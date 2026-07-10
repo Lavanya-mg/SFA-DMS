@@ -1,0 +1,13 @@
+/* Use a more specific selector to ensure we override Odoo's default */
+.o_form_view .o_field_many2many_checkboxes {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+}
+
+.o_form_view .o_field_many2many_checkboxes .form-check {
+    display: flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+}

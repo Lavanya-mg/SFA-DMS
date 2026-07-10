@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         BEAT MODULE — GRAPH & PIVOT REPORTS  (Odoo 19 Enterprise)
+    ══════════════════════════════════════════════════════════════ -->
+
+    <!-- 1. Beat Status Distribution (Pie) -->
+    <record id="view_beat_module_graph_status_pie" model="ir.ui.view">
+        <field name="name">beat.module.graph.status.pie</field>
+        <field name="model">beat.module</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Status Distribution" type="pie">
+                <field name="status" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 2. Beats by Employee — Customer Coverage (Bar) -->
+    <record id="view_beat_module_graph_employee_coverage" model="ir.ui.view">
+        <field name="name">beat.module.graph.employee.coverage</field>
+        <field name="model">beat.module</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Customer Coverage by Employee" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="customer_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 3. Beat Status by Employee (Bar stacked) -->
+    <record id="view_beat_module_graph_employee_status" model="ir.ui.view">
+        <field name="name">beat.module.graph.employee.status</field>
+        <field name="model">beat.module</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Status by Employee" type="bar" stacked="1">
+                <field name="employee_id" type="row"/>
+                <field name="status" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 4. Monthly Beat Activity (Line) -->
+    <record id="view_beat_module_graph_monthly_activity" model="ir.ui.view">
+        <field name="name">beat.module.graph.monthly.activity</field>
+        <field name="model">beat.module</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly Beat Activity" type="line">
+                <field name="beat_date" interval="month" type="row"/>
+                <field name="customer_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 5. Beat Coverage Pivot — Employee × Status -->
+    <record id="view_beat_module_pivot_employee_status" model="ir.ui.view">
+        <field name="name">beat.module.pivot.employee.status</field>
+        <field name="model">beat.module</field>
+        <field name="arch" type="xml">
+            <pivot string="Beat Coverage — Employee × Status">
+                <field name="employee_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="customer_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- 6. Beat Coverage Pivot — Employee × Month -->
+    <record id="view_beat_module_pivot_employee_month" model="ir.ui.view">
+        <field name="name">beat.module.pivot.employee.month</field>
+        <field name="model">beat.module</field>
+        <field name="arch" type="xml">
+            <pivot string="Beat Activity — Employee × Month">
+                <field name="employee_id" type="row"/>
+                <field name="beat_date" interval="month" type="col"/>
+                <field name="customer_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Beat Coverage Analytics Action -->
+    <record id="action_beat_module_analytics" model="ir.actions.act_window">
+        <field name="name">Beat Coverage Analytics</field>
+        <field name="res_model">beat.module</field>
+        <field name="view_mode">graph,pivot,list,kanban</field>
+        <field name="view_id" ref="view_beat_module_graph_employee_coverage"/>
+        <field name="search_view_id" ref="view_beat_module_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No beats found. Create beats to see analytics.
+            </p>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         BEAT SWITCH HISTORY — GRAPH & PIVOT REPORTS
+    ══════════════════════════════════════════════════════════════ -->
+
+    <!-- 7. Switch Activity by Employee (Bar) -->
+    <record id="view_beat_switch_graph_by_employee" model="ir.ui.view">
+        <field name="name">beat.switch.history.graph.employee</field>
+        <field name="model">beat.switch.history</field>
+        <field name="arch" type="xml">
+            <graph string="Switch Activity by Employee" type="bar">
+                <field name="employee_id" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 8. Beat Switch Monthly Trend (Line) -->
+    <record id="view_beat_switch_graph_monthly_trend" model="ir.ui.view">
+        <field name="name">beat.switch.history.graph.monthly</field>
+        <field name="model">beat.switch.history</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Switch Monthly Trend" type="line">
+                <field name="switch_date" interval="month" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 9. Switch Pivot — Employee × Month -->
+    <record id="view_beat_switch_pivot_employee_month" model="ir.ui.view">
+        <field name="name">beat.switch.history.pivot.employee.month</field>
+        <field name="model">beat.switch.history</field>
+        <field name="arch" type="xml">
+            <pivot string="Beat Switch Analysis — Employee × Month">
+                <field name="employee_id" type="row"/>
+                <field name="switch_date" interval="month" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Beat Switch List View -->
+    <record id="view_beat_switch_list" model="ir.ui.view">
+        <field name="name">beat.switch.history.list</field>
+        <field name="model">beat.switch.history</field>
+        <field name="arch" type="xml">
+            <list string="Beat Switch History" create="0">
+                <field name="employee_id"/>
+                <field name="switch_date"/>
+                <field name="switch_time"/>
+                <field name="start_beat_id"/>
+                <field name="switched_beat_id"/>
+                <field name="reason"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Beat Switch Analytics Action -->
+    <record id="action_beat_switch_analytics" model="ir.actions.act_window">
+        <field name="name">Beat Switch Analytics</field>
+        <field name="res_model">beat.switch.history</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_beat_switch_graph_by_employee"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No beat switch history found.</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_sfa_incentive_record_list" model="ir.ui.view">
+        <field name="name">sfa.incentive.record.list</field>
+        <field name="model">sfa.incentive.record</field>
+        <field name="arch" type="xml">
+            <list string="Incentive Records"
+                  decoration-success="status == 'approved'"
+                  decoration-warning="status == 'pending_approval'"
+                  decoration-danger="status == 'rejected'"
+                  decoration-muted="status == 'paid'">
+                <field name="employee_id" string="Salesperson"/>
+                <field name="period_display" string="Period"/>
+                <field name="criteria_id" string="Criteria"/>
+                <field name="territory_id" string="Territory"/>
+                <field name="achievement_percent" string="Achievement %" widget="float" digits="[16,2]"/>
+                <field name="slab_id" string="Slab"/>
+                <field name="calculated_amount" string="Calculated" widget="monetary"/>
+                <field name="final_amount" string="Final" widget="monetary"/>
+                <field name="status" string="Status" widget="badge"
+                       decoration-success="status == 'approved' or status == 'paid'"
+                       decoration-warning="status == 'pending_approval'"
+                       decoration-danger="status == 'rejected'"
+                       decoration-info="status == 'calculated'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_sfa_incentive_record_form" model="ir.ui.view">
+        <field name="name">sfa.incentive.record.form</field>
+        <field name="model">sfa.incentive.record</field>
+        <field name="arch" type="xml">
+            <form string="Incentive Record">
+                <header>
+                    <button name="action_submit_approval" string="Submit for Approval"
+                            type="object" class="btn-primary"
+                            invisible="status != 'calculated'"/>
+                    <button name="action_approve" string="Approve"
+                            type="object" class="btn-success"
+                            invisible="status != 'pending_approval'"
+                            groups="base.group_system"/>
+                    <button name="action_reject" string="Reject"
+                            type="object" class="btn-danger"
+                            invisible="status != 'pending_approval'"
+                            groups="base.group_system"/>
+                    <button name="action_mark_paid" string="Mark as Paid"
+                            type="object" class="btn-warning"
+                            invisible="status != 'approved'"
+                            groups="base.group_system"/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="calculated,pending_approval,approved,paid"/>
+                </header>
+                <sheet>
+                    <group string="Employee &amp; Period">
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="period_month" string="Month"/>
+                            <field name="period_year" string="Year"/>
+                            <field name="criteria_id"/>
+                            <field name="territory_id"/>
+                        </group>
+                        <group>
+                            <field name="target_value"/>
+                            <field name="actual_value"/>
+                            <field name="achievement_percent" string="Achievement %"/>
+                            <field name="slab_id"/>
+                        </group>
+                    </group>
+                    <group string="Payout">
+                        <group>
+                            <field name="calculated_amount"/>
+                            <field name="final_amount"/>
+                        </group>
+                        <group>
+                            <field name="approved_by"/>
+                            <field name="approved_date"/>
+                            <field name="payment_date"/>
+                        </group>
+                    </group>
+                    <group string="Rejection" invisible="status != 'rejected'">
+                        <field name="rejection_reason" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_sfa_incentive_record" model="ir.actions.act_window">
+        <field name="name">Incentive Records</field>
+        <field name="res_model">sfa.incentive.record</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Dashboard Client Action -->
+    <record id="action_sfa_incentive_dashboard" model="ir.actions.client">
+        <field name="name">Incentive Dashboard</field>
+        <field name="tag">sfa_incentive_dashboard</field>
+    </record>
+</odoo>

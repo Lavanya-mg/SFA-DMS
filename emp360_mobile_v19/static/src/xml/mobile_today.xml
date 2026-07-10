@@ -1,0 +1,748 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<!-- ============================================================
+     EMPLOYEE 360 — MOBILE TODAY / WORKDAY SCREEN
+     ============================================================ -->
+
+<t t-name="employee_mobile_v19.MobileToday">
+
+    <!-- Loading -->
+    <t t-if="state.loading">
+        <div class="mobile360-loading"><div class="mobile360-spinner"/><span class="mobile360-loading-text">Loading workday...</span></div>
+    </t>
+
+    <t t-else="">
+        <!-- ── Hero / Attendance Card ──────────────────────── -->
+        <div style="background:linear-gradient(135deg,#06d6a0,#019b72);padding:20px 16px 36px;position:relative;overflow:hidden;">
+            <div class="mobile360-hero-decor"/>
+            <div style="font-size:13px;color:rgba(255,255,255,0.8);font-weight:600;">
+                <i class="fa fa-briefcase me-1"/> My Workday
+            </div>
+            <div style="font-size:21px;font-weight:800;color:#fff;margin-top:4px;"><t t-esc="todayDateStr"/></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+                <!-- Check-in time -->
+                <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Check-In</div>
+                    <div style="font-size:20px;font-weight:800;color:#fff;margin-top:4px;font-family:monospace;">
+                        <t t-if="state.attendance.checkIn"><t t-esc="fmtTime(state.attendance.checkIn)"/></t>
+                        <t t-else="">--:--</t>
+                    </div>
+                </div>
+                <!-- Check-out / worked -->
+                <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                        <t t-if="state.attendance.checkOut">Worked</t>
+                        <t t-else="">Status</t>
+                    </div>
+                    <div style="font-size:20px;font-weight:800;color:#fff;margin-top:4px;">
+                        <t t-if="state.attendance.workedHours"><t t-esc="state.attendance.workedHours"/></t>
+                        <t t-elif="state.attendance.checkedIn">Active</t>
+                        <t t-else="">Not In</t>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Day Start/End Action ─────────────────────────── -->
+        <div style="background:#f0f4f8;padding:0 16px;margin-top:-16px;">
+            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);border:1px solid #e2e8f0;">
+                <t t-if="!state.attendance.checkedIn and !state.attendance.checkOut">
+                    <!-- Not started -->
+                    <div style="text-align:center;padding:4px 0 8px;">
+                        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:4px;">Ready to start your day?</div>
+                        <div style="font-size:13px;color:#64748b;margin-bottom:14px;">Record your check-in and begin your beat</div>
+                        <button class="mobile360-btn mobile360-btn-success mobile360-btn-full mobile360-btn-lg"
+                            t-on-click="openStartDay"
+                            t-att-disabled="state.busy">
+                            <i class="fa fa-play-circle"/> Start My Day
+                        </button>
+                    </div>
+                </t>
+                <t t-elif="state.attendance.checkedIn">
+                    <!-- Day in progress -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                        <div>
+                            <div style="font-size:14px;font-weight:700;color:#0f172a;">Day in Progress</div>
+                            <div style="font-size:12px;color:#64748b;margin-top:2px;">
+                                Since <t t-esc="fmtTime(state.attendance.checkIn)"/>
+                            </div>
+                        </div>
+                        <button class="mobile360-btn mobile360-btn-danger mobile360-btn-sm"
+                            t-on-click="openEndDay"
+                            t-att-disabled="state.busy">
+                            <i class="fa fa-stop-circle"/> End Day
+                        </button>
+                    </div>
+                </t>
+                <t t-else="">
+                    <!-- Day ended -->
+                    <div style="text-align:center;padding:4px 0;">
+                        <div style="font-size:22px;font-weight:800;color:#06d6a0;"><i class="fa fa-check-circle"/></div>
+                        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-top:4px;">Day Completed!</div>
+                        <div style="font-size:13px;color:#64748b;">Worked <strong><t t-esc="state.attendance.workedHours"/></strong> today</div>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+        <!-- ── Today Stats Row ──────────────────────────────── -->
+        <div style="padding:16px 16px 0;">
+            <div style="background:#fff;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);">
+                    <div style="padding:14px 10px;text-align:center;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:20px;font-weight:800;color:#0f172a;"><t t-esc="state.todayStats.visits_done"/></div>
+                        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.3px;margin-top:3px;">Visits Done</div>
+                    </div>
+                    <div style="padding:14px 10px;text-align:center;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:20px;font-weight:800;color:#0f172a;"><t t-esc="state.todayStats.orders_placed"/></div>
+                        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.3px;margin-top:3px;">Orders</div>
+                    </div>
+                    <div style="padding:14px 10px;text-align:center;">
+                        <div style="font-size:20px;font-weight:800;color:#0f172a;"><t t-esc="state.todayStats.beat_progress"/>%</div>
+                        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.3px;margin-top:3px;">Beat Done</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Active Visit Panel ───────────────────────────── -->
+        <t t-if="state.activeVisit">
+            <div style="padding:14px 16px 0;">
+                <div class="mobile360-active-visit">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                        <div style="flex:1;">
+                            <div style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+                                <div class="mobile360-pulse" style="width:8px;height:8px;"/> VISIT IN PROGRESS
+                            </div>
+                            <div style="font-size:18px;font-weight:800;color:#fff;margin-top:6px;line-height:1.2;">
+                                <t t-esc="state.activeVisit.partner_id?.[1] || 'Customer'"/>
+                            </div>
+                            <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px;">
+                                <i class="fa fa-clock-o"/> Started <t t-esc="fmtTime(state.activeVisit.actual_start_time)"/>
+                            </div>
+                        </div>
+                        <button class="mobile360-btn mobile360-btn-sm"
+                            style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);"
+                            t-on-click="openEndVisit">
+                            <i class="fa fa-stop"/> End
+                        </button>
+                    </div>
+
+                    <!-- Visit action buttons -->
+                    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px;">
+                        <button class="mobile360-quick-btn" t-on-click="() => openPanel('orders')" style="gap:4px;">
+                            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">
+                                <i class="fa fa-shopping-cart"/>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">Orders</span>
+                        </button>
+                        <button class="mobile360-quick-btn" t-on-click="() => openPanel('stock')" style="gap:4px;">
+                            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">
+                                <i class="fa fa-cubes"/>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">Stock</span>
+                        </button>
+                        <button class="mobile360-quick-btn" t-on-click="() => openPanel('collect')" style="gap:4px;">
+                            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">
+                                <i class="fa fa-money"/>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">Collect</span>
+                        </button>
+                        <button class="mobile360-quick-btn" t-on-click="() => openPanel('checklist')" style="gap:4px;">
+                            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">
+                                <i class="fa fa-check-square-o"/>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">Check</span>
+                        </button>
+                        <button class="mobile360-quick-btn" t-on-click="() => openPanel('ticket')" style="gap:4px;">
+                            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">
+                                <i class="fa fa-ticket"/>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">Ticket</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ── Beat Selection / Customer List ───────────────── -->
+        <t t-if="state.beats.length">
+            <div style="padding:16px 16px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div style="font-size:15px;font-weight:700;color:#0f172a;">Today's Beat</div>
+                    <button class="mobile360-btn mobile360-btn-ghost mobile360-btn-sm"
+                        t-if="state.attendance.checkedIn and !state.activeVisit"
+                        t-on-click="openSwitchBeat">
+                        <i class="fa fa-exchange"/> Switch
+                    </button>
+                </div>
+
+                <t t-foreach="state.beats" t-as="beat" t-key="beat.id">
+                    <div class="mobile360-beat-card" style="margin-bottom:12px;">
+                        <div class="mobile360-beat-header">
+                            <div style="display:flex;align-items:center;justify-content:space-between;">
+                                <div>
+                                    <div class="mobile360-beat-name"><t t-esc="beat.name"/></div>
+                                    <div class="mobile360-beat-meta">
+                                        <i class="fa fa-users"/> <t t-esc="beat.customer_count or (beat.beatLines and beat.beatLines.length) or 0"/> customers
+                                    </div>
+                                </div>
+                                <span t-attf-class="mobile360-badge {{beat.status === 'in_progress' ? 'warning' : beat.status === 'completed' ? 'success' : 'muted'}}">
+                                    <t t-esc="beat.status === 'in_progress' ? 'Active' : beat.status === 'completed' ? 'Done' : beat.status"/>
+                                </span>
+                            </div>
+                            <div class="mobile360-beat-progress" style="margin-top:10px;">
+                                <div class="mobile360-beat-progress-bar" t-attf-style="width:{{beatProgress}}%;"/>
+                            </div>
+                        </div>
+
+                        <!-- Customer list -->
+                        <t t-if="beat.beatLines and beat.beatLines.length">
+                            <t t-foreach="beat.beatLines" t-as="line" t-key="line.id">
+                                <div class="mobile360-customer-item"
+                                    t-on-click="() => line.visitStatus?.status !== 'completed' and state.attendance.checkedIn and openStartVisit(line, line_index)">
+                                    <div class="mobile360-seq-num"><t t-esc="line_index + 1"/></div>
+                                    <div class="mobile360-customer-avatar"
+                                        t-attf-style="background:{{getAvatarGradient(line.partner_id?.[1])}};">
+                                        <t t-esc="getInitials(line.partner_id?.[1])"/>
+                                    </div>
+                                    <div class="mobile360-customer-name">
+                                        <div style="font-size:14px;font-weight:600;color:#0f172a;"><t t-esc="line.partner_id?.[1] || 'Customer'"/></div>
+                                        <div style="font-size:11px;color:#64748b;margin-top:2px;">
+                                            <i class="fa fa-phone"/> <t t-esc="line.partner_phone or line.partner_mobile or '—'"/>
+                                        </div>
+                                    </div>
+                                    <div class="mobile360-customer-status">
+                                        <t t-if="line.visitStatus">
+                                            <span t-attf-class="mobile360-badge {{visitStatusClass(line.visitStatus.status)}}">
+                                                <t t-esc="visitStatusLabel(line.visitStatus.status)"/>
+                                            </span>
+                                        </t>
+                                        <t t-elif="state.attendance.checkedIn and !state.activeVisit">
+                                            <div style="width:32px;height:32px;border-radius:50%;background:#e8ecfd;display:flex;align-items:center;justify-content:center;color:#4361ee;font-size:14px;">
+                                                <i class="fa fa-play"/>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div style="width:32px;height:32px;border-radius:50%;background:#f0f4f8;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;">
+                                                <i class="fa fa-lock"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+                </t>
+            </div>
+        </t>
+        <t t-else="">
+            <div class="mobile360-empty" style="padding:40px 32px;">
+                <div class="mobile360-empty-icon"><i class="fa fa-road"/></div>
+                <div class="mobile360-empty-title">No Beat Assigned</div>
+                <div class="mobile360-empty-sub">No beats assigned for today. Contact your manager.</div>
+            </div>
+        </t>
+
+        <div class="m-spacer-16"/>
+
+        <!-- ═══════════════════════════════════════════════════
+             MODALS / BOTTOM SHEETS
+             ═══════════════════════════════════════════════════ -->
+
+        <!-- ── Start Day Sheet ─────────────────────────────── -->
+        <t t-if="state.showStartDaySheet">
+            <div class="mobile360-overlay" t-on-click.self="closeStartDay">
+                <div class="mobile360-sheet">
+                    <div class="mobile360-sheet-handle"/>
+                    <div class="mobile360-sheet-header">
+                        <span class="mobile360-sheet-title">Start My Day</span>
+                        <button class="mobile360-sheet-close" t-on-click="closeStartDay"><i class="fa fa-times"/></button>
+                    </div>
+                    <div class="mobile360-sheet-body">
+                        <div class="mobile360-banner info"><i class="fa fa-info-circle mobile360-banner-icon"/><div class="mobile360-banner-text">Your location will be recorded for check-in</div></div>
+                        <div class="mobile360-form-group">
+                            <label class="mobile360-form-label">Today's Work Plan</label>
+                            <select class="mobile360-form-input mobile360-form-select"
+                                t-model="state.startDayForm.workPlan">
+                                <option value="Customer Visit">Customer Visit</option>
+                                <option value="Office Work">Office Work</option>
+                                <option value="Market Survey">Market Survey</option>
+                                <option value="Training">Training</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mobile360-form-row">
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Travel Type</label>
+                                <select class="mobile360-form-input mobile360-form-select" t-model="state.startDayForm.travelType">
+                                    <option value="Own">Own Vehicle</option>
+                                    <option value="Company">Company Vehicle</option>
+                                    <option value="Public">Public Transport</option>
+                                    <option value="Walk">Walk</option>
+                                </select>
+                            </div>
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Vehicle No.</label>
+                                <input class="mobile360-form-input" type="text" placeholder="e.g. MH-01-AB-1234"
+                                    t-model="state.startDayForm.vehicle"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mobile360-sheet-footer">
+                        <button class="mobile360-btn mobile360-btn-outline" t-on-click="closeStartDay" style="flex:1;">Cancel</button>
+                        <button class="mobile360-btn mobile360-btn-success" t-on-click="confirmStartDay"
+                            t-att-disabled="state.busy" style="flex:2;">
+                            <t t-if="state.busy"><i class="fa fa-spinner fa-spin"/> Working...</t>
+                            <t t-else=""><i class="fa fa-play-circle"/> Start Day</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ── End Day Sheet ───────────────────────────────── -->
+        <t t-if="state.showEndDaySheet">
+            <div class="mobile360-overlay" t-on-click.self="closeEndDay">
+                <div class="mobile360-sheet">
+                    <div class="mobile360-sheet-handle"/>
+                    <div class="mobile360-sheet-header">
+                        <span class="mobile360-sheet-title">End My Day</span>
+                        <button class="mobile360-sheet-close" t-on-click="closeEndDay"><i class="fa fa-times"/></button>
+                    </div>
+                    <div class="mobile360-sheet-body">
+                        <div style="text-align:center;padding:16px 0;">
+                            <div style="font-size:56px;color:#06d6a0;margin-bottom:12px;"><i class="fa fa-check-circle"/></div>
+                            <div style="font-size:17px;font-weight:700;color:#0f172a;">End your workday?</div>
+                            <div style="font-size:13px;color:#64748b;margin-top:6px;">Today's summary will be recorded</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:20px;">
+                                <div style="background:#f0f4f8;border-radius:12px;padding:12px;">
+                                    <div style="font-size:20px;font-weight:800;color:#0f172a;"><t t-esc="state.todayStats.visits_done"/></div>
+                                    <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Visits</div>
+                                </div>
+                                <div style="background:#f0f4f8;border-radius:12px;padding:12px;">
+                                    <div style="font-size:20px;font-weight:800;color:#0f172a;"><t t-esc="state.todayStats.orders_placed"/></div>
+                                    <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Orders</div>
+                                </div>
+                                <div style="background:#f0f4f8;border-radius:12px;padding:12px;">
+                                    <div style="font-size:20px;font-weight:800;color:#0f172a;"><t t-esc="state.todayStats.beat_progress"/>%</div>
+                                    <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Beat</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mobile360-sheet-footer">
+                        <button class="mobile360-btn mobile360-btn-outline" t-on-click="closeEndDay" style="flex:1;">Cancel</button>
+                        <button class="mobile360-btn mobile360-btn-danger" t-on-click="confirmEndDay"
+                            t-att-disabled="state.busy" style="flex:2;">
+                            <t t-if="state.busy"><i class="fa fa-spinner fa-spin"/> Working...</t>
+                            <t t-else=""><i class="fa fa-stop-circle"/> End Day</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ── Start Visit Sheet ───────────────────────────── -->
+        <t t-if="state.showStartVisitSheet">
+            <div class="mobile360-overlay" t-on-click.self="closeStartVisit">
+                <div class="mobile360-sheet">
+                    <div class="mobile360-sheet-handle"/>
+                    <div class="mobile360-sheet-header">
+                        <span class="mobile360-sheet-title">Start Visit</span>
+                        <button class="mobile360-sheet-close" t-on-click="closeStartVisit"><i class="fa fa-times"/></button>
+                    </div>
+                    <div class="mobile360-sheet-body">
+                        <div class="mobile360-banner success">
+                            <i class="fa fa-map-marker mobile360-banner-icon"/>
+                            <div class="mobile360-banner-text">
+                                <strong><t t-esc="state.currentLine?.partner_id?.[1] || 'Customer'"/></strong><br/>
+                                <t t-esc="state.currentLine?.partner_street || 'Address not available'"/>
+                            </div>
+                        </div>
+                        <div class="mobile360-form-group">
+                            <label class="mobile360-form-label">Store Photo (Required)</label>
+                            <input type="file" accept="image/*" capture="environment" style="display:none;"
+                                t-ref="fileInput" t-on-change="onStoreImageChange"/>
+                            <t t-if="state.visitForm.storeImageName">
+                                <div style="background:#d1fae5;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;">
+                                    <i class="fa fa-check-circle" style="color:#019b72;font-size:20px;"/>
+                                    <div>
+                                        <div style="font-size:13px;font-weight:600;color:#019b72;">Photo captured</div>
+                                        <div style="font-size:11px;color:#64748b;"><t t-esc="state.visitForm.storeImageName"/></div>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="mobile360-photo-upload" t-on-click="() => fileInputRef.el?.click()">
+                                    <i class="fa fa-camera mobile360-photo-upload-icon"/>
+                                    <span class="mobile360-photo-upload-text">Tap to take store photo</span>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="mobile360-banner info">
+                            <i class="fa fa-map-marker mobile360-banner-icon"/>
+                            <div class="mobile360-banner-text">GPS location will be recorded automatically</div>
+                        </div>
+                    </div>
+                    <div class="mobile360-sheet-footer">
+                        <button class="mobile360-btn mobile360-btn-outline" t-on-click="closeStartVisit" style="flex:1;">Cancel</button>
+                        <button class="mobile360-btn mobile360-btn-primary" t-on-click="confirmStartVisit"
+                            t-att-disabled="state.busy" style="flex:2;">
+                            <t t-if="state.busy"><i class="fa fa-spinner fa-spin"/> Starting...</t>
+                            <t t-else=""><i class="fa fa-map-marker"/> Start Visit</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ── End Visit Sheet ─────────────────────────────── -->
+        <t t-if="state.showEndVisitSheet">
+            <div class="mobile360-overlay" t-on-click.self="closeEndVisit">
+                <div class="mobile360-sheet">
+                    <div class="mobile360-sheet-handle"/>
+                    <div class="mobile360-sheet-header">
+                        <span class="mobile360-sheet-title">End Visit</span>
+                        <button class="mobile360-sheet-close" t-on-click="closeEndVisit"><i class="fa fa-times"/></button>
+                    </div>
+                    <div class="mobile360-sheet-body">
+                        <div class="mobile360-form-group">
+                            <label class="mobile360-form-label">Visit Comments</label>
+                            <textarea class="mobile360-form-input mobile360-form-textarea"
+                                placeholder="Any notes about this visit..."
+                                t-model="state.endVisitForm.comments"/>
+                        </div>
+                        <!-- Quick checklist summary -->
+                        <div style="background:#f0f4f8;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#0f172a;">Checklist</div>
+                                <div style="font-size:12px;color:#64748b;margin-top:2px;"><t t-esc="checklistDone"/>/<t t-esc="state.checklist.length"/> completed</div>
+                            </div>
+                            <div style="font-size:18px;font-weight:800;color:#4361ee;"><t t-esc="checklistPct"/>%</div>
+                        </div>
+                    </div>
+                    <div class="mobile360-sheet-footer">
+                        <button class="mobile360-btn mobile360-btn-outline" t-on-click="closeEndVisit" style="flex:1;">Cancel</button>
+                        <button class="mobile360-btn mobile360-btn-success" t-on-click="confirmEndVisit"
+                            t-att-disabled="state.busy" style="flex:2;">
+                            <t t-if="state.busy"><i class="fa fa-spinner fa-spin"/> Saving...</t>
+                            <t t-else=""><i class="fa fa-check-circle"/> Complete Visit</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ── Panel Sheet (Stock / Collect / Orders / Checklist / Ticket) ── -->
+        <t t-if="state.showPanelSheet">
+            <div class="mobile360-overlay" t-on-click.self="closePanel">
+                <div class="mobile360-sheet" style="max-height:90vh;">
+                    <div class="mobile360-sheet-handle"/>
+
+                    <!-- STOCK PANEL -->
+                    <t t-if="state.activePanel === 'stock'">
+                        <div class="mobile360-sheet-header">
+                            <span class="mobile360-sheet-title"><i class="fa fa-cubes"/> Stock Update</span>
+                            <button class="mobile360-sheet-close" t-on-click="closePanel"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="mobile360-sheet-body">
+                            <!-- Header row -->
+                            <div class="mobile360-stock-row" style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">
+                                <div>Product</div><div style="text-align:center;">Open</div>
+                                <div style="text-align:center;">Close</div><div style="text-align:center;">Dmg</div>
+                            </div>
+                            <t t-foreach="state.stockItems" t-as="item" t-key="item.productId">
+                                <div class="mobile360-stock-row">
+                                    <div style="font-size:12px;font-weight:600;color:#0f172a;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                        <t t-esc="item.name"/>
+                                    </div>
+                                    <input class="mobile360-stock-input" type="number" min="0"
+                                        t-att-value="item.opening"
+                                        t-on-change="(e) => updateStock(item_index, 'opening', e)"/>
+                                    <input class="mobile360-stock-input" type="number" min="0"
+                                        t-att-value="item.closing"
+                                        t-on-change="(e) => updateStock(item_index, 'closing', e)"/>
+                                    <input class="mobile360-stock-input" type="number" min="0"
+                                        t-att-value="item.damaged"
+                                        t-on-change="(e) => updateStock(item_index, 'damaged', e)"/>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="mobile360-sheet-footer">
+                            <button class="mobile360-btn mobile360-btn-outline" t-on-click="closePanel" style="flex:1;">Skip</button>
+                            <button class="mobile360-btn mobile360-btn-primary" t-on-click="saveStock"
+                                t-att-disabled="state.busy" style="flex:2;">
+                                <t t-if="state.busy"><i class="fa fa-spinner fa-spin"/></t>
+                                <t t-else=""><i class="fa fa-save"/> Save Stock</t>
+                            </button>
+                        </div>
+                    </t>
+
+                    <!-- COLLECTION PANEL -->
+                    <t t-if="state.activePanel === 'collect'">
+                        <div class="mobile360-sheet-header">
+                            <span class="mobile360-sheet-title"><i class="fa fa-money"/> Collect Payment</span>
+                            <button class="mobile360-sheet-close" t-on-click="closePanel"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="mobile360-sheet-body">
+                            <t t-if="state.outstandingData">
+                                <div style="background:#fff3e0;border-radius:12px;padding:14px;margin-bottom:16px;border:1px solid #fed7aa;">
+                                    <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;">Outstanding Balance</div>
+                                    <div style="font-size:24px;font-weight:800;color:#d97706;margin-top:4px;">
+                                        ₹<t t-esc="Math.round(state.outstandingData.total_overdue or 0).toLocaleString('en-IN')"/>
+                                    </div>
+                                </div>
+                            </t>
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Amount (₹)</label>
+                                <input class="mobile360-form-input" type="number" placeholder="0.00"
+                                    t-model="state.collectForm.amount" style="font-size:18px;font-weight:700;"/>
+                            </div>
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Payment Mode</label>
+                                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                                    <t t-foreach="['Cash','UPI','Cheque','NEFT']" t-as="mode" t-key="mode">
+                                        <button t-attf-class="mobile360-btn mobile360-btn-sm {{state.collectForm.paymentMode === mode ? 'mobile360-btn-primary' : 'mobile360-btn-outline'}}"
+                                            t-on-click="() => state.collectForm.paymentMode = mode">
+                                            <t t-esc="mode"/>
+                                        </button>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Reference / Cheque No.</label>
+                                <input class="mobile360-form-input" type="text" placeholder="Optional"
+                                    t-model="state.collectForm.reference"/>
+                            </div>
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Remarks</label>
+                                <input class="mobile360-form-input" type="text" placeholder="Optional"
+                                    t-model="state.collectForm.remarks"/>
+                            </div>
+                        </div>
+                        <div class="mobile360-sheet-footer">
+                            <button class="mobile360-btn mobile360-btn-outline" t-on-click="closePanel" style="flex:1;">Cancel</button>
+                            <button class="mobile360-btn mobile360-btn-success" t-on-click="saveCollection"
+                                t-att-disabled="state.collectBusy or !state.collectForm.amount" style="flex:2;">
+                                <t t-if="state.collectBusy"><i class="fa fa-spinner fa-spin"/></t>
+                                <t t-else=""><i class="fa fa-check"/> Confirm Collection</t>
+                            </button>
+                        </div>
+                    </t>
+
+                    <!-- ORDERS PANEL -->
+                    <t t-if="state.activePanel === 'orders'">
+                        <div class="mobile360-sheet-header">
+                            <span class="mobile360-sheet-title"><i class="fa fa-shopping-cart"/> Quick Order</span>
+                            <button class="mobile360-sheet-close" t-on-click="closePanel"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="mobile360-sheet-body" style="padding:12px;">
+                            <!-- Previous orders -->
+                            <t t-if="state.customerOrders.length">
+                                <div style="margin-bottom:12px;">
+                                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Previous Orders</div>
+                                    <t t-foreach="state.customerOrders" t-as="order" t-key="order.id">
+                                        <div style="background:#f0f4f8;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                                            <div>
+                                                <div style="font-size:13px;font-weight:700;color:#4361ee;"><t t-esc="order.name"/></div>
+                                                <div style="font-size:11px;color:#64748b;"><t t-esc="fmtMoney(order.amount_total)"/></div>
+                                            </div>
+                                            <span t-attf-class="mobile360-badge {{order.state === 'sale' ? 'success' : 'warning'}}">
+                                                <t t-esc="order.state === 'sale' ? 'Confirmed' : order.state"/>
+                                            </span>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+
+                            <!-- Search -->
+                            <div class="mobile360-search-bar">
+                                <i class="fa fa-search mobile360-search-icon"/>
+                                <input class="mobile360-search-input" type="text" placeholder="Search products..."
+                                    t-model="state.productSearch" t-on-input="searchProducts"/>
+                            </div>
+
+                            <!-- Products -->
+                            <t t-foreach="state.filteredProducts" t-as="prod" t-key="prod.id">
+                                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e2e8f0;">
+                                    <div style="flex:1;">
+                                        <div style="font-size:13px;font-weight:600;color:#0f172a;"><t t-esc="prod.name"/></div>
+                                        <div style="font-size:12px;color:#4361ee;font-weight:700;">₹<t t-esc="prod.list_price or 0"/></div>
+                                    </div>
+                                    <t t-if="state.selectedProducts[prod.id]">
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <button style="width:28px;height:28px;border-radius:50%;background:#e8ecfd;border:none;color:#4361ee;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                                                t-on-click="() => updateQty(prod.id, -1)">−</button>
+                                            <span style="font-size:15px;font-weight:700;min-width:24px;text-align:center;">
+                                                <t t-esc="state.selectedProducts[prod.id].qty"/>
+                                            </span>
+                                            <button style="width:28px;height:28px;border-radius:50%;background:#4361ee;border:none;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                                                t-on-click="() => updateQty(prod.id, 1)">+</button>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <button style="width:32px;height:32px;border-radius:50%;background:#e8ecfd;border:none;color:#4361ee;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                                            t-on-click="() => toggleProduct(prod)">+</button>
+                                    </t>
+                                </div>
+                            </t>
+
+                            <!-- Order total -->
+                            <t t-if="selectedProductsList.length">
+                                <div style="background:#f0f4f8;border-radius:12px;padding:14px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;">
+                                    <div>
+                                        <div style="font-size:12px;color:#64748b;font-weight:600;"><t t-esc="selectedProductsList.length"/> items</div>
+                                        <div style="font-size:18px;font-weight:800;color:#0f172a;"><t t-esc="orderTotalFmt"/></div>
+                                    </div>
+                                    <button class="mobile360-btn mobile360-btn-primary"
+                                        t-on-click="createOrder"
+                                        t-att-disabled="state.orderBusy">
+                                        <t t-if="state.orderBusy"><i class="fa fa-spinner fa-spin"/></t>
+                                        <t t-else=""><i class="fa fa-check"/> Place Order</t>
+                                    </button>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+
+                    <!-- CHECKLIST PANEL -->
+                    <t t-if="state.activePanel === 'checklist'">
+                        <div class="mobile360-sheet-header">
+                            <span class="mobile360-sheet-title"><i class="fa fa-check-square-o"/> Store Checklist</span>
+                            <button class="mobile360-sheet-close" t-on-click="closePanel"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="mobile360-sheet-body">
+                            <!-- Progress -->
+                            <div style="background:linear-gradient(135deg,#4361ee,#3a0ca3);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                                <div style="text-align:center;">
+                                    <div style="font-size:28px;font-weight:800;color:#fff;"><t t-esc="checklistDone"/></div>
+                                    <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700;">DONE</div>
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;">
+                                        <div t-attf-style="width:{{checklistPct}}%;height:100%;background:#06d6a0;border-radius:3px;transition:width 0.5s ease;"/>
+                                    </div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:6px;"><t t-esc="checklistPct"/>% complete</div>
+                                </div>
+                                <div style="font-size:24px;font-weight:800;color:#fff;"><t t-esc="state.checklist.length"/><span style="font-size:12px;"> total</span></div>
+                            </div>
+
+                            <t t-foreach="state.checklist" t-as="item" t-key="item.id">
+                                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #e2e8f0;"
+                                    t-on-click="() => toggleCheck(item.id)">
+                                    <div t-attf-style="width:24px;height:24px;border-radius:6px;border:2px solid {{item.done ? '#06d6a0' : '#cbd5e1'}};background:{{item.done ? '#06d6a0' : '#fff'}};display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;transition:all 0.2s ease;">
+                                        <t t-if="item.done"><i class="fa fa-check" style="font-size:12px;"/></t>
+                                    </div>
+                                    <div t-attf-style="font-size:14px;font-weight:{{item.done ? '600' : '500'}};color:{{item.done ? '#64748b' : '#0f172a'}};text-decoration:{{item.done ? 'line-through' : 'none'}};line-height:1.4;">
+                                        <t t-esc="item.q"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="mobile360-sheet-footer">
+                            <button class="mobile360-btn mobile360-btn-outline" t-on-click="closePanel" style="flex:1;">Skip</button>
+                            <button class="mobile360-btn mobile360-btn-primary" t-on-click="saveChecklist" style="flex:2;">
+                                <i class="fa fa-save"/> Save Checklist
+                            </button>
+                        </div>
+                    </t>
+
+                    <!-- TICKET PANEL -->
+                    <t t-if="state.activePanel === 'ticket'">
+                        <div class="mobile360-sheet-header">
+                            <span class="mobile360-sheet-title"><i class="fa fa-ticket"/> Raise Ticket</span>
+                            <button class="mobile360-sheet-close" t-on-click="closePanel"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="mobile360-sheet-body">
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Subject *</label>
+                                <input class="mobile360-form-input" type="text" placeholder="Brief issue summary"
+                                    t-model="state.ticketForm.subject"/>
+                            </div>
+                            <div class="mobile360-form-row">
+                                <div class="mobile360-form-group">
+                                    <label class="mobile360-form-label">Category</label>
+                                    <select class="mobile360-form-input mobile360-form-select" t-model="state.ticketForm.category">
+                                        <option value="Product Quality">Product Quality</option>
+                                        <option value="Delivery">Delivery</option>
+                                        <option value="Payment">Payment</option>
+                                        <option value="Scheme">Scheme</option>
+                                        <option value="Returns">Returns</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="mobile360-form-group">
+                                    <label class="mobile360-form-label">Priority</label>
+                                    <select class="mobile360-form-input mobile360-form-select" t-model="state.ticketForm.priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Critical">Critical</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mobile360-form-group">
+                                <label class="mobile360-form-label">Description</label>
+                                <textarea class="mobile360-form-input mobile360-form-textarea"
+                                    placeholder="Describe the issue in detail..."
+                                    t-model="state.ticketForm.description"/>
+                            </div>
+                        </div>
+                        <div class="mobile360-sheet-footer">
+                            <button class="mobile360-btn mobile360-btn-outline" t-on-click="closePanel" style="flex:1;">Cancel</button>
+                            <button class="mobile360-btn mobile360-btn-danger" t-on-click="saveTicket"
+                                t-att-disabled="state.ticketBusy or !state.ticketForm.subject" style="flex:2;">
+                                <t t-if="state.ticketBusy"><i class="fa fa-spinner fa-spin"/></t>
+                                <t t-else=""><i class="fa fa-ticket"/> Submit Ticket</t>
+                            </button>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+
+        <!-- ── Beat Switch Sheet ───────────────────────────── -->
+        <t t-if="state.showSwitchSheet">
+            <div class="mobile360-overlay" t-on-click.self="closeSwitchBeat">
+                <div class="mobile360-sheet">
+                    <div class="mobile360-sheet-handle"/>
+                    <div class="mobile360-sheet-header">
+                        <span class="mobile360-sheet-title"><i class="fa fa-exchange"/> Switch Beat</span>
+                        <button class="mobile360-sheet-close" t-on-click="closeSwitchBeat"><i class="fa fa-times"/></button>
+                    </div>
+                    <div class="mobile360-sheet-body">
+                        <div class="mobile360-form-group">
+                            <label class="mobile360-form-label">New Beat *</label>
+                            <select class="mobile360-form-input mobile360-form-select" t-model="state.switchForm.newBeatId">
+                                <option value="">Select beat...</option>
+                                <t t-foreach="state.allBeatsForSwap" t-as="b" t-key="b.id">
+                                    <option t-att-value="b.id"><t t-esc="b.name"/> (<t t-esc="b.beat_number"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="mobile360-form-group">
+                            <label class="mobile360-form-label">Reason for Switch *</label>
+                            <textarea class="mobile360-form-input mobile360-form-textarea"
+                                placeholder="Explain why you need to switch beats..."
+                                t-model="state.switchForm.reason"/>
+                        </div>
+                    </div>
+                    <div class="mobile360-sheet-footer">
+                        <button class="mobile360-btn mobile360-btn-outline" t-on-click="closeSwitchBeat" style="flex:1;">Cancel</button>
+                        <button class="mobile360-btn mobile360-btn-warning" t-on-click="confirmSwitchBeat"
+                            t-att-disabled="state.switchBusy" style="flex:2;">
+                            <t t-if="state.switchBusy"><i class="fa fa-spinner fa-spin"/></t>
+                            <t t-else=""><i class="fa fa-exchange"/> Switch Beat</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+    </t>
+</t>
+
+</templates>

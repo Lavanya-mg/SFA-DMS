@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PRICE BOOK
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ── List View ──────────────────────────────────────────────────── -->
+    <record id="view_price_book_list" model="ir.ui.view">
+        <field name="name">price.book.list</field>
+        <field name="model">price.book</field>
+        <field name="arch" type="xml">
+            <list string="Price Book" decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="price_type"/>
+                <field name="product_id"/>
+                <field name="customer_id"/>
+                <field name="category_id"/>
+                <field name="territory"/>
+                <field name="channel"/>
+                <field name="unit_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="min_qty"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form View ──────────────────────────────────────────────────── -->
+    <record id="view_price_book_form" model="ir.ui.view">
+        <field name="name">price.book.form</field>
+        <field name="model">price.book</field>
+        <field name="arch" type="xml">
+            <form string="Price Book Entry">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Amul Milk — Customer Price for Reliance"/></h1>
+                    </div>
+                    <group>
+                        <group string="Classification">
+                            <field name="price_type"/>
+                            <field name="sequence"/>
+                            <field name="active" invisible="1"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Pricing">
+                            <field name="unit_price" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="min_qty"/>
+                            <field name="uom_id" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+                    <group string="Scope — fill only fields relevant to the price type">
+                        <group>
+                            <field name="product_tmpl_id"
+                                   placeholder="Leave blank to apply to all products"/>
+                            <field name="product_id"
+                                   domain="[('product_tmpl_id','=',product_tmpl_id)]"
+                                   placeholder="Leave blank for all variants"/>
+                            <field name="customer_id"
+                                   invisible="price_type not in ('customer','combination')"
+                                   placeholder="Required for Customer-wise"/>
+                            <field name="category_id"
+                                   invisible="price_type not in ('category','combination')"
+                                   placeholder="Required for Category-wise"/>
+                        </group>
+                        <group>
+                            <field name="territory"
+                                   invisible="price_type not in ('territory','combination')"
+                                   placeholder="e.g. Bangalore, Kerala"/>
+                            <field name="channel"
+                                   invisible="price_type not in ('channel','combination')"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Search View ────────────────────────────────────────────────── -->
+    <!-- <record id="view_price_book_search" model="ir.ui.view">
+        <field name="name">price.book.search</field>
+        <field name="model">price.book</field>
+        <field name="arch" type="xml">
+            <search string="Search Price Book">
+                <field name="name"/>
+                <field name="product_id" string="Product"/>
+                <field name="customer_id" string="Customer"/>
+                <field name="category_id" string="Category"/>
+                <field name="territory" string="Territory"/>
+                <separator/>
+                <filter string="Base Price" name="base" domain="[('price_type','=','base')]"/>
+                <filter string="Customer-wise" name="customer" domain="[('price_type','=','customer')]"/>
+                <filter string="Category-wise" name="category" domain="[('price_type','=','category')]"/>
+                <filter string="Territory-wise" name="territory" domain="[('price_type','=','territory')]"/>
+                <filter string="Channel-wise" name="channel" domain="[('price_type','=','channel')]"/>
+                <filter string="Combination" name="combination" domain="[('price_type','=','combination')]"/>
+                <separator/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Currently Valid" name="valid_now"
+                        domain="['|',('date_from','=',False),('date_from','&lt;=',context_today()),
+                                  '|',('date_to','=',False),('date_to','&gt;=',context_today())]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Price Type" name="group_type" context="{'group_by': 'price_type'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'customer_id'}"/>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Channel" name="group_channel" context="{'group_by': 'channel'}"/>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <!-- ── Action ─────────────────────────────────────────────────────── -->
+    <!-- <record id="action_price_book" model="ir.actions.act_window">
+        <field name="name">Price Book</field>
+        <field name="res_model">price.book</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_price_book_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add your first price book entry.
+            </p>
+            <p>
+                Supported types: Base Price, Customer-wise, Category-wise,
+                Territory-wise, Channel-wise, and Combination.
+            </p>
+        </field>
+    </record> -->
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PRICE BOOK PRIORITY CONFIG
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_price_book_priority_list" model="ir.ui.view">
+        <field name="name">price.book.priority.list</field>
+        <field name="model">price.book.priority</field>
+        <field name="arch" type="xml">
+            <list string="Priority Configuration" editable="top">
+                <field name="sequence" widget="handle"/>
+                <field name="price_type"/>
+                <field name="description" readonly="1"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_price_book_priority_form" model="ir.ui.view">
+        <field name="name">price.book.priority.form</field>
+        <field name="model">price.book.priority</field>
+        <field name="arch" type="xml">
+            <form string="Priority Rule">
+                <sheet>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="price_type"/>
+                        <field name="description" readonly="1"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_price_book_priority" model="ir.actions.act_window">
+        <field name="name">Priority Configuration</field>
+        <field name="res_model">price.book.priority</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define priority order for price book types.
+                Drag rows to reorder — highest row wins when multiple prices match.
+            </p>
+        </field>
+    </record>
+
+</odoo>

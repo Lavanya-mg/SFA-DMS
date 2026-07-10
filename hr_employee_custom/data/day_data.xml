@@ -1,0 +1,11 @@
+<odoo>
+    <data>
+        <record id="mon" model="day.master"><field name="name">Monday</field></record>
+        <record id="tue" model="day.master"><field name="name">Tuesday</field></record>
+        <record id="wed" model="day.master"><field name="name">Wednesday</field></record>
+        <record id="thu" model="day.master"><field name="name">Thursday</field></record>
+        <record id="fri" model="day.master"><field name="name">Friday</field></record>
+        <record id="sat" model="day.master"><field name="name">Saturday</field></record>
+        <record id="sun" model="day.master"><field  name="name">Sunday</field></record>
+        </data>
+</odoo>

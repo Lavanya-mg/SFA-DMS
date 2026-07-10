@@ -1,0 +1,82 @@
+/* ── Target Allocation (Salesforce-style OWL UI) ───────────────────────────── */
+.tal-wrap {
+    padding: 20px 28px; background: #f3f4f7; height: 100%; overflow-y: auto;
+    font-size: 13px; color: #1a1a2e;
+}
+
+/* Header */
+.tal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.tal-title { display: flex; align-items: center; font-size: 22px; font-weight: 700; color: #16192c; }
+.tal-title .fa-tasks { color: #4b2fd6; }
+.tal-refresh {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid #d4d0e8;
+    background: #fff; color: #4b2fd6; cursor: pointer;
+}
+.tal-refresh:hover { background: #f5f3ff; }
+
+/* Toolbar */
+.tal-toolbar { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.tal-filter { display: flex; flex-direction: column; }
+.tal-filter label { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 5px; }
+.tal-input {
+    border: 1px solid #d7dae2; border-radius: 8px; padding: 8px 11px;
+    font-size: 13px; color: #1a1a2e; background: #fff; min-width: 200px; width: 100%;
+}
+.tal-input:focus { outline: none; border-color: #4b2fd6; box-shadow: 0 0 0 3px rgba(75,47,214,.12); }
+.tal-actions { display: flex; gap: 10px; margin-left: auto; }
+
+/* Buttons */
+.tal-btn {
+    display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 8px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.tal-btn:disabled { opacity: .55; cursor: not-allowed; }
+.tal-btn-primary { background: #4b2fd6; color: #fff; }
+.tal-btn-primary:hover:not(:disabled) { background: #3d24b8; }
+.tal-btn-outline { background: #fff; color: #4b2fd6; border: 1px solid #d4d0e8; }
+.tal-btn-outline:hover:not(:disabled) { background: #f5f3ff; }
+
+/* Table */
+.tal-card { background: #fff; border: 1px solid #eceef3; border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.tal-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+.tal-table th {
+    padding: 11px 16px; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    color: #8a90a0; background: #fafbfc; text-align: right; border-bottom: 1px solid #eceef3;
+}
+.tal-th-crit, .tal-crit { text-align: left !important; }
+.tal-th-sec { text-align: center !important; border-left: 1px solid #eceef3; color: #6b7280; }
+.tal-th-sub th { font-weight: 600; }
+.tal-table tbody td { padding: 14px 16px; border-bottom: 1px solid #f3f4f6; text-align: right; vertical-align: middle; }
+.tal-table tbody tr:last-child td { border-bottom: none; }
+.tal-table tbody tr:hover { background: #fafbff; }
+.tal-crit { font-weight: 700; color: #16192c; }
+.tal-bold { font-weight: 700; color: #16192c; }
+.tal-empty { text-align: center !important; color: #9aa0ac; padding: 34px 18px !important; }
+
+/* Achievement % cell */
+.tal-pct-cell { min-width: 160px; }
+.tal-pct-val { font-weight: 700; font-size: 13px; margin-bottom: 5px; text-align: left; }
+.tal-bar-track { height: 6px; background: #eef0f4; border-radius: 4px; overflow: hidden; }
+.tal-bar { height: 100%; border-radius: 4px; transition: width .3s ease; }
+.tal-bar-red { background: #ef4444; } .tal-bar-orange { background: #f59e0b; } .tal-bar-green { background: #16a34a; }
+.tal-red { color: #dc2626; } .tal-orange { color: #d97706; } .tal-green { color: #16a34a; }
+
+/* Modals */
+.tal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 1000; }
+.tal-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #fff; border-radius: 14px; z-index: 1001; width: 640px; max-width: 94vw;
+    max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(16,24,40,.28);
+}
+.tal-modal-wide { width: 1100px; }
+.tal-modal-title { text-align: center; font-size: 19px; font-weight: 700; color: #16192c; padding: 20px; border-bottom: 1px solid #f0f1f4; }
+.tal-modal-body { padding: 8px 20px; overflow: auto; }
+.tal-modal-table { width: 100%; border-collapse: collapse; }
+.tal-modal-table th {
+    text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700;
+    color: #8a90a0; background: #fafbfc; border-bottom: 1px solid #eceef3; white-space: nowrap;
+}
+.tal-modal-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+.tal-modal-table .tal-input { min-width: 120px; }
+.tal-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid #f0f1f4; }
+.tal-hint { font-size: 11px; color: #9aa0ac; margin: 10px 4px 4px; }

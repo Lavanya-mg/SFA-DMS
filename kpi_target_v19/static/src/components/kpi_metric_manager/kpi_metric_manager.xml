@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="kpi_target_v19.KpiMetricManager">
+    <div class="kmm-wrap">
+
+        <!-- Header -->
+        <div class="kmm-header">
+            <div>
+                <div class="kmm-title"><i class="fa fa-tachometer me-2"/>KPI Metric Manager</div>
+                <div class="kmm-sub">Define metrics for the Dynamic KPI Dashboard — no API names needed.</div>
+            </div>
+            <button class="kmm-btn kmm-btn-primary" t-on-click="() => this.openNew()">
+                <i class="fa fa-plus me-1"/>New Metric
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="kmm-card">
+            <table class="kmm-table">
+                <thead>
+                    <tr>
+                        <th class="kmm-dotcol"></th>
+                        <th>METRIC NAME</th><th>KEY</th><th>CATEGORY</th>
+                        <th>SOURCE OBJECT</th><th>AGGREGATION</th><th>FORMAT</th>
+                        <th class="kmm-center">FORECAST</th><th class="kmm-center">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="state.loading">
+                        <tr><td colspan="9" class="kmm-empty">Loading…</td></tr>
+                    </t>
+                    <t t-elif="!state.rows.length">
+                        <tr><td colspan="9" class="kmm-empty">No metrics yet. Click “New Metric” to add one.</td></tr>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="state.rows" t-as="r" t-key="r.id">
+                            <tr>
+                                <td class="kmm-dotcol">
+                                    <span class="kmm-dot" t-att-class="r.active ? 'kmm-dot-on' : 'kmm-dot-off'"
+                                          t-att-title="r.active ? 'Active — click to deactivate' : 'Inactive — click to activate'"
+                                          t-on-click="() => this.toggleActive(r.id)"/>
+                                </td>
+                                <td>
+                                    <a class="kmm-name" t-on-click="() => this.openEdit(r.id)">
+                                        <span class="kmm-name-dot" t-attf-style="background:{{ r.card_color }};"/>
+                                        <t t-esc="r.name"/>
+                                    </a>
+                                </td>
+                                <td><code class="kmm-key"><t t-esc="r.key"/></code></td>
+                                <td>
+                                    <t t-if="r.category">
+                                        <span class="kmm-chip" t-att-class="categoryChipClass(r.category)"><t t-esc="r.category_label"/></span>
+                                    </t>
+                                    <t t-else=""><span class="kmm-muted">—</span></t>
+                                </td>
+                                <td><span class="kmm-obj"><t t-esc="r.model_name || '—'"/></span></td>
+                                <td><t t-esc="r.aggregation_display"/></td>
+                                <td><t t-esc="r.format_label"/></td>
+                                <td class="kmm-center">
+                                    <t t-if="r.allow_forecast"><i class="fa fa-check kmm-fc"/></t>
+                                    <t t-else=""><span class="kmm-muted">—</span></t>
+                                </td>
+                                <td class="kmm-center">
+                                    <button class="kmm-icon" title="Edit" t-on-click="() => this.openEdit(r.id)">
+                                        <i class="fa fa-pencil"/>
+                                    </button>
+                                    <button class="kmm-icon kmm-icon-danger" title="Delete"
+                                            t-on-click="() => this.deleteMetric(r.id, r.name)">
+                                        <i class="fa fa-trash"/>
+                                    </button>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══════════ New / Edit Metric modal ══════════ -->
+        <t t-if="state.modal === 'form'">
+            <div class="kmm-overlay" t-on-click="() => this.closeModal()"/>
+            <div class="kmm-modal">
+                <div class="kmm-modal-title"><t t-esc="state.form.id ? 'Edit Metric' : 'New Metric'"/></div>
+                <div class="kmm-modal-body">
+                    <div class="kmm-grid">
+                        <div class="kmm-field">
+                            <label>Metric Name <span class="kmm-req">*</span></label>
+                            <input type="text" class="kmm-input" t-model="state.form.name"/>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Metric Key <span class="kmm-req">*</span></label>
+                            <input type="text" class="kmm-input" t-model="state.form.key" placeholder="e.g. revenue_total"/>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Display Label <span class="kmm-req">*</span></label>
+                            <input type="text" class="kmm-input" t-model="state.form.display_label"/>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Category <span class="kmm-req">*</span></label>
+                            <select class="kmm-input" t-att-value="state.form.category"
+                                    t-on-change="(ev) => this.setField('category', ev.target.value)">
+                                <t t-foreach="state.options.categories" t-as="c" t-key="c.value">
+                                    <option t-att-value="c.value"><t t-esc="c.label"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Source Object <span class="kmm-req">*</span></label>
+                            <div class="kmm-combo">
+                                <input type="text" class="kmm-input" t-att-value="state.objectSearch"
+                                       placeholder="Select an Option"
+                                       t-on-input="onObjectInput" t-on-focus="openObjectDropdown" t-on-blur="closeObjectDropdown"/>
+                                <t t-if="state.objectDropdownOpen and filteredModels.length">
+                                    <div class="kmm-combo-list">
+                                        <t t-foreach="filteredModels" t-as="m" t-key="m.id">
+                                            <div class="kmm-combo-item" t-on-click="() => this.selectModel(m)">
+                                                <span class="kmm-combo-name"><t t-esc="m.name"/></span>
+                                                <span class="kmm-combo-tech"><t t-esc="m.model"/></span>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Aggregation <span class="kmm-req">*</span></label>
+                            <select class="kmm-input" t-att-value="state.form.aggregation" t-on-change="onAggregationChange">
+                                <t t-foreach="state.options.aggregations" t-as="a" t-key="a.value">
+                                    <option t-att-value="a.value"><t t-esc="a.label"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Date Field <span class="kmm-req">*</span></label>
+                            <select class="kmm-input" t-att-value="state.form.date_field_id || ''"
+                                    t-on-change="(ev) => this.setField('date_field_id', ev.target.value)">
+                                <option value="">Select an Option</option>
+                                <t t-foreach="state.modelFields.date" t-as="f" t-key="f.id">
+                                    <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Aggregate Field <t t-if="state.form.aggregation === 'sum'"><span class="kmm-req">*</span></t></label>
+                            <select class="kmm-input" t-att-disabled="state.form.aggregation !== 'sum'"
+                                    t-att-value="state.form.aggregate_field_id || ''"
+                                    t-on-change="(ev) => this.setField('aggregate_field_id', ev.target.value)">
+                                <option value="">Select an Option</option>
+                                <t t-foreach="state.modelFields.numeric" t-as="f" t-key="f.id">
+                                    <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="kmm-field">
+                            <label>User/Owner Field</label>
+                            <select class="kmm-input" t-att-value="state.form.user_field_id || ''"
+                                    t-on-change="(ev) => this.setField('user_field_id', ev.target.value)">
+                                <option value="">Select an Option</option>
+                                <t t-foreach="state.modelFields.user" t-as="f" t-key="f.id">
+                                    <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Display Format <span class="kmm-req">*</span></label>
+                            <select class="kmm-input" t-att-value="state.form.display_format"
+                                    t-on-change="(ev) => this.setField('display_format', ev.target.value)">
+                                <t t-foreach="state.options.display_formats" t-as="d" t-key="d.value">
+                                    <option t-att-value="d.value"><t t-esc="d.label"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Icon</label>
+                            <input type="text" class="kmm-input" t-model="state.form.icon" placeholder="e.g. utility:money"/>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Card Color</label>
+                            <div class="kmm-color">
+                                <input type="color" class="kmm-color-swatch" t-att-value="state.form.card_color"
+                                       t-on-change="(ev) => this.setField('card_color', ev.target.value)"/>
+                                <input type="text" class="kmm-input" t-model="state.form.card_color" placeholder="#0176d3"/>
+                            </div>
+                        </div>
+                        <div class="kmm-field kmm-col-span">
+                            <label>Advanced: Raw Domain Filter (optional)</label>
+                            <textarea class="kmm-input kmm-textarea" t-model="state.form.raw_filter"
+                                      placeholder="[('state', '=', 'sale')]"/>
+                        </div>
+                        <div class="kmm-field kmm-col-span">
+                            <label>Description</label>
+                            <textarea class="kmm-input kmm-textarea" t-model="state.form.description"/>
+                        </div>
+                        <div class="kmm-field">
+                            <label>Sort Order</label>
+                            <input type="number" class="kmm-input" t-model="state.form.sort_order"/>
+                        </div>
+                        <div class="kmm-field kmm-checks">
+                            <label class="kmm-check">
+                                <input type="checkbox" t-att-checked="state.form.active"
+                                       t-on-change="(ev) => this.setField('active', ev.target.checked)"/>
+                                <span>Is Active</span>
+                            </label>
+                            <label class="kmm-check">
+                                <input type="checkbox" t-att-checked="state.form.allow_forecast"
+                                       t-on-change="(ev) => this.setField('allow_forecast', ev.target.checked)"/>
+                                <span>Allow Forecast</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="kmm-modal-footer">
+                    <button class="kmm-btn kmm-btn-outline" t-on-click="() => this.closeModal()">Cancel</button>
+                    <button class="kmm-btn kmm-btn-primary" t-att-disabled="!canSave or state.saving" t-on-click="() => this.save()">
+                        <i class="fa fa-save me-1"/><t t-esc="state.saving ? 'Saving…' : 'Save'"/>
+                    </button>
+                </div>
+            </div>
+        </t>
+    </div>
+</t>
+</templates>

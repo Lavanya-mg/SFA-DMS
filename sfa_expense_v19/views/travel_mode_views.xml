@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_sfa_travel_mode_list" model="ir.ui.view">
+        <field name="name">sfa.travel.mode.list</field>
+        <field name="model">sfa.travel.mode</field>
+        <field name="arch" type="xml">
+            <list string="Travel Modes" editable="top">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sfa_travel_mode_form" model="ir.ui.view">
+        <field name="name">sfa.travel.mode.form</field>
+        <field name="model">sfa.travel.mode</field>
+        <field name="arch" type="xml">
+            <form string="Travel Mode">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="sequence"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+<record id="action_sfa_travel_mode" model="ir.actions.act_window">
+        <field name="name">Travel Modes</field>
+        <field name="res_model">sfa.travel.mode</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

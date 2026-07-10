@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         WIZARD  –  Generate Executive Beat Report
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_executive_beat_report_wizard_form" model="ir.ui.view">
+        <field name="name">executive.beat.report.wizard.form</field>
+        <field name="model">executive.beat.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Executive Beat Report">
+                <sheet>
+                    <group>
+                        <group string="Date Range">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group string="Filter">
+                            <field name="employee_id"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   placeholder="All Executives"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_generate"
+                                type="object"
+                                string="Generate Report"
+                                class="btn-primary"
+                                icon="fa-refresh"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         REPORT SWITCH DETAIL  –  Inline List
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_executive_beat_report_switch_list" model="ir.ui.view">
+        <field name="name">executive.beat.report.switch.list</field>
+        <field name="model">executive.beat.report.switch</field>
+        <field name="arch" type="xml">
+            <list string="Beat Switch Details"
+                  create="0" delete="0" edit="0"
+                  default_order="sequence asc">
+                <field name="sequence" string="#" widget="handle"/>
+                <field name="switch_time" widget="datetime" string="Switch Time"/>
+                <field name="from_beat_number" string="From Beat No."/>
+                <field name="from_beat_name" string="From Beat Name"/>
+                <field name="to_beat_number" string="To Beat No."/>
+                <field name="to_beat_name" string="To Beat Name"/>
+                <field name="reason" string="Reason"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         REPORT  –  List View  (Manager sees all executives)
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_executive_beat_report_list" model="ir.ui.view">
+        <field name="name">executive.beat.report.list</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <list string="Executive Beat Report"
+                  create="0" edit="0" delete="0"
+                  default_order="date desc, employee_id asc"
+                  decoration-warning="switch_count &gt; 0"
+                  decoration-success="switch_count == 0 and assigned_beat_id != False"
+                  decoration-muted="not assigned_beat_id">
+                <field name="date" string="Date"/>
+                <field name="employee_id" string="Executive"/>
+                <field name="department_id" string="Department" optional="show"/>
+                <field name="check_in" widget="datetime" string="Check In"/>
+                <field name="check_out" widget="datetime" string="Check Out"/>
+                <field name="worked_hours" string="Worked (hrs)" widget="float_time" optional="show"/>
+                <field name="assigned_beat_number" string="Assigned Beat No."/>
+                <field name="assigned_beat_id" string="Assigned Beat Name"/>
+                <field name="current_beat_number" string="Current Beat No." optional="show"/>
+                <field name="current_beat_id" string="Current Beat Name" optional="show"/>
+                <field name="switch_count" string="No. of Switches"
+                       decoration-danger="switch_count &gt; 0"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         REPORT  –  Form View  (click a row → details + switch log)
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_executive_beat_report_form" model="ir.ui.view">
+        <field name="name">executive.beat.report.form</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <form string="Executive Beat Report" create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="oe_title mb-3">
+                        <h1>
+                            <field name="employee_id" readonly="1"/>
+                        </h1>
+                        <h3 class="text-muted">
+                            <field name="date" readonly="1"/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group string="Attendance">
+                            <field name="check_in" widget="datetime" readonly="1"/>
+                            <field name="check_out" widget="datetime" readonly="1"/>
+                            <field name="worked_hours" widget="float_time" readonly="1"/>
+                        </group>
+                        <group string="Beat Summary">
+                            <field name="assigned_beat_number" readonly="1"
+                                   string="Assigned Beat No."/>
+                            <field name="assigned_beat_id" readonly="1"
+                                   string="Assigned Beat Name"/>
+                            <field name="current_beat_number" readonly="1"
+                                   string="Current Beat No."/>
+                            <field name="current_beat_id" readonly="1"
+                                   string="Current Beat Name"/>
+                            <field name="switch_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <separator string="Beat Switch History"/>
+                    <field name="switch_ids" readonly="1">
+                        <list string="Switch History"
+                              create="0" delete="0" edit="0">
+                            <field name="sequence" string="#"/>
+                            <field name="switch_time" widget="datetime"
+                                   string="Switch Time"/>
+                            <field name="from_beat_number" string="From Beat No."/>
+                            <field name="from_beat_name" string="From Beat Name"/>
+                            <field name="to_beat_number" string="To Beat No."/>
+                            <field name="to_beat_name" string="To Beat Name"/>
+                            <field name="reason" string="Reason"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         REPORT  –  Search View  (filters + group‑by)
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_executive_beat_report_search" model="ir.ui.view">
+        <field name="name">executive.beat.report.search</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <search string="Search Executive Beat Report">
+                <field name="employee_id" string="Executive"/>
+                <field name="assigned_beat_id" string="Assigned Beat"/>
+                <field name="date" string="Date"/>
+                <filter string="Today" name="filter_today"
+                        domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="filter_this_week"
+                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')),
+                                 ('date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="filter_this_month"
+                        domain="[('date', '>=', context_today().strftime('%Y-%m-01')),
+                                 ('date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Has Switches" name="filter_has_switches"
+                        domain="[('switch_count', '>', 0)]"/>
+                <filter string="No Switches" name="filter_no_switches"
+                        domain="[('switch_count', '=', 0)]"/>
+                <separator/>
+                <group>
+                    <filter string="Executive" name="group_employee"
+                            context="{'group_by': 'employee_id'}"/>
+                    <filter string="Department" name="group_department"
+                            context="{'group_by': 'department_id'}"/>
+                    <filter string="Date" name="group_date"
+                            context="{'group_by': 'date:day'}"/>
+                    <filter string="Month" name="group_month"
+                            context="{'group_by': 'date:month'}"/>
+                    <filter string="Assigned Beat" name="group_beat"
+                            context="{'group_by': 'assigned_beat_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Beat Switch History  –  standalone list for managers
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_beat_switch_history_list_manager" model="ir.ui.view">
+        <field name="name">beat.switch.history.list.manager</field>
+        <field name="model">beat.switch.history</field>
+        <field name="arch" type="xml">
+            <list string="Beat Switch History"
+                  create="0" edit="0" delete="0"
+                  default_order="switch_time desc">
+                <field name="employee_id" string="Executive"/>
+                <field name="switch_date" string="Date"/>
+                <field name="switch_time" widget="datetime" string="Switch Time"/>
+                <field name="start_beat_id" string="From Beat"/>
+                <field name="switched_beat_id" string="To Beat"/>
+                <field name="reason" string="Reason"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_beat_switch_history_search_manager" model="ir.ui.view">
+        <field name="name">beat.switch.history.search.manager</field>
+        <field name="model">beat.switch.history</field>
+        <field name="arch" type="xml">
+            <search string="Search Switch History">
+                <field name="employee_id" string="Executive"/>
+                <field name="switch_date" string="Date"/>
+                <filter string="Today" name="filter_today"
+                        domain="[('switch_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group>
+                    <filter string="Executive" name="group_employee"
+                            context="{'group_by': 'employee_id'}"/>
+                    <filter string="Date" name="group_date"
+                            context="{'group_by': 'switch_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Actions
+    ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Wizard action (opens in dialog) -->
+    <record id="action_executive_beat_report_wizard" model="ir.actions.act_window">
+        <field name="name">Generate Executive Beat Report</field>
+        <field name="res_model">executive.beat.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_executive_beat_report_wizard_form"/>
+    </record>
+
+    <!-- Report list action -->
+    <record id="action_executive_beat_report_list" model="ir.actions.act_window">
+        <field name="name">Executive Beat Report</field>
+        <field name="res_model">executive.beat.report</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_executive_beat_report_search"/>
+        <field name="context">{'search_default_filter_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No report records yet.
+            </p>
+            <p>
+                Click <b>"Generate Report"</b> from the menu to create
+                executive beat reports for a date range.
+            </p>
+        </field>
+    </record>
+
+    <!-- Beat switch history action -->
+    <record id="action_beat_switch_history_manager" model="ir.actions.act_window">
+        <field name="name">Beat Switch History</field>
+        <field name="res_model">beat.switch.history</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_beat_switch_history_list_manager"/>
+        <field name="search_view_id" ref="view_beat_switch_history_search_manager"/>
+    </record>
+
+
+</odoo>

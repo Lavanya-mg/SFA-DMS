@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         VISIT MODEL – GRAPH & PIVOT DASHBOARD REPORTS
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- 1. Visit Status Distribution (Pie) -->
+    <record id="view_visit_graph_status" model="ir.ui.view">
+        <field name="name">visit.model.graph.status</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Visit Status Distribution" type="pie">
+                <field name="status" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 2. Visit Count &amp; Revenue by Employee (Bar) -->
+    <record id="view_visit_graph_employee" model="ir.ui.view">
+        <field name="name">visit.model.graph.employee</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Visit Revenue by Employee" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="total_order_amount" type="measure"/>
+                <field name="order_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 3. Visit Work Plan Distribution (Pie) -->
+    <record id="view_visit_graph_workplan" model="ir.ui.view">
+        <field name="name">visit.model.graph.workplan</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Visit Work Plan Distribution" type="pie">
+                <field name="today_work_plan" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 4. Monthly Visit Trend by Status (Line) -->
+    <record id="view_visit_graph_monthly_trend" model="ir.ui.view">
+        <field name="name">visit.model.graph.monthly.trend</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly Visit Trend" type="line">
+                <field name="actual_start_time" interval="month" type="row"/>
+                <field name="status" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 5. Visit Productivity Rate (Pie) -->
+    <record id="view_visit_graph_productivity" model="ir.ui.view">
+        <field name="name">visit.model.graph.productivity</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Visit Productivity Rate" type="pie">
+                <field name="is_productive" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 6. Visit Revenue by Employee and Status (Bar Stacked) -->
+    <record id="view_visit_graph_revenue_by_status" model="ir.ui.view">
+        <field name="name">visit.model.graph.revenue.by.status</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Revenue by Employee and Status" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="total_order_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 7. Travel Type Distribution (Pie) -->
+    <record id="view_visit_graph_travel_type" model="ir.ui.view">
+        <field name="name">visit.model.graph.travel.type</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Visit Travel Type Distribution" type="pie">
+                <field name="travel_type" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 8. Vehicle Usage Distribution (Pie) -->
+    <record id="view_visit_graph_vehicle" model="ir.ui.view">
+        <field name="name">visit.model.graph.vehicle</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Vehicle Usage Distribution" type="pie">
+                <field name="vehicle_used" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 9. Visit Duration by Employee (Bar) -->
+    <record id="view_visit_graph_duration" model="ir.ui.view">
+        <field name="name">visit.model.graph.duration</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Average Visit Duration by Employee" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="duration" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 10. Visit Purpose Distribution (Bar) -->
+    <record id="view_visit_graph_visit_for" model="ir.ui.view">
+        <field name="name">visit.model.graph.visit.for</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <graph string="Visit Purpose Distribution" type="bar">
+                <field name="visit_for" type="row"/>
+                <field name="employee_id" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 11. Visit Analytics Pivot – Employee x Status -->
+    <record id="view_visit_pivot_employee_status" model="ir.ui.view">
+        <field name="name">visit.model.pivot.employee.status</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <pivot string="Visit Analytics – Employee × Status">
+                <field name="employee_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="total_order_amount" type="measure"/>
+                <field name="duration" type="measure"/>
+                <field name="order_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- 12. Visit Analytics Pivot – Employee x Work Plan -->
+    <record id="view_visit_pivot_workplan" model="ir.ui.view">
+        <field name="name">visit.model.pivot.workplan</field>
+        <field name="model">visit.model</field>
+        <field name="arch" type="xml">
+            <pivot string="Visit Analytics – Employee × Work Plan">
+                <field name="employee_id" type="row"/>
+                <field name="today_work_plan" type="col"/>
+                <field name="total_order_amount" type="measure"/>
+                <field name="duration" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Visit Analytics Actions -->
+    <record id="action_visit_analytics" model="ir.actions.act_window">
+        <field name="name">Visit Analytics</field>
+        <field name="res_model">visit.model</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+        <field name="view_id" ref="view_visit_graph_employee"/>
+        <field name="search_view_id" ref="view_visit_model_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No visits found. Create visits to see analytics.
+            </p>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         HR ATTENDANCE – GRAPH, PIVOT &amp; COHORT DASHBOARD REPORTS
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- 13. Worked Hours by Employee (Bar) -->
+    <record id="view_hr_attendance_graph_employee_hours" model="ir.ui.view">
+        <field name="name">hr.attendance.graph.employee.hours</field>
+        <field name="model">hr.attendance</field>
+        <field name="arch" type="xml">
+            <graph string="Worked Hours by Employee" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 14. Monthly Attendance Hours Trend (Line) -->
+    <record id="view_hr_attendance_graph_monthly_trend" model="ir.ui.view">
+        <field name="name">hr.attendance.graph.monthly.trend</field>
+        <field name="model">hr.attendance</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly Attendance Hours Trend" type="line">
+                <field name="check_in" interval="month" type="row"/>
+                <field name="employee_id" type="col"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 15. Weekly Attendance Distribution (Bar) -->
+    <record id="view_hr_attendance_graph_weekly" model="ir.ui.view">
+        <field name="name">hr.attendance.graph.weekly</field>
+        <field name="model">hr.attendance</field>
+        <field name="arch" type="xml">
+            <graph string="Weekly Attendance Distribution" type="bar">
+                <field name="check_in" interval="week" type="row"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 16. Attendance Pivot – Employee x Month -->
+    <record id="view_hr_attendance_pivot_employee_month" model="ir.ui.view">
+        <field name="name">hr.attendance.pivot.employee.month</field>
+        <field name="model">hr.attendance</field>
+        <field name="arch" type="xml">
+            <pivot string="Attendance Analysis – Employee × Month">
+                <field name="employee_id" type="row"/>
+                <field name="check_in" interval="month" type="col"/>
+                <field name="worked_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- 17. Attendance Pivot – Check-In Date x Worked Hours -->
+    <record id="view_hr_attendance_pivot_checkin_hours" model="ir.ui.view">
+        <field name="name">hr.attendance.pivot.checkin.hours</field>
+        <field name="model">hr.attendance</field>
+        <field name="arch" type="xml">
+            <pivot string="Attendance Duration Analysis">
+                <field name="check_in" interval="day" type="row"/>
+                <field name="employee_id" type="col"/>
+                <field name="worked_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Attendance Analytics Action -->
+    <record id="action_attendance_analytics" model="ir.actions.act_window">
+        <field name="name">Attendance Analytics</field>
+        <field name="res_model">hr.attendance</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_hr_attendance_graph_employee_hours"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No attendance records found.
+            </p>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         EXECUTIVE BEAT REPORT – GRAPH &amp; PIVOT DASHBOARD REPORTS
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- 18. Beat Switches by Executive (Bar) -->
+    <record id="view_exec_beat_graph_switches_by_employee" model="ir.ui.view">
+        <field name="name">executive.beat.report.graph.switches.employee</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Switches by Executive" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="switch_count" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 19. Worked Hours by Executive (Bar) -->
+    <record id="view_exec_beat_graph_hours_by_employee" model="ir.ui.view">
+        <field name="name">executive.beat.report.graph.hours.employee</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <graph string="Worked Hours by Executive" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 20. Monthly Beat Activity Trend (Line) -->
+    <record id="view_exec_beat_graph_monthly_trend" model="ir.ui.view">
+        <field name="name">executive.beat.report.graph.monthly.trend</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly Beat Activity Trend" type="line">
+                <field name="date" interval="month" type="row"/>
+                <field name="switch_count" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 21. Department Beat Activity Comparison (Bar) -->
+    <record id="view_exec_beat_graph_by_department" model="ir.ui.view">
+        <field name="name">executive.beat.report.graph.department</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Activity by Department" type="bar">
+                <field name="department_id" type="row"/>
+                <field name="switch_count" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 22. Beat Switches by Assigned Beat (Bar) -->
+    <record id="view_exec_beat_graph_switches_by_beat" model="ir.ui.view">
+        <field name="name">executive.beat.report.graph.switches.beat</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <graph string="Beat Switches by Assigned Beat" type="bar">
+                <field name="assigned_beat_id" type="row"/>
+                <field name="switch_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 23. Executive Beat Report Pivot – Employee x Month -->
+    <record id="view_exec_beat_pivot_employee_month" model="ir.ui.view">
+        <field name="name">executive.beat.report.pivot.employee.month</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Executive Beat Analysis – Employee × Month">
+                <field name="employee_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="switch_count" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- 24. Executive Beat Report Pivot – Department x Month -->
+    <record id="view_exec_beat_pivot_dept_month" model="ir.ui.view">
+        <field name="name">executive.beat.report.pivot.dept.month</field>
+        <field name="model">executive.beat.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Department Beat Analysis – Dept × Month">
+                <field name="department_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="switch_count" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Executive Beat Report Analytics Action -->
+    <record id="action_exec_beat_analytics" model="ir.actions.act_window">
+        <field name="name">Beat Activity Analytics</field>
+        <field name="res_model">executive.beat.report</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+        <field name="view_id" ref="view_exec_beat_graph_switches_by_employee"/>
+        <field name="search_view_id" ref="view_executive_beat_report_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No beat report data. Generate a report first.
+            </p>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PJP MODEL – GRAPH &amp; PIVOT DASHBOARD REPORTS
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- 25. PJP by Status (Pie) -->
+    <record id="view_pjp_graph_by_state" model="ir.ui.view">
+        <field name="name">pjp.model.graph.state</field>
+        <field name="model">pjp.model</field>
+        <field name="arch" type="xml">
+            <graph string="PJP by Status" type="pie">
+                <field name="state" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 26. PJP Count by Employee and Status (Bar) -->
+    <record id="view_pjp_graph_by_employee" model="ir.ui.view">
+        <field name="name">pjp.model.graph.employee</field>
+        <field name="model">pjp.model</field>
+        <field name="arch" type="xml">
+            <graph string="PJP by Employee and Status" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="state" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 27. PJP Monthly Trend (Line) -->
+    <record id="view_pjp_graph_monthly_trend" model="ir.ui.view">
+        <field name="name">pjp.model.graph.monthly</field>
+        <field name="model">pjp.model</field>
+        <field name="arch" type="xml">
+            <graph string="PJP Monthly Creation Trend" type="line">
+                <field name="start_date" interval="month" type="row"/>
+                <field name="state" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 28. PJP Pivot – Employee x State -->
+    <record id="view_pjp_pivot_employee_state" model="ir.ui.view">
+        <field name="name">pjp.model.pivot.employee.state</field>
+        <field name="model">pjp.model</field>
+        <field name="arch" type="xml">
+            <pivot string="PJP Analysis – Employee × Status">
+                <field name="employee_id" type="row"/>
+                <field name="state" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- PJP Analytics Action -->
+    <record id="action_pjp_analytics" model="ir.actions.act_window">
+        <field name="name">PJP Analytics</field>
+        <field name="res_model">pjp.model</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+        <field name="view_id" ref="view_pjp_graph_by_employee"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No PJP records found.
+            </p>
+        </field>
+    </record>
+
+    <!-- Analytics menu items have been moved to Employee 360 navbar.
+         See views/main_menu.xml (menu_emp360_analytics_dashboard).
+         The standalone Beat Management "Analytics" submenu is removed. -->
+
+</odoo>

@@ -1,0 +1,84 @@
+/* ── KPI Metric Manager (Salesforce-style OWL UI) ──────────────────────────── */
+.kmm-wrap { padding: 20px 28px; background: #f3f4f7; height: 100%; overflow-y: auto; font-size: 13px; color: #1a1a2e; }
+
+/* Header */
+.kmm-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+.kmm-title { display: flex; align-items: center; font-size: 22px; font-weight: 700; color: #16192c; }
+.kmm-title .fa-tachometer { color: #e5227a; }
+.kmm-sub { font-size: 12px; color: #8a90a0; margin-top: 3px; }
+
+/* Buttons */
+.kmm-btn { display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.kmm-btn:disabled { opacity: .5; cursor: not-allowed; }
+.kmm-btn-primary { background: #4b2fd6; color: #fff; }
+.kmm-btn-primary:hover:not(:disabled) { background: #3d24b8; }
+.kmm-btn-outline { background: #fff; color: #4b2fd6; border: 1px solid #d4d0e8; }
+.kmm-btn-outline:hover { background: #f5f3ff; }
+
+/* Table */
+.kmm-card { background: #fff; border: 1px solid #eceef3; border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.kmm-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+.kmm-table thead th { text-align: left; padding: 13px 16px; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #8a90a0; background: #fafbfc; border-bottom: 1px solid #eceef3; }
+.kmm-table tbody td { padding: 13px 16px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.kmm-table tbody tr:last-child td { border-bottom: none; }
+.kmm-table tbody tr:hover { background: #fafbff; }
+.kmm-center { text-align: center; }
+.kmm-empty { text-align: center !important; color: #9aa0ac; padding: 34px 18px !important; }
+.kmm-muted { color: #c4c8d1; }
+
+.kmm-dotcol { width: 34px; text-align: center; }
+.kmm-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; cursor: pointer; }
+.kmm-dot-on { background: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.15); }
+.kmm-dot-off { background: #cbd2dc; }
+
+.kmm-name { display: inline-flex; align-items: center; gap: 8px; color: #16192c; font-weight: 600; cursor: pointer; text-decoration: none; }
+.kmm-name:hover { color: #4b2fd6; }
+.kmm-name-dot { width: 18px; height: 18px; border-radius: 5px; display: inline-block; flex-shrink: 0; }
+.kmm-key { background: #f1f5f9; color: #475569; border-radius: 5px; padding: 2px 7px; font-size: 12px; }
+.kmm-obj { background: #eef2ff; color: #4338ca; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.kmm-fc { color: #16a34a; }
+
+/* Category chips */
+.kmm-chip { border-radius: 20px; padding: 3px 11px; font-size: 11px; font-weight: 600; }
+.kmm-chip-sales { background: #ede9fe; color: #6d28d9; }
+.kmm-chip-visits { background: #dbeafe; color: #1d4ed8; }
+.kmm-chip-outlets { background: #fef3c7; color: #b45309; }
+.kmm-chip-collections { background: #dcfce7; color: #15803d; }
+.kmm-chip-other { background: #f1f5f9; color: #475569; }
+
+/* Icons */
+.kmm-icon { border: none; background: #eef2ff; color: #4b2fd6; border-radius: 50%; width: 30px; height: 30px; margin: 0 3px; cursor: pointer; font-size: 12px; }
+.kmm-icon:hover { background: #ddd6fe; }
+.kmm-icon-danger { background: #fef2f2; color: #dc2626; }
+.kmm-icon-danger:hover { background: #fee2e2; }
+
+/* Modal */
+.kmm-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 1000; }
+.kmm-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border-radius: 14px; z-index: 1001; width: 860px; max-width: 94vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(16,24,40,.28); }
+.kmm-modal-title { text-align: center; font-size: 19px; font-weight: 700; color: #16192c; padding: 20px; border-bottom: 1px solid #f0f1f4; }
+.kmm-modal-body { padding: 18px 22px; overflow: auto; }
+.kmm-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px; border-top: 1px solid #f0f1f4; }
+
+/* Form */
+.kmm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.kmm-col-span { grid-column: 1 / -1; }
+.kmm-field { display: flex; flex-direction: column; }
+.kmm-field label { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 5px; }
+.kmm-req { color: #dc2626; }
+.kmm-input { border: 1px solid #d7dae2; border-radius: 8px; padding: 8px 11px; font-size: 13px; color: #1a1a2e; background: #fff; width: 100%; }
+.kmm-input:focus { outline: none; border-color: #4b2fd6; box-shadow: 0 0 0 3px rgba(75,47,214,.12); }
+.kmm-input:disabled { background: #f3f4f6; color: #9aa0ac; }
+.kmm-textarea { min-height: 64px; resize: vertical; font-family: inherit; }
+.kmm-color { display: flex; gap: 8px; align-items: center; }
+.kmm-color-swatch { width: 42px; height: 38px; border: 1px solid #d7dae2; border-radius: 8px; padding: 2px; background: #fff; cursor: pointer; flex-shrink: 0; }
+.kmm-checks { flex-direction: row; gap: 22px; align-items: center; padding-top: 22px; }
+.kmm-check { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; margin: 0; }
+.kmm-check input { width: 16px; height: 16px; cursor: pointer; }
+
+/* Source-object combobox */
+.kmm-combo { position: relative; }
+.kmm-combo-list { position: absolute; z-index: 30; top: 100%; left: 0; right: 0; margin-top: 4px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; max-height: 240px; overflow-y: auto; box-shadow: 0 8px 24px rgba(16,24,40,.12); }
+.kmm-combo-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
+.kmm-combo-item:hover { background: #f5f3ff; }
+.kmm-combo-name { font-weight: 600; color: #1a1a2e; }
+.kmm-combo-tech { font-size: 11px; color: #9aa0ac; }

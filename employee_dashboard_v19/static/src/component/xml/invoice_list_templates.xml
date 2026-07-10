@@ -1,0 +1,94 @@
+
+<templates xml:space="preserve">
+
+    <t t-name="employee_dashboard_v19.InvoiceList">
+
+        <div style="flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
+
+            <!-- Themed header -->
+            <div class="emp360-page-header" style="flex-shrink:0;">
+                <div class="emp360-ph-top">
+                    <div>
+                        <h3 class="emp360-ph-name"><i class="fa fa-file-text me-2"></i> Invoices</h3>
+                        <p class="emp360-ph-role">Account invoices and billing records</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mb-3 align-items-end" style="flex-shrink: 0; align-items: flex-end; padding: 12px 24px 0;">
+                <div style="flex: 1 1 150px;">
+                    <label>Customer</label>
+                    <input type="text"
+                           t-model="state.invoiceFilter.customer"
+                           style="height: 38px;"
+                           class="form-control"
+                           placeholder="Search Customer..."
+                           t-on-input="applyInvoiceFilters" />
+                </div>
+
+                <div style="flex: 1 1 150px;">
+                    <label>From Date</label>
+                    <input type="date"
+                           t-model="state.invoiceFilter.from_date"
+                           style="height: 38px;"
+                           class="form-control"
+                           t-on-change="applyInvoiceFilters" />
+                </div>
+
+                <div style="flex: 1 1 150px;">
+                    <label>End Date</label>
+                    <input type="date"
+                           t-model="state.invoiceFilter.to_date"
+                           style="height: 38px;"
+                           class="form-control"
+                           t-on-change="applyInvoiceFilters" />
+                </div>
+
+                <div style="flex: 1 1 150px;">
+                    <label>Status</label>
+                    <select
+                            t-model="state.invoiceFilter.status"
+                            style="height: 38px;"
+                            class="form-control"
+                            t-on-change="applyInvoiceFilters">
+                        <option value="">All</option>
+                        <option value="draft">Draft</option>
+                        <option value="posted">Posted</option>
+                        <option value="cancel">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto;">
+                <table class="table table-responsive table-sm" id="invoiceTable">
+                    <thead style="background-color: #007bff; color: #fff; position: sticky; top: 0; z-index: 10;">
+                        <tr><th>Invoice ID</th><th>Outlet</th><th>Date</th><th>Status</th><th>Amount</th><th>Items</th></tr>
+                    </thead>
+                    <t t-if="state.invoices">
+                        <tbody t-foreach="state.invoices" t-as="l" t-key="l.id">
+                            <tr>
+                                <td><t t-esc="l.name"/></td>
+                                <td><t t-esc="l.partner_id and l.partner_id[1]"/></td>
+                                <td><t t-esc="l.invoice_date"/></td>
+                                <td><t t-esc="l.state"/></td>
+                                <td><t t-esc="l.amount_total"/></td>
+                                <td><t t-esc="l.item_count"/></td>
+                            </tr>
+                        </tbody>
+                    </t>
+                    <t t-else="">
+                        <tbody>
+                            <tr>
+                                <td class="text-center" colspan="6">No active Invoices</td>
+                            </tr>
+                        </tbody>
+                    </t>
+                </table>
+            </div>
+
+        </div>
+
+    </t>
+
+</templates>
+

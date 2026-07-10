@@ -1,0 +1,1855 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- =========================================================
+         EMPLOYEE 360 — SINGLE-PAGE SIDEBAR SHELL
+         ========================================================= -->
+    <t t-name="employee_dashboard_v19.EmployeeComponent">
+        <div class="emp360-root">
+
+            <!-- ── Sidebar ──────────────────────────────────── -->
+            <div t-attf-class="emp360-sidebar {{!state.isManager ? 'emp360-sidebar-user' : ''}}">
+
+                <!-- Brand -->
+                <div t-attf-class="emp360-sidebar-brand {{!state.isManager ? 'emp360-sidebar-brand-user' : ''}}">
+                    <div class="emp360-brand-icon">
+                        <t t-if="state.isManager">
+                            <i class="fa fa-user-circle"></i>
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-briefcase"></i>
+                        </t>
+                    </div>
+                    <div class="emp360-brand-text">
+                        <t t-if="state.isManager">
+                            <span class="emp360-brand-title">Employee 360</span>
+                        </t>
+                        <t t-else="">
+                            <span class="emp360-brand-title emp360-brand-title-user">My Workday</span>
+                            <span class="emp360-brand-sub emp360-brand-sub-user">
+                                <i t-attf-class="fa {{greetingIcon()}} me-1"></i>
+                                <t t-esc="greeting()"/>
+                            </span>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Employee selector (managers) / User Profile Card (employees) -->
+                <div class="emp360-emp-select-wrap">
+                    <t t-if="state.isManager">
+                        <div class="emp360-emp-label">Select Employee</div>
+                        <select class="emp360-emp-select" t-on-change="selectEmployee">
+                            <option value="">-- Select --</option>
+                            <t t-foreach="state.employees" t-as="emp" t-key="emp.id">
+                                <option t-att-value="emp.id"
+                                        t-att-selected="emp.id === state.selectedEmployee">
+                                    <t t-esc="emp.name"/>
+                                </option>
+                            </t>
+                        </select>
+                    </t>
+                    <t t-else="">
+                        <!-- ── Premium user profile card ── -->
+                        <div class="emp360-user-profile-card">
+                            <!-- Greeting line -->
+                            <div class="emp360-user-greeting">
+                                <i t-attf-class="fa {{greetingIcon()}}"></i>
+                                <span><t t-esc="greeting()"/>, <strong><t t-esc="userFirstName()"/></strong>!</span>
+                            </div>
+                            <!-- Avatar + info row -->
+                            <div class="emp360-user-profile-row">
+                                <div class="emp360-user-avatar-lg">
+                                    <t t-if="state.details">
+                                        <t t-esc="state.details.name ? state.details.name[0].toUpperCase() : 'E'"/>
+                                    </t>
+                                    <t t-else="">E</t>
+                                    <!-- Online indicator -->
+                                    <span class="emp360-avatar-online-dot"></span>
+                                </div>
+                                <div class="emp360-user-profile-info">
+                                    <div class="emp360-user-profile-name">
+                                        <t t-if="state.details">
+                                            <t t-esc="state.details.name"/>
+                                        </t>
+                                        <t t-else="">Loading…</t>
+                                    </div>
+                                    <div class="emp360-user-profile-role">
+                                        <i class="fa fa-briefcase me-1"></i>Sales Executive
+                                    </div>
+                                    <div class="emp360-user-status-badge">
+                                        <span class="emp360-status-dot-online"></span> Active Today
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+
+                
+
+                <!-- Navigation -->
+                <nav class="emp360-nav">
+
+                    <!-- ── Full navigation for all users ───────── -->
+                    <div class="emp360-nav-section">
+                        <span class="emp360-nav-section-label">
+                            <t t-if="state.isManager">Main</t>
+                            <t t-else="">My Work</t>
+                        </span>
+                    </div>
+
+                    <!-- Dashboard — managers only -->
+                    <t t-if="state.isManager">
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'overview' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('overview')">
+                            <div class="emp360-nav-icon"><i class="fa fa-home"></i></div>
+                            <span class="emp360-nav-label">Dashboard</span>
+                        </div>
+                    </t>
+
+                    <!-- Today's Plan — always visible for all users -->
+                     
+                    <div t-att-class="'emp360-nav-item emp360-nav-today' + (state.activeTab === 'todayvisit' ? ' active' : '')"
+                         t-on-click="() => this.changeTab('todayvisit')">
+                        <div class="emp360-nav-icon"><i class="fa fa-calendar-check-o"></i></div>
+                        <div class="emp360-nav-label-wrap">
+                            <span class="emp360-nav-label">Today's Plan</span>
+                            <t t-if="!state.isManager">
+                                <span class="emp360-nav-sublabel">Start · Visit · Complete</span>
+                            </t>
+                        </div>
+                    </div>
+
+                    <t t-if="state.isManager">
+                      
+                        
+                        
+                    </t>
+
+                    <!-- All remaining nav items — managers only -->
+                    <t t-if="state.isManager">
+
+                        <!-- ═══ PRODUCT MANAGEMENT (collapsible) ═══ -->
+                        <div class="pm-section-header" t-on-click="() => this.toggleProductMgmt()">
+                            <span class="pm-section-title">
+                                <i class="fa fa-cube"/>
+                                Product Management
+                            </span>
+                            <i t-attf-class="fa fa-chevron-right pm-chevron {{ state.productMgmtExpanded ? 'open' : '' }}"/>
+                        </div>
+
+                        <div class="pm-sub-items" t-if="state.productMgmtExpanded">
+
+                            <div class="pm-sub-item" t-on-click="() => this.openProductHub()">
+                                <i class="fa fa-th-large"/><span>Product Hub</span>
+                            </div>
+                            <!-- <div class="pm-sub-item" t-on-click="() => this.openOdooAction('product.batch','Batch Master')">
+                                <i class="fa fa-database"/><span>Batch Master</span>
+                            </div>
+                            <div class="pm-sub-item" t-on-click="() => this.openOdooAction('priority.sell.config','Priority Sell Config')">
+                                <i class="fa fa-sort-amount-desc"/><span>Priority Sell Config</span>
+                            </div>
+                            <div class="pm-sub-item" t-on-click="() => this.openOdooAction('price.change.log','Price Change Logs')">
+                                <i class="fa fa-history"/><span>Price Change Logs</span>
+                            </div>
+
+                            <div class="pm-sub-divider">Masters</div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('product.category','Product Categories')">
+                                <i class="fa fa-tags"/><span>Product Categories</span>
+                            </div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('uom.uom','Units of Measure')">
+                                <i class="fa fa-balance-scale"/><span>Units of Measure</span>
+                            </div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('uom.conversion.rule','UOM Conversions')">
+                                <i class="fa fa-refresh"/><span>UOM Conversions</span>
+                            </div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('price.book','Price Book')">
+                                <i class="fa fa-book"/><span>Price Book</span>
+                            </div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('product.template','Products')">
+                                <i class="fa fa-cube"/><span>Products</span>
+                            </div>
+
+                            <div class="pm-sub-divider">Configuration</div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('price.book.priority','Pricebook Priority')">
+                                <i class="fa fa-cog"/><span>Pricebook Priority</span>
+                            </div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('employee.category.mapping','Employee Category Mapping')">
+                                <i class="fa fa-user-circle"/><span>Employee Categories</span>
+                            </div>
+                            <div class="pm-sub-item pm-sub-deep" t-on-click="() => this.openOdooAction('customer.category.mapping','Customer Category Mapping')">
+                                <i class="fa fa-link"/><span>Customer Categories</span>
+                            </div> -->
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-on-click="() => this.openOdooAction('fmcg.account', 'Accounts')">
+                            <div class="emp360-nav-icon"><i class="fa fa-building"></i></div>
+                            <span class="emp360-nav-label">Accounts</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'visits' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('visits')">
+                            <div class="emp360-nav-icon"><i class="fa fa-history"></i></div>
+                            <span class="emp360-nav-label">Visit History</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'schemes' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('schemes')">
+                            <div class="emp360-nav-icon"><i class="fa fa-tags"></i></div>
+                            <span class="emp360-nav-label">Schemes</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'orders' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('orders')">
+                            <div class="emp360-nav-icon"><i class="fa fa-shopping-cart"></i></div>
+                            <span class="emp360-nav-label">Orders</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'retailer' ? 'active' : ''"
+                             t-on-click="() => this.changeTabAndLoad('retailer')">
+                            <div class="emp360-nav-icon"><i class="fa fa-list"></i></div>
+                            <span class="emp360-nav-label">Retailer Orders</span>
+                        </div>
+                       
+                        <div class="emp360-nav-section">
+                            <span class="emp360-nav-section-label">Planning</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'pjp' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('pjp')">
+                            <div class="emp360-nav-icon"><i class="fa fa-map"></i></div>
+                            <span class="emp360-nav-label">PJP</span>
+                        </div>
+
+                        <div class="emp360-nav-section">
+                            <span class="emp360-nav-section-label">HR &amp; Finance</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'attendance' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('attendance')">
+                            <div class="emp360-nav-icon"><i class="fa fa-clock-o"></i></div>
+                            <span class="emp360-nav-label">Attendance</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'expenses' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('expenses')">
+                            <div class="emp360-nav-icon"><i class="fa fa-money"></i></div>
+                            <span class="emp360-nav-label">Expenses</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-on-click="openExpenseManager">
+                            <div class="emp360-nav-icon"><i class="fa fa-file-text-o"></i></div>
+                            <span class="emp360-nav-label">Expense Mgr</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'invoices' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('invoices')">
+                            <div class="emp360-nav-icon"><i class="fa fa-file-text"></i></div>
+                            <span class="emp360-nav-label">Invoices</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'incentives' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('incentives')">
+                            <div class="emp360-nav-icon"><i class="fa fa-trophy"></i></div>
+                            <span class="emp360-nav-label">Incentives</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'targetCriteria' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('targetCriteria')">
+                            <div class="emp360-nav-icon"><i class="fa fa-bullseye"></i></div>
+                            <span class="emp360-nav-label">Target Criteria Manager</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'targetAllocation' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('targetAllocation')">
+                            <div class="emp360-nav-icon"><i class="fa fa-tasks"></i></div>
+                            <span class="emp360-nav-label">Target Allocation</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'kpiMetric' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('kpiMetric')">
+                            <div class="emp360-nav-icon"><i class="fa fa-tachometer"></i></div>
+                            <span class="emp360-nav-label">KPI Metric Manager</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'kpiDashboard' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('kpiDashboard')">
+                            <div class="emp360-nav-icon"><i class="fa fa-line-chart"></i></div>
+                            <span class="emp360-nav-label">KPI Dashboard</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'slabManager' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('slabManager')">
+                            <div class="emp360-nav-icon"><i class="fa fa-list"></i></div>
+                            <span class="emp360-nav-label">Slab Manager</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'leaves' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('leaves')">
+                            <div class="emp360-nav-icon"><i class="fa fa-calendar-check-o"></i></div>
+                            <span class="emp360-nav-label">Leave Mgmt</span>
+                        </div>
+
+                        <div class="emp360-nav-item"
+                             t-att-class="state.activeTab === 'summary' ? 'active' : ''"
+                             t-on-click="openAnalytics">
+                            <div class="emp360-nav-icon"><i class="fa fa-bar-chart"></i></div>
+                            <span class="emp360-nav-label">Analytics Dashboard</span>
+                        </div>
+
+                    </t>
+                    <!-- /managers-only nav -->
+
+                    <!-- User info strip (only for non-managers) -->
+
+                    
+                    <t t-if="!state.isManager and state.details">
+                        <div class="emp360-user-info-strip">
+                            <t t-if="state.details.work_email">
+                                <div class="emp360-user-strip-row">
+                                    <i class="fa fa-envelope-o"></i>
+                                    <span><t t-esc="state.details.work_email"/></span>
+                                </div>
+                            </t>
+                            <t t-if="state.details.work_phone">
+                                <div class="emp360-user-strip-row">
+                                    <i class="fa fa-phone"></i>
+                                    <span><t t-esc="state.details.work_phone"/></span>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Motivational quick-stats strip for users -->
+                        <div class="emp360-user-quickstats">
+                            <div class="emp360-user-qs-item">
+                                <div class="emp360-user-qs-num" style="color:#06d6a0;">
+                                    <t t-esc="state.pjpStats.completed || 0"/>
+                                </div>
+                                <div class="emp360-user-qs-lbl">Done</div>
+                            </div>
+                            <div class="emp360-user-qs-divider"></div>
+                            <div class="emp360-user-qs-item">
+                                <div class="emp360-user-qs-num" style="color:#4cc9f0;">
+                                    <t t-esc="state.pjpStats.planned || 0"/>
+                                </div>
+                                <div class="emp360-user-qs-lbl">Planned</div>
+                            </div>
+                            <div class="emp360-user-qs-divider"></div>
+                            <div class="emp360-user-qs-item">
+                                <div class="emp360-user-qs-num" style="color:#ffd166;">
+                                    <t t-esc="state.overviewKpi.total_orders || 0"/>
+                                </div>
+                                <div class="emp360-user-qs-lbl">Orders</div>
+                            </div>
+                        </div>
+                    </t>
+
+                </nav>
+
+                <!-- Sidebar footer -->
+                <div class="emp360-sidebar-footer">
+                    <div class="emp360-nav-item"
+                         style="margin:0;padding:8px 6px;"
+                         t-on-click="refreshData">
+                        <div class="emp360-nav-icon"><i class="fa fa-refresh"></i></div>
+                        <span class="emp360-nav-label">Refresh</span>
+                    </div>
+                </div>
+            </div>
+            <!-- /Sidebar -->
+
+            <!-- ── Main area ──────────────────────────────── -->
+            <div class="emp360-main">
+
+                <!-- Top bar -->
+                <div t-attf-class="emp360-topbar {{!state.isManager ? 'emp360-topbar-user' : ''}}">
+                    <h5 class="emp360-topbar-title">
+                        <div class="emp360-topbar-icon"
+                             t-attf-style="background: {{topbarGradient()}}">
+                            <i t-attf-class="fa {{topbarIcon()}}"></i>
+                        </div>
+                        <t t-esc="topbarTitle()"/>
+                        <!-- User role badge shown next to title -->
+                        <t t-if="!state.isManager">
+                            <span class="emp360-topbar-user-badge">
+                                <i class="fa fa-user me-1"></i>Field View
+                            </span>
+                        </t>
+                    </h5>
+                    <div class="emp360-topbar-right">
+                        <!-- Check-in chip -->
+                        <t t-if="state.checkinTime">
+                            <div class="emp360-checkin-chip">
+                                <span class="emp360-pulse"></span>
+                                CheckIn: <t t-esc="state.checkinTime"/>
+                            </div>
+                        </t>
+                        <!-- Today's date -->
+                        <div class="emp360-topbar-date">
+                            <i class="fa fa-calendar me-1"></i>
+                            <t t-esc="state.todayLabel"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="emp360-content">
+
+                    <!-- ═══════════════════════════════════════
+                         OVERVIEW / ANALYTICS BOARD
+                         ═══════════════════════════════════════ -->
+
+                         <t t-if="state.activeTab === 'categories'">
+                            <div class="emp360-section" style="padding: 24px; height: 100%; overflow: auto;">
+                                <div class="emp360-card">
+                                    <div class="emp360-card-header" style="padding: 16px 20px; display: flex; justify-content: space-between;">
+                                        <h5>Product Categories</h5>
+                                        <button class="btn btn-primary" t-on-click="() => this.openCategoryForm(false)" style="background:#4361ee; color:#fff; border:none; padding:6px 16px; border-radius:6px;">
+                                            <i class="fa fa-plus me-1"></i> Create
+                                        </button>
+                                    </div>
+                                    <table class="table emp360-table table-hover">
+                                        <thead><tr><th>Category Name</th></tr></thead>
+                                        <tbody>
+                                            <tr t-foreach="state.categories" t-as="cat" t-key="cat.id" style="cursor: pointer;" t-on-click="() => this.openCategoryForm(cat.id)">
+                                                <td><t t-esc="cat.complete_name"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- ═══════════════════════════ PRICE BOOK ═══════════════════════════ -->
+                        <t t-if="state.activeTab === 'price_book'">
+                            <div class="emp360-section" style="padding: 24px; height: 100%; overflow: auto;">
+                                <div class="emp360-card">
+                                    <div class="emp360-card-header" style="padding: 16px 20px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                                        <h5 style="margin: 0; font-weight: 700;"><i class="fa fa-book me-2"></i>Price Book</h5>
+                                        <button class="btn btn-primary"
+                                            t-on-click="() => this.openPriceBookForm(false)"
+                                            style="background-color: #4361ee; border: none; padding: 6px 16px; border-radius: 6px; color: #fff;">
+                                            <i class="fa fa-plus me-1"></i> Add Entry
+                                        </button>
+                                    </div>
+                                    <table class="table emp360-table" style="width: 100%; margin-bottom: 0;">
+                                        <thead style="background: #f8fafc;">
+                                            <tr>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Name</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Type</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Product</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Customer</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase; text-align: right;">Unit Price</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Valid From</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Valid To</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-if="state.price_book.length === 0">
+                                                <td colspan="7" style="text-align: center; padding: 32px; color: #9ca3af;">
+                                                    No price book entries yet. Click "Add Entry" to create one.
+                                                </td>
+                                            </tr>
+                                            <tr t-foreach="state.price_book" t-as="pb" t-key="pb.id"
+                                                style="border-bottom: 1px solid #f3f4f6; cursor: pointer;"
+                                                t-on-click="() => this.openPriceBookForm(pb.id)">
+                                                <td style="padding: 14px 20px; font-weight: 500;"><t t-esc="pb.name"/></td>
+                                                <td style="padding: 14px 20px;">
+                                                    <span class="emp360-badge emp360-badge-secondary" style="font-size: 10px; padding: 2px 8px; text-transform: capitalize;">
+                                                        <t t-esc="pb.price_type"/>
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 14px 20px;"><t t-esc="pb.product_id ? pb.product_id[1] : '—'"/></td>
+                                                <td style="padding: 14px 20px;"><t t-esc="pb.customer_id ? pb.customer_id[1] : '—'"/></td>
+                                                <td style="padding: 14px 20px; text-align: right; font-weight: 700; color: #059669;">
+                                                    <t t-esc="pb.unit_price.toFixed(2)"/>
+                                                </td>
+                                                <td style="padding: 14px 20px; color: #6b7280;"><t t-esc="pb.date_from || '—'"/></td>
+                                                <td style="padding: 14px 20px; color: #6b7280;"><t t-esc="pb.date_to || '—'"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+
+                        <t t-if="state.activeTab === 'products'">
+                            <div class="emp360-section" style="padding: 24px; height: 100%; overflow: auto;">
+                                <div class="emp360-card">
+                                    <div class="emp360-card-header" style="padding: 16px 20px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                                        <h5 class="emp360-card-title" style="margin: 0; font-weight: 700;">
+                                            <i class="fa fa-cube me-2"></i>Product Catalog
+                                        </h5>
+                                        
+                                        <span class="badge" style="background: #4361ee; color: #fff;">
+                                            <t t-esc="state.products.length"/> Items
+                                        </span>
+                                        <button class="btn btn-primary" 
+                                            t-on-click="() => this.openProductForm(false)"
+                                            style="background-color: #4361ee; border: none; padding: 6px 16px; border-radius: 6px; color: #fff;">
+                                        <i class="fa fa-plus me-1"></i> Create Product
+                                    </button>
+                                    </div>
+                                    
+                                    <table class="table emp360-table" style="width: 100%; margin-bottom: 0;">
+                                        <thead style="background: #f8fafc;">
+                                            <tr>
+                                                
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Name</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase;">Type</th>
+                                                <th style="padding: 12px 20px; font-size: 12px; color: #6b7280; text-transform: uppercase; text-align: right;">Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.products" t-as="p" t-key="p.id" style="border-bottom: 1px solid #f3f4f6; cursor: pointer;" 
+                                            t-on-click="() => this.openProductForm(p.id)">
+                                                
+                                                <td style="padding: 16px 20px; font-weight: 500;"><t t-esc="p.name"/></td>
+                                                <td style="padding: 16px 20px;">
+                                                    <span class="emp360-badge emp360-badge-secondary" style="font-size: 10px; padding: 2px 8px;">
+                                                        <t t-esc="p.type"/>
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 16px 20px; text-align: right; font-weight: 700; color: #059669;">
+                                                    ₹<t t-esc="p.list_price.toFixed(2)"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+
+                <t t-if="state.activeTab === 'uom'">
+                    <div class="emp360-section" style="padding: 24px; height: 100%; overflow: auto;">
+                        <div class="emp360-card">
+                            <div class="emp360-card-header"><h5>Units of Measure</h5><button class="btn btn-primary" 
+                                        t-on-click="() => this.openUomForm(false)"
+                                        style="background-color: #4361ee; border: none; padding: 6px 16px; border-radius: 6px; color: #fff;">
+                                    <i class="fa fa-plus me-1"></i> Create UoM
+                                </button>
+                            </div>
+                            <table class="table emp360-table table-hover">
+                                <thead>
+                                    <tr><th>Unit Name</th><th>Contains</th><th>Reference Unit</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.uom_list" t-as="u" t-key="u.id" style="cursor: pointer;" t-on-click="() => this.openUomForm(u.id)">
+                                        <td><t t-esc="u.name"/></td>
+                                        <td><t t-esc="u.relative_factor"/></td>
+                                        <td><t t-esc="u.relative_uom_id[1]"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+
+                    <t t-if="state.activeTab === 'uom_conversion'">
+                        <div class="emp360-section" style="padding: 24px; height: 100%; overflow: auto;">
+                            <div class="emp360-card">
+                                <div class="emp360-card-header"><h5>Conversion Rules</h5>
+                                <button class="btn btn-primary" 
+                                        t-on-click="() => this.openUomConversionForm(false)"
+                                        style="background-color: #4361ee; border: none; padding: 6px 16px; border-radius: 6px; color: #fff;">
+                                    <i class="fa fa-plus me-1"></i> Create
+                                </button>
+                            </div>
+                                <table class="table emp360-table">
+                                    <thead><tr><th>From UOM</th><th>To UOM</th><th>Product</th><th>Factor</th><th>Active</th></tr></thead>
+                                    <tbody>
+                                        
+                                            <tr t-foreach="state.uom_conversion" t-as="c" t-key="c.id" 
+                                                style="cursor: pointer;" 
+                                                t-on-click="() => this.openUomConversionForm(c.id)">
+                                                                
+                                            <td><t t-esc="c.from_uom_id[1]"/></td>
+                                            <td><t t-esc="c.to_uom_id[1]"/></td>
+                                            <td><t t-esc="c.name"/></td>
+                                            <td><t t-esc="c.factor"/></td>
+                                            <td t-on-click.stop="() => this.toggleActiveStatus(c)">
+                                               
+                                                <input type="checkbox" t-att-checked="c.active"/>
+                                                <span class="slider"></span>
+                                                
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+
+                    <t t-if="state.activeTab === 'overview'">
+
+                        <!-- ── Analytics Board Hero Header ── -->
+                        <div class="ab-hero">
+                            <div class="ab-hero-left">
+                                <div class="ab-hero-title">Analytics Board</div>
+                                <div class="ab-hero-sub">
+                                    Sales Performance Dashboard ·
+                                    <t t-esc="state.todayLabel"/>
+                                </div>
+                            </div>
+                            <div class="ab-hero-right">
+                                <t t-if="state.checkinTime">
+                                    <div class="emp360-checkin-chip" style="background:rgba(255,255,255,.15);color:#6ee7b7;border-color:rgba(110,231,183,.3);">
+                                        <span class="emp360-pulse"></span>
+                                        CheckIn: <t t-esc="state.checkinTime"/>
+                                    </div>
+                                </t>
+                                <!-- Period filter chips -->
+                                <div class="ab-period-chips">
+                                    <button t-att-class="'ab-chip ' + (state.dashPeriod === 'today'   ? 'ab-chip-active' : '')"
+                                            t-on-click="() => this.setDashPeriod('today')">Today</button>
+                                    <button t-att-class="'ab-chip ' + (state.dashPeriod === 'week'    ? 'ab-chip-active' : '')"
+                                            t-on-click="() => this.setDashPeriod('week')">Week</button>
+                                    <button t-att-class="'ab-chip ' + (state.dashPeriod === 'month'   ? 'ab-chip-active' : '')"
+                                            t-on-click="() => this.setDashPeriod('month')">Month</button>
+                                    <button t-att-class="'ab-chip ' + (state.dashPeriod === 'quarter' ? 'ab-chip-active' : '')"
+                                            t-on-click="() => this.setDashPeriod('quarter')">Quarter</button>
+                                </div>
+                                <button class="ab-refresh-btn" t-on-click="refreshData" title="Refresh">
+                                    <i class="fa fa-refresh"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- No employee message -->
+                        <t t-if="!state.selectedEmployee">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-user-circle"></i></div>
+                                    <div class="emp360-empty-title">No Employee Selected</div>
+                                    <div class="emp360-empty-desc">
+                                        <t t-if="state.isManager">Use the sidebar to select an employee.</t>
+                                        <t t-else="">Loading your profile…</t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- ══════════ Full Dashboard (employee selected) ══════════ -->
+                        <t t-if="state.selectedEmployee">
+
+                        <!-- ── Row 1: 4 Main Sales KPI Cards ── -->
+                        <div class="ab-kpi-row">
+                            <!-- Total Revenue -->
+                            <div class="ab-kpi-card ab-kpi-green">
+                                <div class="ab-kpi-icon-wrap ab-icon-green">
+                                    <i class="fa fa-rupee"></i>
+                                </div>
+                                <div class="ab-kpi-body">
+                                    <div class="ab-kpi-value">
+                                        ₹<t t-esc="formatLargeNumber(state.overviewKpi.total_sales)"/>
+                                    </div>
+                                    <div class="ab-kpi-label">TOTAL REVENUE</div>
+                                    <div class="ab-kpi-sub">
+                                        <t t-esc="state.overviewKpi.total_orders"/> orders placed
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Total Orders -->
+                            <div class="ab-kpi-card ab-kpi-blue">
+                                <div class="ab-kpi-icon-wrap ab-icon-blue">
+                                    <i class="fa fa-shopping-cart"></i>
+                                </div>
+                                <div class="ab-kpi-body">
+                                    <div class="ab-kpi-value">
+                                        <t t-esc="state.overviewKpi.total_orders || 0"/>
+                                    </div>
+                                    <div class="ab-kpi-label">TOTAL ORDERS</div>
+                                    <div class="ab-kpi-sub">
+                                        Avg ₹<t t-esc="formatLargeNumber(state.overviewKpi.avg_sales)"/>/order
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Collections -->
+                            <div class="ab-kpi-card ab-kpi-purple">
+                                <div class="ab-kpi-icon-wrap ab-icon-purple">
+                                    <i class="fa fa-money"></i>
+                                </div>
+                                <div class="ab-kpi-body">
+                                    <div class="ab-kpi-value">
+                                        ₹<t t-esc="formatLargeNumber(state.overviewKpi.collections)"/>
+                                    </div>
+                                    <div class="ab-kpi-label">COLLECTIONS</div>
+                                    <div class="ab-kpi-sub">50% collection ratio</div>
+                                </div>
+                            </div>
+                            <!-- Overall Achievement -->
+                            <div class="ab-kpi-card ab-kpi-orange">
+                                <div class="ab-kpi-icon-wrap ab-icon-orange">
+                                    <i class="fa fa-trophy"></i>
+                                </div>
+                                <div class="ab-kpi-body">
+                                    <div class="ab-kpi-value">
+                                        <t t-esc="state.overviewKpi.achievement"/>%
+                                    </div>
+                                    <div class="ab-kpi-label">OVERALL ACHIEVEMENT</div>
+                                    <div class="ab-kpi-sub">of target achieved</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Row 2: Day Status + PJP Stats ── -->
+                        <div class="ab-stats-row">
+                            <!-- Day Status banner -->
+                            <div class="ab-day-banner">
+                                <div class="ab-day-icon">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                                <div>
+                                    <div class="ab-day-title">Day Active</div>
+                                    <div class="ab-day-sub"><t t-esc="state.checkinTime || '--:--'"/></div>
+                                </div>
+                                <button class="ab-action-btn ms-auto"
+                                        t-on-click="() => this.changeTab('todayvisit')">
+                                    Manage Day <i class="fa fa-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+
+                            <!-- PJP Visit Statistics -->
+                            <div class="ab-visit-stats">
+                                <div class="ab-vs-label">
+                                    <i class="fa fa-bar-chart me-1"></i> STATISTICS
+                                    <span class="ab-vs-toggle"
+                                          t-on-click="() => this.toggleAccordion('pjpStats')">
+                                        <i t-att-class="'fa fa-chevron-' + (state.accordion.pjpStats ? 'up' : 'down')"></i>
+                                    </span>
+                                </div>
+                                <t t-if="state.accordion.pjpStats">
+                                <div class="ab-vs-cards">
+                                    <div class="ab-vs-card ab-vs-total">
+                                        <div class="ab-vs-num"><t t-esc="state.pjpStats.total"/></div>
+                                        <div class="ab-vs-txt">TOTAL</div>
+                                        <div class="ab-vs-bar" style="background:#4361ee;"></div>
+                                    </div>
+                                    <div class="ab-vs-card ab-vs-done">
+                                        <div class="ab-vs-num"><t t-esc="state.pjpStats.completed"/></div>
+                                        <div class="ab-vs-txt">DONE</div>
+                                        <div class="ab-vs-bar" style="background:#06d6a0;"></div>
+                                    </div>
+                                    <div class="ab-vs-card ab-vs-planned">
+                                        <div class="ab-vs-num"><t t-esc="state.pjpStats.planned"/></div>
+                                        <div class="ab-vs-txt">PLANNED</div>
+                                        <div class="ab-vs-bar" style="background:#4cc9f0;"></div>
+                                    </div>
+                                    <div class="ab-vs-card ab-vs-missed">
+                                        <div class="ab-vs-num"><t t-esc="state.pjpStats.missed"/></div>
+                                        <div class="ab-vs-txt">MISSED</div>
+                                        <div class="ab-vs-bar" style="background:#ef476f;"></div>
+                                    </div>
+                                </div>
+                                <!-- Mini metrics row -->
+                                <div class="ab-mini-metrics">
+                                    <div class="ab-mini-m">
+                                        <i class="fa fa-clock-o"></i>
+                                        <span><t t-esc="state.pjpStats.working_hours"/></span>
+                                        <span class="ab-mini-label">WORKING</span>
+                                    </div>
+                                    <div class="ab-mini-m">
+                                        <i class="fa fa-percent"></i>
+                                        <span><t t-esc="state.pjpStats.visit_pct"/>%</span>
+                                        <span class="ab-mini-label">VISIT %</span>
+                                    </div>
+                                    <div class="ab-mini-m">
+                                        <i class="fa fa-shopping-cart"></i>
+                                        <span><t t-esc="state.overviewKpi.total_orders"/></span>
+                                        <span class="ab-mini-label">ORDERS</span>
+                                    </div>
+                                    <div class="ab-mini-m">
+                                        <i class="fa fa-map-marker"></i>
+                                        <span><t t-esc="state.beatStats.today_total"/></span>
+                                        <span class="ab-mini-label">BEATS TODAY</span>
+                                    </div>
+                                </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- ── Row 3: Target vs Achievement + Beat Coverage ── -->
+                        <div class="ab-middle-row">
+                            <!-- Target vs Achievement -->
+                            <div class="ab-target-card">
+                                <div class="ab-section-header">
+                                    <i class="fa fa-line-chart me-1"></i> Target vs Actual
+                                    <span class="ab-pct-badge">
+                                        <t t-esc="state.targetAchievement.pct"/>%
+                                    </span>
+                                </div>
+                                <div class="ab-target-row">
+                                    <span class="ab-target-label">Target</span>
+                                    <span class="ab-target-val">₹<t t-esc="formatLargeNumber(state.targetAchievement.target)"/></span>
+                                </div>
+                                <div class="ab-progress-bar-wrap">
+                                    <div class="ab-progress-bar"
+                                         t-attf-style="width:100%;background:#e5e7eb;border-radius:8px;height:8px;overflow:hidden;">
+                                        <div t-attf-style="width:{{state.targetAchievement.pct}}%;background:linear-gradient(90deg,#4361ee,#7209b7);height:100%;border-radius:8px;transition:width .5s;"></div>
+                                    </div>
+                                </div>
+                                <div class="ab-target-row" style="margin-top:6px;">
+                                    <span class="ab-target-label">Actual</span>
+                                    <span class="ab-target-val" style="color:#4361ee;">₹<t t-esc="formatLargeNumber(state.targetAchievement.actual)"/></span>
+                                </div>
+                                <div class="ab-legend-row">
+                                    <span class="ab-legend-dot" style="background:#4361ee;"></span> Monthly Target
+                                    <span class="ab-legend-dot ms-2" style="background:#06d6a0;"></span> Achieved
+                                </div>
+                            </div>
+
+                            <!-- Beat Coverage Summary -->
+                            <div class="ab-beat-card">
+                                <div class="ab-section-header">
+                                    <i class="fa fa-map me-1"></i> Beat Coverage
+                                    <button class="ab-link-btn" t-on-click="() => this.changeTab('todayvisit')">
+                                        Manage <i class="fa fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                                <div class="ab-beat-stats">
+                                    <div class="ab-beat-stat">
+                                        <div class="ab-beat-num" style="color:#4361ee;"><t t-esc="state.beatStats.total"/></div>
+                                        <div class="ab-beat-lbl">Total</div>
+                                    </div>
+                                    <div class="ab-beat-stat">
+                                        <div class="ab-beat-num" style="color:#f77f00;"><t t-esc="state.beatStats.in_progress"/></div>
+                                        <div class="ab-beat-lbl">Active</div>
+                                    </div>
+                                    <div class="ab-beat-stat">
+                                        <div class="ab-beat-num" style="color:#06d6a0;"><t t-esc="state.beatStats.completed"/></div>
+                                        <div class="ab-beat-lbl">Done</div>
+                                    </div>
+                                    <div class="ab-beat-stat">
+                                        <div class="ab-beat-num" style="color:#9ca3af;"><t t-esc="state.beatStats.pending"/></div>
+                                        <div class="ab-beat-lbl">Pending</div>
+                                    </div>
+                                </div>
+                                <!-- Coverage meter -->
+                                <div class="ab-coverage-wrap">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                        <span style="font-size:11px;color:#6b7280;font-weight:600;">Coverage</span>
+                                        <span style="font-size:13px;font-weight:800;color:#4361ee;"><t t-esc="state.beatStats.coverage"/>%</span>
+                                    </div>
+                                    <div style="background:#e5e7eb;border-radius:8px;height:10px;overflow:hidden;">
+                                        <div t-attf-style="width:{{state.beatStats.coverage}}%;background:linear-gradient(90deg,#06d6a0,#019b72);height:100%;border-radius:8px;transition:width .5s;"></div>
+                                    </div>
+                                </div>
+                                <!-- PJP quick link -->
+                                <div class="ab-pjp-quick" t-on-click="() => this.changeTab('pjp')">
+                                    <i class="fa fa-road me-1"></i>
+                                    View PJP Plan
+                                    <i class="fa fa-arrow-right ms-auto"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Row 4: Store-wise Performance + Top Accounts ── -->
+                        <div class="ab-bottom-row">
+                            <!-- Store-wise Performance -->
+                            <div class="ab-store-panel">
+                                <div class="ab-section-header">
+                                    <i class="fa fa-building me-1"></i> Store-wise Performance
+                                    <span class="ab-badge-label">CARDS</span>
+                                </div>
+                                <t t-if="state.storePerformance.length > 0">
+                                <div class="ab-store-grid">
+                                    <t t-foreach="state.storePerformance" t-as="store" t-key="store.id">
+                                        <div class="ab-store-card">
+                                            <div class="ab-store-top">
+                                                <div>
+                                                    <div class="ab-store-name"><t t-esc="store.name"/></div>
+                                                    <div class="ab-store-city" style="font-size:11px;color:#9ca3af;">Retailer</div>
+                                                </div>
+                                                <span class="ab-store-badge">RETAILER</span>
+                                            </div>
+                                            <div class="ab-store-kpis">
+                                                <div class="ab-store-kpi">
+                                                    <div class="ab-store-kpi-lbl">REVENUE</div>
+                                                    <div class="ab-store-kpi-val">₹<t t-esc="formatLargeNumber(store.revenue)"/></div>
+                                                </div>
+                                                <div class="ab-store-kpi">
+                                                    <div class="ab-store-kpi-lbl">ORDERS</div>
+                                                    <div class="ab-store-kpi-val"><t t-esc="store.orders"/></div>
+                                                </div>
+                                                <div class="ab-store-kpi">
+                                                    <div class="ab-store-kpi-lbl">ACHIEVEMENT</div>
+                                                    <div class="ab-store-kpi-val" style="color:#059669;"><t t-esc="store.achievement"/>%</div>
+                                                </div>
+                                            </div>
+                                            <div style="background:#e5e7eb;border-radius:4px;height:5px;overflow:hidden;margin-top:8px;">
+                                                <div t-attf-style="width:{{store.achievement}}%;background:linear-gradient(90deg,#4361ee,#06d6a0);height:100%;border-radius:4px;"></div>
+                                            </div>
+                                            <div style="font-size:10px;color:#9ca3af;margin-top:4px;">
+                                                Target: ₹<t t-esc="formatLargeNumber(store.target)"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="emp360-alert emp360-alert-info" style="margin:16px;">
+                                        <i class="fa fa-info-circle"></i> No store performance data for this period.
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- Top Accounts -->
+                            <div class="ab-top-accounts">
+                                <div class="ab-section-header">
+                                    <i class="fa fa-star me-1"></i> Top Accounts
+                                    <span class="ab-badge-label">RANKED</span>
+                                </div>
+                                <t t-if="state.topAccounts.length > 0">
+                                <div class="ab-top-list">
+                                    <t t-foreach="state.topAccounts" t-as="acc" t-key="acc.rank">
+                                        <div class="ab-top-item">
+                                            <div class="ab-top-rank" t-attf-style="background:{{acc.rank === 1 ? '#ffd166' : acc.rank === 2 ? '#e5e7eb' : '#f77f00'}};">
+                                                <t t-esc="acc.rank"/>
+                                            </div>
+                                            <div class="ab-top-info">
+                                                <div class="ab-top-name"><t t-esc="acc.name"/></div>
+                                                <div class="ab-top-sub"><t t-esc="acc.orders"/> orders</div>
+                                            </div>
+                                            <div class="ab-top-rev">
+                                                ₹<t t-esc="formatLargeNumber(acc.revenue)"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="emp360-alert emp360-alert-info" style="margin:16px;">
+                                        <i class="fa fa-info-circle"></i> No account data available.
+                                    </div>
+                                </t>
+
+                                <!-- Visit Summary accordion -->
+                                <div class="ab-visit-summary">
+                                    <div class="ab-section-header" style="margin-top:16px;cursor:pointer;"
+                                         t-on-click="() => this.toggleAccordion('lastVisit')">
+                                        <i class="fa fa-history me-1"></i> Last Visit
+                                        <i t-att-class="'fa fa-chevron-' + (state.accordion.lastVisit ? 'up' : 'down') + ' ms-auto'"></i>
+                                    </div>
+                                    <t t-if="state.accordion.lastVisit and state.lastVisit">
+                                        <div style="padding:8px 0;">
+                                            <div class="emp360-info-row">
+                                                <span class="emp360-info-row-label"><i class="fa fa-building-o me-1"></i>Customer</span>
+                                                <span class="emp360-info-row-value"><t t-esc="state.lastVisit.partner_id ? state.lastVisit.partner_id[1] : '-'"/></span>
+                                            </div>
+                                            <div class="emp360-info-row">
+                                                <span class="emp360-info-row-label"><i class="fa fa-map-marker me-1"></i>Beat</span>
+                                                <span class="emp360-info-row-value"><t t-esc="state.lastVisit.beat_id ? state.lastVisit.beat_id[1] : '-'"/></span>
+                                            </div>
+                                            <div class="emp360-info-row">
+                                                <span class="emp360-info-row-label"><i class="fa fa-calendar me-1"></i>Date</span>
+                                                <span class="emp360-info-row-value"><t t-esc="formatDate(state.lastVisit.actual_start_time)"/></span>
+                                            </div>
+                                            <div class="emp360-info-row">
+                                                <span class="emp360-info-row-label"><i class="fa fa-info-circle me-1"></i>Status</span>
+                                                <span t-attf-class="emp360-badge {{statusBadgeClass(state.lastVisit.status)}}">
+                                                    <t t-esc="state.lastVisit.status"/>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <t t-if="state.accordion.lastVisit and !state.lastVisit">
+                                        <div class="emp360-alert emp360-alert-info"><i class="fa fa-info-circle"></i> No visits found.</div>
+                                    </t>
+                                </div>
+
+                                <!-- Checklist quick view -->
+                                <div class="ab-visit-summary" style="margin-top:8px;">
+                                    <div class="ab-section-header" style="cursor:pointer;"
+                                         t-on-click="() => this.toggleAccordion('checklist')">
+                                        <i class="fa fa-list-ul me-1"></i>
+                                        Checklist (<t t-esc="state.checklistDone"/>/<t t-esc="state.checklistTotal"/>)
+                                        <i t-att-class="'fa fa-chevron-' + (state.accordion.checklist ? 'up' : 'down') + ' ms-auto'"></i>
+                                    </div>
+                                    <t t-if="state.accordion.checklist">
+                                        <div style="max-height:200px;overflow-y:auto;padding:4px 0;">
+                                            <t t-foreach="state.checklistItems" t-as="item" t-key="item.id">
+                                                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6;">
+                                                    <input type="checkbox"
+                                                           t-att-checked="item.done"
+                                                           t-on-change="(ev) => this.toggleChecklistItem(item.id, ev.target.checked)"
+                                                           style="width:15px;height:15px;accent-color:#4361ee;flex-shrink:0;cursor:pointer;"/>
+                                                    <span t-attf-style="font-size:12px;color:#374151;{{item.done ? 'text-decoration:line-through;color:#9ca3af;' : ''}}">
+                                                        <t t-esc="item.question"/>
+                                                    </span>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Row 5: Location View (full-width) ── -->
+                        <div class="ab-location-row">
+                            <LocationMapCard
+                                t-props="{ employeeId: state.selectedEmployee }"
+                                t-key="'lm_' + state.selectedEmployee"/>
+                        </div>
+
+                        </t>
+                        <!-- /employee selected -->
+
+                    </t>
+                    <!-- /overview -->
+
+                    <!-- ═══════════════════════════════════════
+                         TODAY VISIT
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'todayvisit'">
+                        <t t-if="state.selectedEmployee">
+                            <TodayVisit
+                                t-props="{
+                                    employeeId: state.selectedEmployee,
+                                    employeeName: state.details ? state.details.name : '',
+                                    isManager: state.isManager
+                                }"
+                                t-key="'tv_' + state.selectedEmployee"/>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-calendar-check-o"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Choose an employee to view today's visit plan.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         VISIT HISTORY
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'visits'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                                <VisitList
+                                    t-props="{ employeeId: state.selectedEmployee }"
+                                    t-key="'vl_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-history"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Visit history will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         SCHEMES
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'schemes'">
+                        <div style="flex:1;min-height:0;overflow-y:auto;padding:24px 20px;">
+
+                            <!-- Stats row -->
+                            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                                <div style="background:linear-gradient(135deg,#06d6a0,#019b72);border-radius:12px;padding:16px;color:#fff;text-align:center;">
+                                    <div style="font-size:26px;font-weight:800;"><t t-esc="state.schemeStats.active || 0"/></div>
+                                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:0.85;margin-top:4px;">Active</div>
+                                </div>
+                                <div style="background:linear-gradient(135deg,#f77f00,#d62828);border-radius:12px;padding:16px;color:#fff;text-align:center;">
+                                    <div style="font-size:26px;font-weight:800;"><t t-esc="state.schemeStats.draft || 0"/></div>
+                                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:0.85;margin-top:4px;">Draft</div>
+                                </div>
+                                <div style="background:linear-gradient(135deg,#4cc9f0,#0077b6);border-radius:12px;padding:16px;color:#fff;text-align:center;">
+                                    <div style="font-size:26px;font-weight:800;"><t t-esc="state.schemeStats.expired || 0"/></div>
+                                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:0.85;margin-top:4px;">Expired</div>
+                                </div>
+                                <div style="background:linear-gradient(135deg,#7209b7,#3a0ca3);border-radius:12px;padding:16px;color:#fff;text-align:center;">
+                                    <div style="font-size:26px;font-weight:800;"><t t-esc="state.schemeStats.total || 0"/></div>
+                                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:0.85;margin-top:4px;">Total</div>
+                                </div>
+                            </div>
+
+                            <!-- Filter chips -->
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                                <t t-foreach="[['active','Active'],['draft','Draft'],['expired','Expired'],['all','All']]" t-as="sf" t-key="sf[0]">
+                                    <button
+                                        t-attf-class="emp360-chip {{state.schemeStatusFilter === sf[0] ? 'active' : ''}}"
+                                        t-on-click="() => this.setSchemesFilter(sf[0])"
+                                        style="padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">
+                                        <t t-esc="sf[1]"/>
+                                    </button>
+                                </t>
+                                <div style="flex:1;min-width:160px;">
+                                    <input type="text" placeholder="Search scheme..." style="width:100%;padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:12px;outline:none;"
+                                        t-on-input="onSchemesSearch"/>
+                                </div>
+                            </div>
+
+                            <!-- Scheme cards -->
+                            <t t-if="state.schemesLoading">
+                                <div style="text-align:center;padding:40px;color:#94a3b8;">
+                                    <i class="fa fa-spinner fa-spin fa-2x"/>
+                                    <div style="margin-top:12px;font-size:13px;">Loading schemes...</div>
+                                </div>
+                            </t>
+                            <t t-elif="!state.schemesList.length">
+                                <div style="text-align:center;padding:40px;color:#94a3b8;">
+                                    <i class="fa fa-tags fa-3x" style="opacity:0.3;"/>
+                                    <div style="margin-top:12px;font-size:14px;font-weight:600;">No Schemes Found</div>
+                                    <div style="font-size:12px;margin-top:4px;">Try changing the filter</div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+                                    <t t-foreach="state.schemesList" t-as="sc" t-key="sc.id">
+                                        <div style="background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border:1px solid #e2e8f0;overflow:hidden;transition:box-shadow .15s;"
+                                            onmouseenter="this.style.boxShadow='0 6px 20px rgba(0,0,0,0.12)'"
+                                            onmouseleave="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.07)'">
+                                            <!-- Card header accent -->
+                                            <div t-attf-style="height:4px;background:{{sc.benefit_type === 'free_product' ? 'linear-gradient(90deg,#06d6a0,#019b72)' : sc.benefit_type === 'percent_discount' ? 'linear-gradient(90deg,#4cc9f0,#0077b6)' : sc.benefit_type === 'price_discount' ? 'linear-gradient(90deg,#f77f00,#d62828)' : 'linear-gradient(90deg,#f72585,#b5179e)'}}"/>
+                                            <div style="padding:14px 16px;">
+                                                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                                                    <div style="flex:1;min-width:0;">
+                                                        <div style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                                            <t t-esc="sc.name"/>
+                                                        </div>
+                                                        <div style="font-size:11px;color:#64748b;margin-top:2px;">
+                                                            <t t-esc="sc.scheme_code"/>
+                                                        </div>
+                                                    </div>
+                                                    <span t-attf-style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;background:{{sc.state === 'active' ? '#dcfce7' : sc.state === 'draft' ? '#fef9c3' : '#fee2e2'}};color:{{sc.state === 'active' ? '#166534' : sc.state === 'draft' ? '#854d0e' : '#991b1b'}};">
+                                                        <t t-esc="sc.state === 'active' ? 'Active' : sc.state === 'draft' ? 'Draft' : sc.state === 'expired' ? 'Expired' : sc.state"/>
+                                                    </span>
+                                                </div>
+                                                <div style="margin-top:10px;padding:8px 10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+                                                    <div style="font-size:12px;font-weight:700;color:#7209b7;">
+                                                        <i t-attf-class="fa {{sc.benefit_type === 'free_product' ? 'fa-gift' : sc.benefit_type === 'percent_discount' ? 'fa-percent' : sc.benefit_type === 'price_discount' ? 'fa-tag' : 'fa-star'}} me-1"/>
+                                                        <t t-esc="sc.benefit_summary or sc.benefit_type"/>
+                                                    </div>
+                                                    <t t-if="sc.min_invoice_value">
+                                                        <div style="font-size:11px;color:#64748b;margin-top:3px;">Min Invoice: ₹<t t-esc="sc.min_invoice_value"/></div>
+                                                    </t>
+                                                </div>
+                                                <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:#94a3b8;">
+                                                    <span><i class="fa fa-calendar-o me-1"/><t t-esc="sc.date_from"/> – <t t-esc="sc.date_to"/></span>
+                                                    <t t-if="sc.line_count">
+                                                        <span><i class="fa fa-list me-1"/><t t-esc="sc.line_count"/> product(s)</span>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         ORDERS
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'orders'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;">
+                                <OrdersList
+                                    t-props="{ employeeId: state.selectedEmployee, userId: state.userId }"
+                                    t-key="'ol_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-shopping-cart"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Order data will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         RETAILER-WISE ORDERS
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'retailer'">
+                        <div class="emp360-retailer-page">
+
+                            <!-- Stats bar -->
+                            <div class="emp360-retailer-stats-bar">
+                                <div class="emp360-rstat-card">
+                                    <div class="emp360-rstat-icon" style="background:rgba(67,97,238,.12);color:#4361ee;">
+                                        <i class="fa fa-building"></i>
+                                    </div>
+                                    <div>
+                                        <div class="emp360-rstat-val"><t t-esc="state.retailerOrderStats.retailers"/></div>
+                                        <div class="emp360-rstat-lbl">RETAILERS</div>
+                                    </div>
+                                </div>
+                                <div class="emp360-rstat-card">
+                                    <div class="emp360-rstat-icon" style="background:rgba(114,9,183,.12);color:#7209b7;">
+                                        <i class="fa fa-file-text-o"></i>
+                                    </div>
+                                    <div>
+                                        <div class="emp360-rstat-val"><t t-esc="state.retailerOrderStats.orders"/></div>
+                                        <div class="emp360-rstat-lbl">ORDERS</div>
+                                    </div>
+                                </div>
+                                <div class="emp360-rstat-card">
+                                    <div class="emp360-rstat-icon" style="background:rgba(5,150,105,.12);color:#059669;">
+                                        <i class="fa fa-money"></i>
+                                    </div>
+                                    <div>
+                                        <div class="emp360-rstat-val" style="color:#059669;">
+                                            Rs. <t t-esc="(state.retailerOrderStats.totalValue || 0).toFixed(2)"/>
+                                        </div>
+                                        <div class="emp360-rstat-lbl">TOTAL VALUE</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabs -->
+                            <div class="emp360-rtabs">
+                                <span t-att-class="'emp360-rtab ' + (state.retailerTab === 'retailers' ? 'active' : '')"
+                                      t-on-click="() => state.retailerTab = 'retailers'">Retailers</span>
+                                <span t-att-class="'emp360-rtab ' + (state.retailerTab === 'subdist' ? 'active' : '')"
+                                      t-on-click="() => state.retailerTab = 'subdist'">Sub Distributors</span>
+                                <span t-att-class="'emp360-rtab ' + (state.retailerTab === 'other' ? 'active' : '')"
+                                      t-on-click="() => state.retailerTab = 'other'">Other</span>
+                            </div>
+
+                            <!-- Section title -->
+                            <div class="emp360-retailer-section-title">RETAILER-WISE ORDERS</div>
+
+                            <!-- Retailer list -->
+                            <div class="emp360-retailer-list">
+                                <t t-foreach="state.retailerOrders" t-as="retailer" t-key="retailer.id">
+                                    <div class="emp360-retailer-item">
+                                        <div class="emp360-retailer-item-header"
+                                             t-on-click="() => this.toggleRetailerExpand(retailer.id)">
+                                            <div style="display:flex;align-items:center;gap:14px;">
+                                                <div class="emp360-retailer-avatar-lg">
+                                                    <t t-esc="retailer.name ? retailer.name[0].toUpperCase() : 'R'"/>
+                                                </div>
+                                                <div>
+                                                    <div class="emp360-retailer-item-name">
+                                                        <t t-esc="retailer.name"/>*
+                                                    </div>
+                                                    <div class="emp360-retailer-item-sub">
+                                                        <t t-esc="retailer.orders.length"/> order(s)
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;align-items:center;gap:12px;">
+                                                <span style="font-size:16px;font-weight:800;color:#059669;">
+                                                    Rs. <t t-esc="retailer.total.toFixed(2)"/>
+                                                </span>
+                                                <i t-attf-class="fa fa-chevron-{{retailer.expanded ? 'up' : 'down'}}"
+                                                   style="color:#9ca3af;font-size:14px;"></i>
+                                            </div>
+                                        </div>
+                                        <t t-if="retailer.expanded">
+                                            <div class="emp360-retailer-orders-body">
+                                                <t t-foreach="retailer.orders" t-as="order" t-key="order.id">
+                                                    <div class="emp360-order-item">
+                                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                                            <div>
+                                                                <div style="font-weight:700;color:#4361ee;font-size:14px;"><t t-esc="order.name"/></div>
+                                                                <div style="font-size:11px;color:#9ca3af;">
+                                                                    <t t-esc="order.order_line ? order.order_line.length : 0"/> items
+                                                                </div>
+                                                            </div>
+                                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                                <span style="font-size:15px;font-weight:800;color:#059669;">
+                                                                    Rs. <t t-esc="(order.amount_total || 0).toFixed(2)"/>
+                                                                </span>
+                                                                <span t-attf-class="emp360-badge {{order.state === 'sale' ? 'emp360-badge-success' : order.state === 'draft' ? 'emp360-badge-warning' : 'emp360-badge-secondary'}}" style="font-size:10px;">
+                                                                    <t t-esc="order.state === 'draft' ? 'NEW' : order.state === 'sale' ? 'CONFIRMED' : order.state"/>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                                <t t-if="state.retailerOrders.length === 0">
+                                    <div class="emp360-empty" style="padding:40px 0;">
+                                        <div class="emp360-empty-icon"><i class="fa fa-file-text-o"></i></div>
+                                        <div class="emp360-empty-title">No retailer orders this month</div>
+                                        <div class="emp360-empty-desc">Orders linked to visits will appear here.</div>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- Bottom actions -->
+                            <div class="emp360-retailer-actions">
+                                <button class="emp360-btn emp360-btn-outline emp360-btn-lg" style="flex:1;justify-content:center;"
+                                        t-on-click="downloadRetailerPdf">
+                                    <i class="fa fa-download me-2"></i> Download PDF
+                                </button>
+                                <button class="emp360-btn emp360-btn-success emp360-btn-lg" style="flex:1;justify-content:center;"
+                                        t-on-click="shareRetailerOnWhatsApp">
+                                    <i class="fa fa-whatsapp me-2"></i> Share on WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         PJP
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'pjp'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                                <PJPList
+                                    t-props="{ employeeId: state.selectedEmployee }"
+                                    t-key="'pjp_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-map"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">PJP data will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         ATTENDANCE
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'attendance'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                                <AttendanceList
+                                    t-props="{ employeeId: state.selectedEmployee }"
+                                    t-key="'att_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-clock-o"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Attendance records will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         EXPENSES
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'expenses'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                                <ExpenseList
+                                    t-props="{ employeeId: state.selectedEmployee }"
+                                    t-key="'exp_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-money"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Expense records will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         INVOICES
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'invoices'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;">
+                                <InvoiceList
+                                    t-props="{ employeeId: state.selectedEmployee }"
+                                    t-key="'inv_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-file-text"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Invoice data will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         INCENTIVES
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'incentives'">
+                        <div style="display:flex;flex-direction:column;height:100%;background:#f3f4f6;">
+
+                            <!-- ── Top bar: filters + action buttons ── -->
+                            <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 16px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+
+                                    <!-- Filters row -->
+                                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                        <!-- Period (combined Mon YYYY) -->
+                                        <div style="display:flex;flex-direction:column;gap:2px;">
+                                            <label style="font-size:.65rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Period</label>
+                                            <select style="padding:5px 28px 5px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.82rem;background:#fff;color:#111827;min-width:110px;appearance:auto;"
+                                                    t-on-change="onIncentivePeriodChange">
+                                                <t t-foreach="incentivePeriodOptions" t-as="opt" t-key="opt.value">
+                                                    <option t-att-value="opt.value"
+                                                            t-att-selected="opt.value === incentivePeriodValue ? 'selected' : false">
+                                                        <t t-esc="opt.label"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <!-- Target Criteria -->
+                                        <div style="display:flex;flex-direction:column;gap:2px;">
+                                            <label style="font-size:.65rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Target Criteria</label>
+                                            <select style="padding:5px 28px 5px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.82rem;background:#fff;color:#111827;min-width:130px;appearance:auto;"
+                                                    t-on-change="onIncentiveCriteriaChange">
+                                                <option value="">-- All --</option>
+                                                <t t-foreach="state.incentiveFilterOpts.criteria" t-as="c" t-key="c.id">
+                                                    <option t-att-value="c.id"
+                                                            t-att-selected="c.id === state.incentiveCriteriaId ? 'selected' : false">
+                                                        <t t-esc="c.name"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <!-- Profile -->
+                                        <div style="display:flex;flex-direction:column;gap:2px;">
+                                            <label style="font-size:.65rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Profile</label>
+                                            <select style="padding:5px 28px 5px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.82rem;background:#fff;color:#111827;min-width:120px;appearance:auto;"
+                                                    t-on-change="onIncentiveProfileChange">
+                                                <option value="">-- All --</option>
+                                                <t t-foreach="state.incentiveFilterOpts.profiles" t-as="p" t-key="p.id">
+                                                    <option t-att-value="p.id"
+                                                            t-att-selected="p.id === state.incentiveProfileId ? 'selected' : false">
+                                                        <t t-esc="p.name"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <!-- Territory -->
+                                        <div style="display:flex;flex-direction:column;gap:2px;">
+                                            <label style="font-size:.65rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Territory</label>
+                                            <select style="padding:5px 28px 5px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.82rem;background:#fff;color:#111827;min-width:130px;appearance:auto;"
+                                                    t-on-change="onIncentiveTerritoryChange">
+                                                <option value="">-- All --</option>
+                                                <t t-foreach="state.incentiveFilterOpts.territories" t-as="tr" t-key="tr.id">
+                                                    <option t-att-value="tr.id"
+                                                            t-att-selected="tr.id === state.incentiveTerritoryId ? 'selected' : false">
+                                                        <t t-esc="tr.name"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action buttons -->
+                                    <div style="display:flex;gap:8px;align-items:center;">
+                                        <button style="display:flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:.82rem;font-weight:500;cursor:pointer;"
+                                                t-on-click="runIncentiveAnnualBonus"
+                                                t-att-disabled="state.incentiveCalculating ? 'disabled' : false">
+                                            <i class="fa fa-calendar-o"/>
+                                            Annual Bonus
+                                        </button>
+                                        <button style="display:flex;align-items:center;gap:6px;padding:6px 14px;border:none;border-radius:6px;background:#7c3aed;color:#fff;font-size:.82rem;font-weight:500;cursor:pointer;"
+                                                t-on-click="runIncentiveCalculation"
+                                                t-att-disabled="state.incentiveCalculating ? 'disabled' : false">
+                                            <i t-if="!state.incentiveCalculating" class="fa fa-play-circle"/>
+                                            <i t-else="" class="fa fa-spinner fa-spin"/>
+                                            Run Calculation
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── Status tab pills ── -->
+                            <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;">
+                                <t t-foreach="[['all','All'],['calculated','Calculated'],['pending_approval','Pending Approval'],['approved','Approved'],['rejected','Rejected'],['paid','Paid']]" t-as="tab" t-key="tab[0]">
+                                    <button t-on-click="setIncentiveTab"
+                                            t-att-data-tab="tab[0]"
+                                            t-att-style="state.incentiveTab===tab[0]
+                                                ? 'padding:10px 14px;font-size:.82rem;font-weight:600;color:#7c3aed;border:none;border-bottom:2px solid #7c3aed;margin-bottom:-1px;background:none;cursor:pointer;white-space:nowrap;'
+                                                : 'padding:10px 14px;font-size:.82rem;font-weight:400;color:#6b7280;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;cursor:pointer;white-space:nowrap;'">
+                                        <t t-esc="tab[1]"/>
+                                        <span t-att-style="state.incentiveTab===tab[0]
+                                                ? 'display:inline-flex;align-items:center;justify-content:center;margin-left:5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:.65rem;font-weight:700;background:#7c3aed;color:#fff;'
+                                                : 'display:inline-flex;align-items:center;justify-content:center;margin-left:5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:.65rem;font-weight:700;background:#e5e7eb;color:#6b7280;'">
+                                            <t t-esc="incentiveTabCount[tab[0]] or 0"/>
+                                        </span>
+                                    </button>
+                                </t>
+                            </div>
+
+                            <!-- ── Stat boxes ── -->
+                            <div style="display:flex;gap:12px;padding:14px 16px;flex-wrap:wrap;">
+                                <div style="flex:1;min-width:130px;background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:3px solid #f97316;">
+                                    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:.07em;margin-bottom:6px;">Calculated</div>
+                                    <div style="font-size:1.4rem;font-weight:700;color:#111827;line-height:1.1;"><t t-esc="formatIncentiveAmount(state.incentiveStats.calc_amount)"/></div>
+                                    <div style="font-size:.72rem;color:#6b7280;margin-top:4px;"><t t-esc="state.incentiveStats.calculated"/> records</div>
+                                </div>
+                                <div style="flex:1;min-width:130px;background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:3px solid #eab308;">
+                                    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:.07em;margin-bottom:6px;">Pending Approval</div>
+                                    <div style="font-size:1.4rem;font-weight:700;color:#111827;line-height:1.1;"><t t-esc="formatIncentiveAmount(state.incentiveStats.pending_amount)"/></div>
+                                    <div style="font-size:.72rem;color:#6b7280;margin-top:4px;"><t t-esc="state.incentiveStats.pending_approval"/> records</div>
+                                </div>
+                                <div style="flex:1;min-width:130px;background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:3px solid #22c55e;">
+                                    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:.07em;margin-bottom:6px;">Approved</div>
+                                    <div style="font-size:1.4rem;font-weight:700;color:#111827;line-height:1.1;"><t t-esc="formatIncentiveAmount(state.incentiveStats.approved_amount)"/></div>
+                                    <div style="font-size:.72rem;color:#6b7280;margin-top:4px;"><t t-esc="state.incentiveStats.approved"/> records</div>
+                                </div>
+                                <div style="flex:1;min-width:130px;background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:3px solid #a855f7;">
+                                    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:.07em;margin-bottom:6px;">Paid</div>
+                                    <div style="font-size:1.4rem;font-weight:700;color:#111827;line-height:1.1;"><t t-esc="formatIncentiveAmount(state.incentiveStats.paid_amount)"/></div>
+                                    <div style="font-size:.72rem;color:#6b7280;margin-top:4px;"><t t-esc="state.incentiveStats.paid"/> records</div>
+                                </div>
+                            </div>
+
+                            <!-- ── Records table ── -->
+                            <div style="flex:1;overflow:auto;padding:0 16px 16px;">
+                                <t t-if="state.incentiveLoading">
+                                    <div style="text-align:center;padding:48px;color:#6b7280;">
+                                        <i class="fa fa-spinner fa-spin" style="font-size:1.5rem;"/>
+                                        <div style="margin-top:8px;font-size:.85rem;">Loading…</div>
+                                    </div>
+                                </t>
+                                <t t-elif="state.incentiveRecords.length === 0">
+                                    <div style="text-align:center;padding:56px;color:#9ca3af;">
+                                        <i class="fa fa-trophy" style="font-size:2.5rem;margin-bottom:12px;display:block;opacity:.25;"/>
+                                        <div style="font-weight:600;font-size:.95rem;color:#374151;margin-bottom:4px;">No Incentive Records</div>
+                                        <div style="font-size:.82rem;">No records found for this period.</div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:.82rem;">
+                                        <thead>
+                                            <tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+                                                <th style="padding:10px 14px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Salesperson</th>
+                                                <th style="padding:10px 14px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Criteria</th>
+                                                <th style="padding:10px 14px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Territory</th>
+                                                <th style="padding:10px 14px;text-align:right;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Achievement %</th>
+                                                <th style="padding:10px 14px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Slab</th>
+                                                <th style="padding:10px 14px;text-align:right;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Calculated</th>
+                                                <th style="padding:10px 14px;text-align:right;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Final</th>
+                                                <th style="padding:10px 14px;text-align:center;font-weight:600;font-size:.68rem;text-transform:uppercase;color:#6b7280;letter-spacing:.06em;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.incentiveRecords" t-as="rec" t-key="rec.id">
+                                                <t t-if="state.incentiveTab === 'all' or rec.status === state.incentiveTab">
+                                                    <tr style="border-bottom:1px solid #f3f4f6;transition:background .15s;" onmouseenter="this.style.background='#fafafa'" onmouseleave="this.style.background='transparent'">
+                                                        <td style="padding:10px 14px;color:#111827;font-weight:500;"><t t-esc="rec.employee_id and rec.employee_id[1] or '—'"/></td>
+                                                        <td style="padding:10px 14px;color:#374151;">
+                                                            <span t-att-style="
+                                                                rec.criteria_id and rec.criteria_id[1] === 'Revenue'          ? 'background:#dbeafe;color:#1e40af;' :
+                                                                rec.criteria_id and rec.criteria_id[1] === 'Collection'       ? 'background:#dcfce7;color:#166534;' :
+                                                                rec.criteria_id and rec.criteria_id[1] === 'New Outlets'      ? 'background:#fef9c3;color:#854d0e;' :
+                                                                rec.criteria_id and rec.criteria_id[1] === 'Productive Calls' ? 'background:#ede9fe;color:#5b21b6;' :
+                                                                                                                                 'background:#f3f4f6;color:#374151;'"
+                                                                style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;">
+                                                                <t t-esc="rec.criteria_id and rec.criteria_id[1] or '—'"/>
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding:10px 14px;color:#374151;"><t t-esc="rec.territory_id and rec.territory_id[1] or '—'"/></td>
+                                                        <td style="padding:10px 14px;text-align:right;font-weight:600;"
+                                                            t-att-style="rec.achievement_percent >= 100 ? 'color:#16a34a;' : rec.achievement_percent >= 80 ? 'color:#ca8a04;' : 'color:#dc2626;'">
+                                                            <t t-esc="rec.achievement_percent.toFixed(2)"/>%
+                                                        </td>
+                                                        <td style="padding:10px 14px;color:#374151;"><t t-esc="rec.slab_id and rec.slab_id[1] or '—'"/></td>
+                                                        <td style="padding:10px 14px;text-align:right;color:#111827;font-weight:500;"><t t-esc="formatIncentiveAmount(rec.calculated_amount)"/></td>
+                                                        <td style="padding:10px 14px;text-align:right;color:#111827;font-weight:600;"><t t-esc="formatIncentiveAmount(rec.final_amount)"/></td>
+                                                        <td style="padding:10px 14px;text-align:center;">
+                                                            <span t-att-style="
+                                                                rec.status==='approved'          ? 'background:#dcfce7;color:#166534;border:1px solid #bbf7d0;' :
+                                                                rec.status==='paid'              ? 'background:#ede9fe;color:#5b21b6;border:1px solid #ddd6fe;' :
+                                                                rec.status==='rejected'          ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;' :
+                                                                rec.status==='pending_approval'  ? 'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;' :
+                                                                                                   'background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;'"
+                                                                style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:600;text-transform:capitalize;white-space:nowrap;">
+                                                                <t t-esc="rec.status.replace('_',' ')"/>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         SLAB MANAGER
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'slabManager'">
+                        <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;background:#f3f4f6;">
+
+                            <!-- Stat boxes -->
+                            <div style="display:flex;gap:0;padding:16px 20px 0;">
+                                <div t-att-style="state.slabActiveFilter==='all' ? 'background:#ede9fe;border-bottom:3px solid #7c3aed;' : 'background:#fff;'"
+                                     style="min-width:90px;border:1px solid #e5e7eb;border-right:none;border-radius:8px 0 0 0;padding:14px 20px;cursor:pointer;text-align:center;"
+                                     data-filter="all" t-on-click="setSlabActiveFilter">
+                                    <div t-att-style="state.slabActiveFilter==='all' ? 'color:#7c3aed;' : 'color:#111827;'"
+                                         style="font-size:1.5rem;font-weight:700;line-height:1;">
+                                        <t t-esc="state.slabStats.total"/>
+                                    </div>
+                                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;color:#6b7280;text-transform:uppercase;margin-top:4px;">TOTAL</div>
+                                </div>
+                                <div t-att-style="state.slabActiveFilter==='active' ? 'background:#ede9fe;border-bottom:3px solid #7c3aed;' : 'background:#fff;'"
+                                     style="min-width:90px;border:1px solid #e5e7eb;border-right:none;padding:14px 20px;cursor:pointer;text-align:center;"
+                                     data-filter="active" t-on-click="setSlabActiveFilter">
+                                    <div t-att-style="state.slabActiveFilter==='active' ? 'color:#7c3aed;' : 'color:#111827;'"
+                                         style="font-size:1.5rem;font-weight:700;line-height:1;">
+                                        <t t-esc="state.slabStats.active"/>
+                                    </div>
+                                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;color:#6b7280;text-transform:uppercase;margin-top:4px;">ACTIVE</div>
+                                </div>
+                                <div t-att-style="state.slabActiveFilter==='inactive' ? 'background:#ede9fe;border-bottom:3px solid #7c3aed;' : 'background:#fff;'"
+                                     style="min-width:90px;border:1px solid #e5e7eb;border-right:1px solid #e5e7eb;border-radius:0 8px 0 0;padding:14px 20px;cursor:pointer;text-align:center;"
+                                     data-filter="inactive" t-on-click="setSlabActiveFilter">
+                                    <div t-att-style="state.slabActiveFilter==='inactive' ? 'color:#7c3aed;' : 'color:#111827;'"
+                                         style="font-size:1.5rem;font-weight:700;line-height:1;">
+                                        <t t-esc="state.slabStats.inactive"/>
+                                    </div>
+                                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;color:#6b7280;text-transform:uppercase;margin-top:4px;">INACTIVE</div>
+                                </div>
+                            </div>
+
+                            <!-- Filter bar + New Slab -->
+                            <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:12px 20px;background:#fff;border:1px solid #e5e7eb;border-top:none;flex-wrap:wrap;gap:10px;">
+                                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                                    <div class="sfa-filter-group">
+                                        <label class="sfa-filter-label">Target Criteria</label>
+                                        <select class="sfa-filter-select" t-on-change="onSlabCriteriaChange">
+                                            <option value="">-- All Criteria --</option>
+                                            <t t-foreach="state.slabFilterOpts.criteria" t-as="c" t-key="c.id">
+                                                <option t-att-value="c.id"
+                                                        t-att-selected="c.id === state.slabCriteriaId ? 'selected' : false">
+                                                    <t t-esc="c.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="sfa-filter-group">
+                                        <label class="sfa-filter-label">Profile</label>
+                                        <select class="sfa-filter-select" t-on-change="onSlabProfileChange">
+                                            <option value="">-- All Profiles --</option>
+                                            <t t-foreach="state.slabFilterOpts.profiles" t-as="p" t-key="p.id">
+                                                <option t-att-value="p.id"
+                                                        t-att-selected="p.id === state.slabProfileId ? 'selected' : false">
+                                                    <t t-esc="p.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="sfa-filter-group">
+                                        <label class="sfa-filter-label">Territory</label>
+                                        <select class="sfa-filter-select" t-on-change="onSlabTerritoryChange">
+                                            <option value="">-- All Territories --</option>
+                                            <t t-foreach="state.slabFilterOpts.territories" t-as="tr" t-key="tr.id">
+                                                <option t-att-value="tr.id"
+                                                        t-att-selected="tr.id === state.slabTerritoryId ? 'selected' : false">
+                                                    <t t-esc="tr.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="sfa-filter-group">
+                                        <label class="sfa-filter-label">Payout Type</label>
+                                        <select class="sfa-filter-select" t-on-change="onSlabPayoutTypeChange">
+                                            <option value="">-- All Types --</option>
+                                            <option value="percentage" t-att-selected="state.slabPayoutType === 'percentage' ? 'selected' : false">Percentage</option>
+                                            <option value="fixed" t-att-selected="state.slabPayoutType === 'fixed' ? 'selected' : false">Fixed Amount</option>
+                                            <option value="salary_pct" t-att-selected="state.slabPayoutType === 'salary_pct' ? 'selected' : false">Salary %</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button style="display:flex;align-items:center;gap:6px;padding:7px 16px;border:none;border-radius:6px;background:#7c3aed;color:#fff;font-size:.85rem;font-weight:600;cursor:pointer;"
+                                        t-on-click="openNewSlabForm">
+                                    <i class="fa fa-plus"/> New Slab
+                                </button>
+                            </div>
+
+                            <!-- Table -->
+                            <div style="flex:1;overflow:auto;padding:16px 20px;">
+                                <t t-if="state.slabLoading">
+                                    <div style="text-align:center;padding:48px;color:#6c757d;">
+                                        <i class="fa fa-spinner fa-spin" style="font-size:1.5rem;"/>
+                                        <div style="margin-top:8px;">Loading…</div>
+                                    </div>
+                                </t>
+                                <t t-elif="state.slabSlabs.length === 0">
+                                    <div style="text-align:center;padding:48px;color:#6c757d;">
+                                        <i class="fa fa-list" style="font-size:2rem;opacity:.2;display:block;margin-bottom:8px;"/>
+                                        <div style="font-weight:600;">No Slabs Found</div>
+                                        <div style="font-size:.85rem;color:#9ca3af;">No slabs match the selected filters.</div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <table class="sfa-slb-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Slab Name</th>
+                                                <th>Criteria</th>
+                                                <th>Profile</th>
+                                                <th>Territory</th>
+                                                <th>Range</th>
+                                                <th>Payout</th>
+                                                <th>Multiplier</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.slabSlabs" t-as="slab" t-key="slab.id">
+                                                <tr>
+                                                    <td>
+                                                        <a href="#" t-on-click.prevent="() => this.editSlabRecord(slab.id)"
+                                                           style="color:#1d4ed8;font-weight:500;text-decoration:none;">
+                                                            <t t-esc="slab.name"/>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <span t-att-class="slabCriteriaColor(slab.criteria)">
+                                                            <t t-esc="slab.criteria"/>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span t-att-class="slabProfileColor(slab.profile)">
+                                                            <t t-esc="slab.profile"/>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="slb-badge gray"><t t-esc="slab.territory"/></span>
+                                                    </td>
+                                                    <td style="white-space:nowrap;"><t t-esc="slab.range"/></td>
+                                                    <td style="white-space:nowrap;"><t t-esc="slab.payout"/></td>
+                                                    <td style="text-align:center;font-weight:600;"><t t-esc="slab.multiplier"/></td>
+                                                    <td>
+                                                        <span t-att-class="slab.active ? 'slb-status-badge active' : 'slb-status-badge inactive'">
+                                                            <t t-esc="slab.active ? 'Active' : 'Inactive'"/>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="slb-actions">
+                                                            <button class="slb-act-btn toggle"
+                                                                    t-on-click="() => this.toggleSlabActive(slab.id)"
+                                                                    t-att-title="slab.active ? 'Deactivate' : 'Activate'">
+                                                                <i t-att-class="slab.active ? 'fa fa-toggle-on' : 'fa fa-toggle-off'"/>
+                                                            </button>
+                                                            <button class="slb-act-btn edit"
+                                                                    t-on-click="() => this.editSlabRecord(slab.id)"
+                                                                    title="Edit">
+                                                                <i class="fa fa-pencil"/>
+                                                            </button>
+                                                            <button class="slb-act-btn delete"
+                                                                    t-on-click="() => this.deleteSlabRecord(slab.id, slab.name)"
+                                                                    title="Delete">
+                                                                <i class="fa fa-trash"/>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </t>
+                            </div>
+
+                        </div>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         LEAVE MANAGEMENT
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'leaves'">
+                        <t t-if="state.selectedEmployee">
+                            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                                <LeaveManagement
+                                    t-props="{
+                                        employeeId: state.selectedEmployee,
+                                        isManager: state.isManager,
+                                        currentUserId: state.userId,
+                                    }"
+                                    t-key="'leave_' + state.selectedEmployee"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="emp360-section" style="padding-top:24px;">
+                                <div class="emp360-empty">
+                                    <div class="emp360-empty-icon"><i class="fa fa-calendar-check-o"></i></div>
+                                    <div class="emp360-empty-title">Select an Employee</div>
+                                    <div class="emp360-empty-desc">Leave records will appear here.</div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         TARGET / KPI SCREENS (embedded client actions)
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'targetCriteria'">
+                        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                            <t t-component="getActionComponent('sfa_target_criteria_manager')" t-key="'tcm'"/>
+                        </div>
+                    </t>
+                    <t t-if="state.activeTab === 'targetAllocation'">
+                        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                            <t t-component="getActionComponent('sfa_target_allocation')" t-key="'tal'"/>
+                        </div>
+                    </t>
+                    <t t-if="state.activeTab === 'kpiMetric'">
+                        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                            <t t-component="getActionComponent('kpi_metric_manager')" t-key="'kmm'"/>
+                        </div>
+                    </t>
+                    <t t-if="state.activeTab === 'kpiDashboard'">
+                        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                            <t t-component="getActionComponent('sfa_kpi_dashboard')" t-key="'kdb'"/>
+                        </div>
+                    </t>
+
+                    <!-- ═══════════════════════════════════════
+                         ANALYTICS / SUMMARY
+                         ═══════════════════════════════════════ -->
+                    <t t-if="state.activeTab === 'summary'">
+                        <DashboardReport/>
+                    </t>
+
+                </div>
+                <!-- /content -->
+
+            </div>
+            <!-- /main -->
+
+        </div>
+    </t>
+
+</templates>

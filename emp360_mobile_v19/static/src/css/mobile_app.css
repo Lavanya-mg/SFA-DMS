@@ -1,0 +1,2309 @@
+/* ============================================================
+   EMPLOYEE 360 — MOBILE APP DESIGN SYSTEM
+   Odoo 19 | PWA Mobile Application
+   Supports: Android & iOS | Manager & Field User
+   ============================================================ */
+
+/* ── CSS Variables / Design Tokens ─────────────────────────── */
+/* Force standard backend action managers to stay white, except when explicitly inside your app */
+.o_web_client:not(.o_mobile_app_active) .o_action_manager {
+    background-color: #ffffff !important;
+}
+.o_web_client:not(.o_mobile_app_active) .o_content {
+    background-color: #ffffff !important;
+}
+:root {
+    --m-primary:       #4361ee;
+    --m-primary-dark:  #3a0ca3;
+    --m-primary-light: #e8ecfd;
+    --m-secondary:     #06d6a0;
+    --m-secondary-dk:  #019b72;
+    --m-accent:        #f72585;
+    --m-warning:       #f77f00;
+    --m-warning-lt:    #fff3e0;
+    --m-danger:        #ef233c;
+    --m-danger-lt:     #fee2e2;
+    --m-info:          #4cc9f0;
+    --m-info-lt:       #e0f7fe;
+    --m-success:       #06d6a0;
+    --m-success-lt:    #d1fae5;
+
+    --m-bg:            #f0f4f8;
+    --m-bg-2:          #e8edf3;
+    --m-card:          #ffffff;
+    --m-dark:          #0d0d1f;
+    --m-dark-2:        #1a1a3e;
+    --m-dark-3:        #16213e;
+
+    --m-text-h:        #0f172a;
+    --m-text-p:        #1e293b;
+    --m-text-s:        #64748b;
+    --m-text-m:        #94a3b8;
+
+    --m-border:        #e2e8f0;
+    --m-border-dk:     #cbd5e1;
+
+    --m-shadow-sm:  0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --m-shadow:     0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --m-shadow-lg:  0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+    --m-shadow-xl:  0 20px 60px rgba(0,0,0,0.16);
+
+    --m-nav-h:     64px;
+    --m-header-h:  56px;
+    --m-status-h:  env(safe-area-inset-top, 0px);
+    --m-bottom-h:  env(safe-area-inset-bottom, 0px);
+
+    --m-r:         16px;
+    --m-r-sm:      12px;
+    --m-r-xs:      8px;
+    --m-r-pill:    100px;
+
+    --m-font:      -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --m-font-mono: "SF Mono", "Fira Code", Consolas, monospace;
+
+    --m-transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    --m-spring:     all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --m-slide:      all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset & Base ────────────────────────────────────────────── */
+.mobile360-root *,
+.mobile360-root *::before,
+.mobile360-root *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* ── App Shell ───────────────────────────────────────────────── */
+.mobile360-root {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--m-bg);
+    font-family: var(--m-font);
+    font-size: 14px;
+    color: var(--m-text-p);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: var(--m-shadow-xl);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+}
+
+/* Desktop centering */
+@media (min-width: 480px) {
+    .mobile360-root {
+        border-radius: 0;
+        box-shadow: 0 0 80px rgba(0,0,0,0.25);
+    }
+    body {
+        background: var(--m-dark) !important;
+    }
+}
+
+/* ── Safe Area / Status Bar ──────────────────────────────────── */
+.mobile360-safe-top {
+    height: var(--m-status-h);
+    background: transparent;
+    flex-shrink: 0;
+}
+
+/* ── Top Navigation Bar ──────────────────────────────────────── */
+.mobile360-topbar {
+    display: flex;
+    align-items: center;
+    height: var(--m-header-h);
+    padding: 0 4px 0 8px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+    transition: var(--m-transition);
+}
+
+.mobile360-topbar-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(255,255,255,0.18);
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: var(--m-transition);
+    backdrop-filter: blur(8px);
+}
+
+.mobile360-topbar-btn:active {
+    transform: scale(0.92);
+    background: rgba(255,255,255,0.28);
+}
+
+.mobile360-topbar-center {
+    flex: 1;
+    text-align: center;
+    padding: 0 4px;
+}
+
+.mobile360-topbar-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.mobile360-topbar-subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    display: block;
+    margin-top: 1px;
+}
+
+/* ── Content Area ────────────────────────────────────────────── */
+.mobile360-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+    padding-bottom: var(--m-nav-h);
+}
+
+.mobile360-screen {
+    min-height: 100%;
+    animation: m-slide-up 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes m-slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Bottom Navigation ───────────────────────────────────────── */
+.mobile360-bottom-nav {
+    display: flex;
+    align-items: center;
+    height: var(--m-nav-h);
+    background: var(--m-card);
+    border-top: 1px solid var(--m-border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile360-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    color: var(--m-text-m);
+    cursor: pointer;
+    padding: 6px 4px;
+    transition: var(--m-transition);
+    position: relative;
+    min-width: 0;
+    height: 100%;
+    border-radius: 0;
+}
+
+.mobile360-nav-item:active {
+    background: var(--m-primary-light);
+}
+
+.mobile360-nav-item.active {
+    color: var(--m-primary);
+}
+
+.mobile360-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    background: var(--m-primary);
+    border-radius: 0 0 4px 4px;
+}
+
+.mobile360-nav-icon {
+    font-size: 20px;
+    transition: var(--m-transition);
+}
+
+.mobile360-nav-item.active .mobile360-nav-icon {
+    transform: scale(1.1);
+}
+
+.mobile360-nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mobile360-nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 50%;
+    transform: translateX(10px);
+    background: var(--m-danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #fff;
+}
+
+/* ── Hero Header (gradient) ──────────────────────────────────── */
+.mobile360-hero {
+    padding: 20px 16px 28px;
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile360-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: var(--m-bg);
+    border-radius: 24px 24px 0 0;
+}
+
+.mobile360-hero-greeting {
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.mobile360-hero-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+.mobile360-hero-date {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.mobile360-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.18);
+    border-radius: var(--m-r-pill);
+    padding: 5px 12px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    margin-top: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+}
+
+.mobile360-hero-decor {
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 140px;
+    height: 140px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.mobile360-hero-decor-2 {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* ── Section ─────────────────────────────────────────────────── */
+.mobile360-section {
+    padding: 0 16px 20px;
+}
+
+.mobile360-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-top: 4px;
+}
+
+.mobile360-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--m-text-h);
+    letter-spacing: -0.3px;
+}
+
+.mobile360-section-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--m-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.mobile360-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    box-shadow: var(--m-shadow-sm);
+    overflow: hidden;
+    transition: var(--m-transition);
+    border: 1px solid var(--m-border);
+}
+
+.mobile360-card:active {
+    transform: scale(0.99);
+    box-shadow: var(--m-shadow);
+}
+
+.mobile360-card-body {
+    padding: 16px;
+}
+
+.mobile360-card-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--m-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mobile360-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-card-sub {
+    font-size: 12px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+/* ── KPI Cards Grid ──────────────────────────────────────────── */
+.mobile360-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.mobile360-kpi-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.mobile360-kpi-card {
+    background: var(--m-card);
+    border-radius: var(--m-r-sm);
+    padding: 14px 12px;
+    border: 1px solid var(--m-border);
+    position: relative;
+    overflow: hidden;
+    transition: var(--m-transition);
+}
+
+.mobile360-kpi-card:active {
+    transform: scale(0.97);
+}
+
+.mobile360-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+}
+
+.mobile360-kpi-card.blue::before   { background: var(--m-primary); }
+.mobile360-kpi-card.green::before  { background: var(--m-secondary); }
+.mobile360-kpi-card.orange::before { background: var(--m-warning); }
+.mobile360-kpi-card.red::before    { background: var(--m-danger); }
+.mobile360-kpi-card.purple::before { background: #7209b7; }
+.mobile360-kpi-card.teal::before   { background: #0077b6; }
+
+.mobile360-kpi-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--m-r-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.mobile360-kpi-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--m-text-h);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+}
+
+.mobile360-kpi-label {
+    font-size: 11px;
+    color: var(--m-text-s);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.mobile360-kpi-change {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.mobile360-kpi-change.up   { color: var(--m-secondary); }
+.mobile360-kpi-change.down { color: var(--m-danger); }
+
+/* ── Quick Actions ───────────────────────────────────────────── */
+.mobile360-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.mobile360-quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: var(--m-spring);
+}
+
+.mobile360-quick-btn:active {
+    transform: scale(0.9);
+}
+
+.mobile360-quick-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #fff;
+    box-shadow: var(--m-shadow);
+    transition: var(--m-transition);
+}
+
+.mobile360-quick-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--m-text-s);
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* ── Visit Card ──────────────────────────────────────────────── */
+.mobile360-visit-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: var(--m-transition);
+}
+
+.mobile360-visit-card:active {
+    transform: scale(0.99);
+    box-shadow: var(--m-shadow);
+}
+
+.mobile360-visit-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px 10px;
+}
+
+.mobile360-visit-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #fff;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.mobile360-visit-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile360-visit-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--m-text-h);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile360-visit-meta {
+    font-size: 12px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mobile360-visit-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--m-border);
+}
+
+.mobile360-visit-stat {
+    padding: 10px 12px;
+    text-align: center;
+    border-right: 1px solid var(--m-border);
+}
+
+.mobile360-visit-stat:last-child {
+    border-right: none;
+}
+
+.mobile360-visit-stat-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-visit-stat-lbl {
+    font-size: 10px;
+    color: var(--m-text-m);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+}
+
+/* ── Status Badges ───────────────────────────────────────────── */
+.mobile360-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--m-r-pill);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.mobile360-badge.success  { background: var(--m-success-lt); color: var(--m-secondary-dk); }
+.mobile360-badge.warning  { background: var(--m-warning-lt); color: #b45309; }
+.mobile360-badge.danger   { background: var(--m-danger-lt);  color: #b91c1c; }
+.mobile360-badge.info     { background: var(--m-info-lt);    color: #0369a1; }
+.mobile360-badge.primary  { background: var(--m-primary-light); color: var(--m-primary-dark); }
+.mobile360-badge.muted    { background: var(--m-bg-2); color: var(--m-text-s); }
+
+/* ── Beat Card ───────────────────────────────────────────────── */
+.mobile360-beat-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.mobile360-beat-header {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    padding: 16px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile360-beat-header::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+
+.mobile360-beat-name {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+}
+
+.mobile360-beat-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobile360-beat-progress {
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.mobile360-beat-progress-bar {
+    height: 100%;
+    background: var(--m-secondary);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+/* ── Customer List Item ──────────────────────────────────────── */
+.mobile360-customer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--m-border);
+    cursor: pointer;
+    transition: var(--m-transition);
+    position: relative;
+}
+
+.mobile360-customer-item:last-child {
+    border-bottom: none;
+}
+
+.mobile360-customer-item:active {
+    background: var(--m-primary-light);
+}
+
+.mobile360-customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.mobile360-customer-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--m-text-h);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile360-customer-meta {
+    font-size: 12px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+.mobile360-customer-status {
+    flex-shrink: 0;
+}
+
+.mobile360-seq-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--m-primary-light);
+    color: var(--m-primary);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── Attendance Card ─────────────────────────────────────────── */
+.mobile360-attendance-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.mobile360-attendance-header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile360-attendance-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #fff;
+}
+
+.mobile360-attendance-info {
+    flex: 1;
+}
+
+.mobile360-attendance-status {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-attendance-time {
+    font-size: 13px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+.mobile360-attendance-times {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--m-border);
+}
+
+.mobile360-time-block {
+    padding: 12px 16px;
+    border-right: 1px solid var(--m-border);
+}
+
+.mobile360-time-block:last-child {
+    border-right: none;
+}
+
+.mobile360-time-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--m-text-m);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.mobile360-time-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--m-text-h);
+    letter-spacing: -0.5px;
+    font-family: var(--m-font-mono);
+}
+
+/* ── Primary Action Button ───────────────────────────────────── */
+.mobile360-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 24px;
+    border-radius: var(--m-r-pill);
+    border: none;
+    font-family: var(--m-font);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--m-transition);
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+}
+
+.mobile360-btn:active {
+    transform: scale(0.97);
+}
+
+.mobile360-btn-primary {
+    background: linear-gradient(135deg, var(--m-primary), var(--m-primary-dark));
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(67,97,238,0.35);
+}
+
+.mobile360-btn-success {
+    background: linear-gradient(135deg, var(--m-secondary), var(--m-secondary-dk));
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(6,214,160,0.35);
+}
+
+.mobile360-btn-danger {
+    background: linear-gradient(135deg, var(--m-danger), #b91c1c);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(239,35,60,0.3);
+}
+
+.mobile360-btn-warning {
+    background: linear-gradient(135deg, var(--m-warning), #d62828);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(247,127,0,0.3);
+}
+
+.mobile360-btn-outline {
+    background: transparent;
+    color: var(--m-primary);
+    border: 2px solid var(--m-primary);
+}
+
+.mobile360-btn-ghost {
+    background: var(--m-primary-light);
+    color: var(--m-primary);
+}
+
+.mobile360-btn-full {
+    width: 100%;
+}
+
+.mobile360-btn-sm {
+    height: 36px;
+    font-size: 13px;
+    padding: 0 16px;
+}
+
+.mobile360-btn-lg {
+    height: 56px;
+    font-size: 17px;
+}
+
+.mobile360-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ── FAB (Floating Action Button) ────────────────────────────── */
+.mobile360-fab {
+    position: fixed;
+    bottom: calc(var(--m-nav-h) + 16px);
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--m-primary), var(--m-primary-dark));
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 24px rgba(67,97,238,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 100;
+    transition: var(--m-spring);
+}
+
+.mobile360-fab:active {
+    transform: scale(0.9);
+}
+
+/* ── Bottom Sheet Modal ──────────────────────────────────────── */
+.mobile360-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    animation: m-fade-in 0.2s ease;
+    backdrop-filter: blur(2px);
+}
+
+@keyframes m-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.mobile360-sheet {
+    width: 100%;
+    max-width: 480px;
+    background: var(--m-card);
+    border-radius: 24px 24px 0 0;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: m-sheet-up 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes m-sheet-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.mobile360-sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--m-border-dk);
+    border-radius: 2px;
+    margin: 12px auto 0;
+}
+
+.mobile360-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--m-border);
+    position: sticky;
+    top: 0;
+    background: var(--m-card);
+    z-index: 1;
+}
+
+.mobile360-sheet-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--m-text-h);
+    letter-spacing: -0.3px;
+}
+
+.mobile360-sheet-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--m-bg);
+    border: none;
+    color: var(--m-text-s);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--m-transition);
+}
+
+.mobile360-sheet-close:active {
+    background: var(--m-border);
+}
+
+.mobile360-sheet-body {
+    padding: 20px;
+}
+
+.mobile360-sheet-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--m-border);
+    display: flex;
+    gap: 10px;
+}
+
+/* ── Dialog Modal (centered) ─────────────────────────────────── */
+.mobile360-dialog {
+    width: calc(100% - 48px);
+    max-width: 360px;
+    background: var(--m-card);
+    border-radius: 24px;
+    overflow: hidden;
+    animation: m-bounce-in 0.3s var(--m-spring);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes m-bounce-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.mobile360-dialog-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 24px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.mobile360-dialog-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--m-text-h);
+    text-align: center;
+    margin: 12px 24px 4px;
+}
+
+.mobile360-dialog-body {
+    padding: 8px 24px 20px;
+    color: var(--m-text-s);
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.mobile360-dialog-footer {
+    display: flex;
+    border-top: 1px solid var(--m-border);
+}
+
+.mobile360-dialog-footer button {
+    flex: 1;
+    height: 52px;
+    border: none;
+    background: none;
+    font-family: var(--m-font);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--m-transition);
+    border-right: 1px solid var(--m-border);
+}
+
+.mobile360-dialog-footer button:last-child {
+    border-right: none;
+}
+
+.mobile360-dialog-footer button:active {
+    background: var(--m-bg);
+}
+
+.mobile360-dialog-footer button.primary {
+    color: var(--m-primary);
+}
+
+.mobile360-dialog-footer button.danger {
+    color: var(--m-danger);
+}
+
+/* ── Form Elements ───────────────────────────────────────────── */
+.mobile360-form-group {
+    margin-bottom: 16px;
+}
+
+.mobile360-form-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--m-text-s);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.mobile360-form-input {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid var(--m-border);
+    border-radius: var(--m-r-sm);
+    background: var(--m-bg);
+    font-family: var(--m-font);
+    font-size: 15px;
+    color: var(--m-text-h);
+    padding: 0 14px;
+    outline: none;
+    transition: var(--m-transition);
+    -webkit-appearance: none;
+}
+
+.mobile360-form-input:focus {
+    border-color: var(--m-primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(67,97,238,0.12);
+}
+
+.mobile360-form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px;
+    padding-right: 36px;
+}
+
+.mobile360-form-textarea {
+    resize: none;
+    height: 96px;
+    padding: 12px 14px;
+    line-height: 1.5;
+}
+
+.mobile360-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* ── Progress Stepper ────────────────────────────────────────── */
+.mobile360-stepper {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    overflow-x: auto;
+    gap: 0;
+    scrollbar-width: none;
+}
+
+.mobile360-stepper::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile360-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 60px;
+    position: relative;
+}
+
+.mobile360-step::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--m-border);
+    z-index: 0;
+}
+
+.mobile360-step:last-child::before {
+    display: none;
+}
+
+.mobile360-step.active::before,
+.mobile360-step.done::before {
+    background: var(--m-primary);
+}
+
+.mobile360-step-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--m-border);
+    color: var(--m-text-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    transition: var(--m-transition);
+    border: 2px solid var(--m-border);
+}
+
+.mobile360-step.active .mobile360-step-dot {
+    background: var(--m-primary);
+    color: #fff;
+    border-color: var(--m-primary);
+    box-shadow: 0 0 0 4px rgba(67,97,238,0.2);
+}
+
+.mobile360-step.done .mobile360-step-dot {
+    background: var(--m-secondary);
+    color: #fff;
+    border-color: var(--m-secondary);
+}
+
+.mobile360-step-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--m-text-m);
+    margin-top: 6px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mobile360-step.active .mobile360-step-label {
+    color: var(--m-primary);
+    font-weight: 700;
+}
+
+.mobile360-step.done .mobile360-step-label {
+    color: var(--m-secondary);
+}
+
+/* ── Progress Ring ───────────────────────────────────────────── */
+.mobile360-progress-ring {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+
+.mobile360-progress-ring svg {
+    transform: rotate(-90deg);
+}
+
+.mobile360-progress-ring-track {
+    fill: none;
+    stroke: var(--m-border);
+    stroke-width: 6;
+}
+
+.mobile360-progress-ring-fill {
+    fill: none;
+    stroke: var(--m-primary);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.mobile360-progress-ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile360-progress-ring-pct {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--m-text-h);
+    letter-spacing: -0.5px;
+}
+
+.mobile360-progress-ring-lbl {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--m-text-m);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* ── List Row ────────────────────────────────────────────────── */
+.mobile360-list {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    overflow: hidden;
+}
+
+.mobile360-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--m-border);
+    cursor: pointer;
+    transition: var(--m-transition);
+}
+
+.mobile360-list-item:last-child {
+    border-bottom: none;
+}
+
+.mobile360-list-item:active {
+    background: var(--m-primary-light);
+}
+
+.mobile360-list-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.mobile360-list-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile360-list-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--m-text-h);
+}
+
+.mobile360-list-sub {
+    font-size: 12px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+.mobile360-list-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.mobile360-list-amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-list-chevron {
+    color: var(--m-text-m);
+    font-size: 13px;
+}
+
+/* ── Timeline ────────────────────────────────────────────────── */
+.mobile360-timeline {
+    padding: 8px 16px;
+}
+
+.mobile360-timeline-item {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    position: relative;
+}
+
+.mobile360-timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    bottom: 0;
+    width: 2px;
+    background: var(--m-border);
+}
+
+.mobile360-timeline-item:last-child::after {
+    display: none;
+}
+
+.mobile360-timeline-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.mobile360-timeline-content {
+    flex: 1;
+    background: var(--m-bg);
+    border-radius: var(--m-r-sm);
+    padding: 12px;
+}
+
+.mobile360-timeline-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-timeline-time {
+    font-size: 11px;
+    color: var(--m-text-m);
+    margin-top: 2px;
+}
+
+/* ── Stat Row ────────────────────────────────────────────────── */
+.mobile360-stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--m-border);
+}
+
+.mobile360-stat-row:last-child {
+    border-bottom: none;
+}
+
+.mobile360-stat-label {
+    font-size: 13px;
+    color: var(--m-text-s);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobile360-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+/* ── Search Bar ──────────────────────────────────────────────── */
+.mobile360-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--m-card);
+    border: 1.5px solid var(--m-border);
+    border-radius: var(--m-r-pill);
+    padding: 0 14px;
+    height: 44px;
+    margin-bottom: 14px;
+    transition: var(--m-transition);
+}
+
+.mobile360-search-bar:focus-within {
+    border-color: var(--m-primary);
+    box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+}
+
+.mobile360-search-icon {
+    color: var(--m-text-m);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.mobile360-search-input {
+    flex: 1;
+    border: none;
+    background: none;
+    font-family: var(--m-font);
+    font-size: 14px;
+    color: var(--m-text-h);
+    outline: none;
+}
+
+.mobile360-search-input::placeholder {
+    color: var(--m-text-m);
+}
+
+/* ── Filter Chips ────────────────────────────────────────────── */
+.mobile360-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 14px;
+}
+
+.mobile360-chips::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile360-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: var(--m-r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--m-border);
+    background: var(--m-card);
+    color: var(--m-text-s);
+    white-space: nowrap;
+    transition: var(--m-transition);
+    flex-shrink: 0;
+}
+
+.mobile360-chip:active {
+    transform: scale(0.95);
+}
+
+.mobile360-chip.active {
+    background: var(--m-primary);
+    border-color: var(--m-primary);
+    color: #fff;
+}
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.mobile360-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 32px;
+    text-align: center;
+}
+
+.mobile360-empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: var(--m-bg-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: var(--m-text-m);
+    margin-bottom: 20px;
+}
+
+.mobile360-empty-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--m-text-h);
+    margin-bottom: 8px;
+}
+
+.mobile360-empty-sub {
+    font-size: 14px;
+    color: var(--m-text-s);
+    line-height: 1.5;
+}
+
+/* ── Loading State ───────────────────────────────────────────── */
+.mobile360-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    gap: 14px;
+}
+
+.mobile360-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--m-border);
+    border-top-color: var(--m-primary);
+    border-radius: 50%;
+    animation: m-spin 0.8s linear infinite;
+}
+
+@keyframes m-spin {
+    to { transform: rotate(360deg); }
+}
+
+.mobile360-loading-text {
+    font-size: 14px;
+    color: var(--m-text-s);
+    font-weight: 500;
+}
+
+/* ── Skeleton Loader ─────────────────────────────────────────── */
+.mobile360-skeleton {
+    background: linear-gradient(90deg, var(--m-bg) 25%, var(--m-bg-2) 50%, var(--m-bg) 75%);
+    background-size: 200% 100%;
+    border-radius: var(--m-r-xs);
+    animation: m-shimmer 1.5s infinite;
+}
+
+@keyframes m-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Achievement Progress Bar ────────────────────────────────── */
+.mobile360-achievement {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    padding: 16px;
+    margin-bottom: 10px;
+}
+
+.mobile360-achievement-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.mobile360-achievement-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-achievement-pct {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--m-primary);
+}
+
+.mobile360-achievement-bar {
+    height: 8px;
+    background: var(--m-bg-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mobile360-achievement-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--m-primary), var(--m-secondary));
+    transition: width 0.6s ease;
+}
+
+.mobile360-achievement-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--m-text-m);
+    font-weight: 600;
+}
+
+/* ── Team Employee Card ──────────────────────────────────────── */
+.mobile360-emp-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: var(--m-transition);
+}
+
+.mobile360-emp-card:active {
+    transform: scale(0.99);
+}
+
+.mobile360-emp-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+}
+
+.mobile360-emp-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.mobile360-emp-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--m-text-h);
+}
+
+.mobile360-emp-role {
+    font-size: 12px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+.mobile360-emp-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--m-border);
+}
+
+.mobile360-emp-stat {
+    padding: 10px 8px;
+    text-align: center;
+    border-right: 1px solid var(--m-border);
+}
+
+.mobile360-emp-stat:last-child {
+    border-right: none;
+}
+
+.mobile360-emp-stat-val {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--m-text-h);
+}
+
+.mobile360-emp-stat-lbl {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--m-text-m);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+}
+
+/* ── Order Card ──────────────────────────────────────────────── */
+.mobile360-order-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: var(--m-transition);
+}
+
+.mobile360-order-card:active {
+    transform: scale(0.99);
+}
+
+.mobile360-order-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+}
+
+.mobile360-order-number {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--m-primary);
+    letter-spacing: -0.3px;
+}
+
+.mobile360-order-partner {
+    font-size: 13px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+.mobile360-order-amount {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--m-text-h);
+    letter-spacing: -0.5px;
+}
+
+.mobile360-order-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--m-border);
+    background: var(--m-bg);
+}
+
+/* ── Collection Card ─────────────────────────────────────────── */
+.mobile360-collect-card {
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: var(--m-transition);
+}
+
+.mobile360-collect-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--m-success-lt);
+    color: var(--m-secondary-dk);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+/* ── Switch between tabs ─────────────────────────────────────── */
+.mobile360-tab-bar {
+    display: flex;
+    background: var(--m-bg-2);
+    border-radius: var(--m-r-pill);
+    padding: 3px;
+    margin-bottom: 16px;
+}
+
+.mobile360-tab-btn {
+    flex: 1;
+    height: 36px;
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: none;
+    color: var(--m-text-s);
+    font-family: var(--m-font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--m-transition);
+}
+
+.mobile360-tab-btn.active {
+    background: var(--m-card);
+    color: var(--m-primary);
+    box-shadow: var(--m-shadow-sm);
+}
+
+/* ── Notification Toast ──────────────────────────────────────── */
+.mobile360-toast {
+    position: fixed;
+    bottom: calc(var(--m-nav-h) + 16px);
+    left: 16px;
+    right: 16px;
+    max-width: calc(480px - 32px);
+    background: var(--m-dark);
+    color: #fff;
+    border-radius: var(--m-r-sm);
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: m-toast-in 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@keyframes m-toast-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Utility Classes ─────────────────────────────────────────── */
+.m-text-primary  { color: var(--m-primary); }
+.m-text-success  { color: var(--m-secondary); }
+.m-text-warning  { color: var(--m-warning); }
+.m-text-danger   { color: var(--m-danger); }
+.m-text-muted    { color: var(--m-text-m); }
+
+.m-bg-primary    { background: linear-gradient(135deg, #4361ee, #3a0ca3); }
+.m-bg-success    { background: linear-gradient(135deg, #06d6a0, #019b72); }
+.m-bg-warning    { background: linear-gradient(135deg, #f77f00, #d62828); }
+.m-bg-danger     { background: linear-gradient(135deg, #ef233c, #b91c1c); }
+.m-bg-info       { background: linear-gradient(135deg, #4cc9f0, #0077b6); }
+.m-bg-purple     { background: linear-gradient(135deg, #7209b7, #3a0ca3); }
+.m-bg-teal       { background: linear-gradient(135deg, #0077b6, #023e8a); }
+
+.m-fw-7  { font-weight: 700; }
+.m-fw-8  { font-weight: 800; }
+.m-fs-12 { font-size: 12px; }
+.m-fs-13 { font-size: 13px; }
+.m-fs-14 { font-size: 14px; }
+.m-fs-15 { font-size: 15px; }
+
+.m-mt-8  { margin-top: 8px; }
+.m-mt-12 { margin-top: 12px; }
+.m-mt-16 { margin-top: 16px; }
+.m-mb-8  { margin-bottom: 8px; }
+.m-mb-12 { margin-bottom: 12px; }
+.m-mb-16 { margin-bottom: 16px; }
+
+.m-p-16  { padding: 16px; }
+.m-px-16 { padding-left: 16px; padding-right: 16px; }
+.m-py-12 { padding-top: 12px; padding-bottom: 12px; }
+
+.m-flex  { display: flex; }
+.m-flex-col { flex-direction: column; }
+.m-items-center { align-items: center; }
+.m-justify-between { justify-content: space-between; }
+.m-gap-8 { gap: 8px; }
+.m-gap-12 { gap: 12px; }
+.m-gap-16 { gap: 16px; }
+
+.m-divider {
+    height: 1px;
+    background: var(--m-border);
+    margin: 0 -16px;
+}
+
+.m-spacer-8  { height: 8px; }
+.m-spacer-12 { height: 12px; }
+.m-spacer-16 { height: 16px; }
+
+/* ── Map Container ───────────────────────────────────────────── */
+.mobile360-map-container {
+    height: 180px;
+    border-radius: var(--m-r-sm);
+    overflow: hidden;
+    border: 1.5px solid var(--m-border);
+    margin-top: 8px;
+}
+
+/* ── Photo Upload ────────────────────────────────────────────── */
+.mobile360-photo-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 120px;
+    border: 2px dashed var(--m-border);
+    border-radius: var(--m-r-sm);
+    background: var(--m-bg);
+    cursor: pointer;
+    transition: var(--m-transition);
+}
+
+.mobile360-photo-upload:active {
+    border-color: var(--m-primary);
+    background: var(--m-primary-light);
+}
+
+.mobile360-photo-upload-icon {
+    font-size: 32px;
+    color: var(--m-text-m);
+}
+
+.mobile360-photo-upload-text {
+    font-size: 13px;
+    color: var(--m-text-s);
+    font-weight: 600;
+}
+
+.mobile360-photo-preview {
+    width: 100%;
+    height: 120px;
+    border-radius: var(--m-r-sm);
+    object-fit: cover;
+    border: 2px solid var(--m-border);
+}
+
+/* ── Info Banner ─────────────────────────────────────────────── */
+.mobile360-banner {
+    border-radius: var(--m-r-sm);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.mobile360-banner.info    { background: var(--m-info-lt);    color: #0369a1; }
+.mobile360-banner.success { background: var(--m-success-lt); color: var(--m-secondary-dk); }
+.mobile360-banner.warning { background: var(--m-warning-lt); color: #92400e; }
+.mobile360-banner.danger  { background: var(--m-danger-lt);  color: #991b1b; }
+
+.mobile360-banner-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.mobile360-banner-text {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* ── Active Visit Indicator ──────────────────────────────────── */
+.mobile360-active-visit {
+    background: linear-gradient(135deg, #06d6a0, #019b72);
+    border-radius: var(--m-r);
+    padding: 16px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.mobile360-active-visit::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+}
+
+.mobile360-pulse {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    position: relative;
+    animation: m-pulse 2s ease-in-out infinite;
+}
+
+.mobile360-pulse::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+    animation: m-pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes m-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes m-pulse-ring {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+/* ── Stock Table ─────────────────────────────────────────────── */
+.mobile360-stock-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--m-border);
+}
+
+.mobile360-stock-row:last-child {
+    border-bottom: none;
+}
+
+.mobile360-stock-input {
+    width: 100%;
+    height: 36px;
+    border: 1.5px solid var(--m-border);
+    border-radius: 8px;
+    background: var(--m-bg);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--m-text-h);
+    outline: none;
+    padding: 0 6px;
+    -webkit-appearance: none;
+}
+
+.mobile360-stock-input:focus {
+    border-color: var(--m-primary);
+    background: #fff;
+}
+
+/* ── Manager Specific ────────────────────────────────────────── */
+.mobile360-manager-hero {
+    padding: 20px 16px 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile360-manager-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0; right: 0;
+    height: 24px;
+    background: var(--m-bg);
+    border-radius: 24px 24px 0 0;
+}
+
+.mobile360-team-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--m-r-pill);
+    padding: 6px 12px;
+    width: fit-content;
+    margin-top: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.mobile360-team-live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--m-secondary);
+    animation: m-pulse 2s ease-in-out infinite;
+}
+
+/* ── Scrollable horizontal cards ─────────────────────────────── */
+.mobile360-hscroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.mobile360-hscroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile360-hcard {
+    min-width: 150px;
+    flex-shrink: 0;
+    background: var(--m-card);
+    border-radius: var(--m-r);
+    border: 1px solid var(--m-border);
+    padding: 16px;
+    transition: var(--m-transition);
+}
+
+.mobile360-hcard:active {
+    transform: scale(0.97);
+}
+
+/* ── Segmented Control ───────────────────────────────────────── */
+.mobile360-segment {
+    display: flex;
+    gap: 0;
+    background: var(--m-bg-2);
+    border-radius: 12px;
+    padding: 3px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mobile360-segment::-webkit-scrollbar { display: none; }
+
+.mobile360-segment-btn {
+    flex: 1;
+    min-width: fit-content;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: none;
+    color: var(--m-text-s);
+    font-family: var(--m-font);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--m-transition);
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+.mobile360-segment-btn.active {
+    background: var(--m-card);
+    color: var(--m-primary);
+    box-shadow: var(--m-shadow-sm);
+}
+
+/* ── Profile Avatar ──────────────────────────────────────────── */
+.mobile360-profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 auto 12px;
+    box-shadow: var(--m-shadow-lg);
+}
+
+/* ── Settings Row ────────────────────────────────────────────── */
+
+.mobile360-settings-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-bottom: 1px solid var(--m-border);
+    cursor: pointer;
+    transition: var(--m-transition);
+}
+
+.mobile360-settings-row:last-child {
+    border-bottom: none;
+}
+
+.mobile360-settings-row:active {
+    background: var(--m-primary-light);
+}
+
+.mobile360-settings-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.mobile360-settings-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--m-text-h);
+}
+
+.mobile360-settings-sub {
+    font-size: 12px;
+    color: var(--m-text-s);
+    margin-top: 2px;
+}
+
+.mobile360-settings-arrow {
+    color: var(--m-text-m);
+    font-size: 14px;
+}
+
+/* ── Responsive tweaks ───────────────────────────────────────── */
+@media (max-width: 360px) {
+    .mobile360-kpi-value  { font-size: 19px; }
+    .mobile360-quick-icon { width: 44px; height: 44px; font-size: 18px; }
+    .mobile360-nav-label  { font-size: 9px; }
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+.m-fade-in  { animation: m-fade-in 0.3s ease; }
+.m-slide-up { animation: m-slide-up 0.3s ease; }
+
+@keyframes m-wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+.m-wiggle { animation: m-wiggle 0.5s ease; }

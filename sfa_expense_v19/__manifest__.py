@@ -1,0 +1,30 @@
+{
+    'name': 'SFA Expense Policy Engine',
+    'version': '19.0.1.0.0',
+    'category': 'Human Resources/Expenses',
+    'summary': 'Generic configurable expense policy engine for FMCG SFA',
+    'depends': ['base', 'hr', 'hr_expense', 'mail', 'web'],
+    'data': [
+        'security/ir.model.access.csv',
+        'data/sequence_data.xml',
+        'data/expense_type_data.xml',
+        'views/expense_band_views.xml',
+        'views/expense_type_views.xml',
+        'views/city_tier_views.xml',
+        'views/travel_mode_views.xml',
+        'views/duty_type_views.xml',
+        'views/expense_manager_views.xml',
+        'views/expense_policy_views.xml',
+        'views/menus.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'sfa_expense_v19/static/src/css/expense_manager.css',
+            'sfa_expense_v19/static/src/xml/expense_manager.xml',
+            'sfa_expense_v19/static/src/js/expense_manager.js',
+        ],
+    },
+    'installable': True,
+    'auto_install': False,
+    'license': 'LGPL-3',
+}

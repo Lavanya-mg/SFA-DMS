@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Visit Stock Ledger ─────────────────────────────────── -->
+    <record id="view_visit_stock_ledger_list" model="ir.ui.view">
+        <field name="name">visit.stock.ledger.list</field>
+        <field name="model">visit.stock.ledger</field>
+        <field name="arch" type="xml">
+            <list string="Stock Updates" default_order="visit_id desc">
+                <field name="visit_id"/>
+                <field name="partner_id"/>
+                <field name="employee_id"/>
+                <field name="date"/>
+                <field name="product_id"/>
+                <field name="opening_stock"/>
+                <field name="closing_stock"/>
+                <field name="damaged_stock"/>
+                <field name="suggested_order"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_visit_stock_ledger_form" model="ir.ui.view">
+        <field name="name">visit.stock.ledger.form</field>
+        <field name="model">visit.stock.ledger</field>
+        <field name="arch" type="xml">
+            <form string="Stock Update">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="visit_id"/>
+                            <field name="partner_id"/>
+                            <field name="employee_id"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="opening_stock"/>
+                            <field name="closing_stock"/>
+                            <field name="damaged_stock"/>
+                            <field name="suggested_order"/>
+                        </group>
+                    </group>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_visit_stock_ledger" model="ir.actions.act_window">
+        <field name="name">Stock Updates</field>
+        <field name="res_model">visit.stock.ledger</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_visit_stock_ledger"
+              name="Stock Updates"
+              action="action_visit_stock_ledger"
+              parent="employee_dashboard_v19.menu_employee_dashboard_reports"
+              sequence="60"/>
+</odoo>

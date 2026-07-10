@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="sfa_incentive.TargetCriteriaManager">
+    <div class="tcm-wrap">
+
+        <!-- ══════════════════════ LIST VIEW ══════════════════════ -->
+        <t t-if="state.view === 'list'">
+            <div class="tcm-header">
+                <div class="tcm-title"><i class="fa fa-bullseye me-2"/>Target Criteria Manager</div>
+                <button class="tcm-btn tcm-btn-primary" t-on-click="() => this.openNew()">
+                    <i class="fa fa-plus me-1"/>New Criteria
+                </button>
+            </div>
+
+            <!-- Stat boxes -->
+            <div class="tcm-stats">
+                <div class="tcm-stat">
+                    <div class="tcm-stat-num tcm-blue"><t t-esc="state.stats.total"/></div>
+                    <div class="tcm-stat-lbl">TOTAL</div>
+                </div>
+                <div class="tcm-stat">
+                    <div class="tcm-stat-num tcm-green"><t t-esc="state.stats.active"/></div>
+                    <div class="tcm-stat-lbl">ACTIVE</div>
+                </div>
+                <div class="tcm-stat">
+                    <div class="tcm-stat-num tcm-red"><t t-esc="state.stats.inactive"/></div>
+                    <div class="tcm-stat-lbl">INACTIVE</div>
+                </div>
+            </div>
+
+            <!-- Category tabs -->
+            <div class="tcm-tabs">
+                <button class="tcm-tab" t-att-class="state.activeCategory === 'all' ? 'tcm-tab-active' : ''"
+                        t-on-click="() => this.setCategory('all')">All</button>
+                <t t-foreach="state.categories" t-as="c" t-key="c.value">
+                    <button class="tcm-tab" t-att-class="state.activeCategory === c.value ? 'tcm-tab-active' : ''"
+                            t-on-click="() => this.setCategory(c.value)"><t t-esc="c.label"/></button>
+                </t>
+            </div>
+
+            <!-- Table -->
+            <div class="tcm-card">
+                <table class="tcm-table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th><th>CATEGORY</th><th>OBJECT</th>
+                            <th>OPERATOR</th><th class="tcm-center">FILTERS</th>
+                            <th>STATUS</th><th class="tcm-center">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="state.loading">
+                            <tr><td colspan="7" class="tcm-empty">Loading…</td></tr>
+                        </t>
+                        <t t-elif="!state.rows.length">
+                            <tr><td colspan="7" class="tcm-empty">No criteria yet. Click “New Criteria” to add one.</td></tr>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="state.rows" t-as="r" t-key="r.id">
+                                <tr>
+                                    <td>
+                                        <a class="tcm-link" t-on-click="() => this.openEdit(r.id)"><t t-esc="r.name"/></a>
+                                    </td>
+                                    <td>
+                                        <t t-if="r.category">
+                                            <span class="tcm-chip" t-att-class="categoryChipClass(r.category)"><t t-esc="r.category_label"/></span>
+                                        </t>
+                                        <t t-else=""><span class="tcm-muted">—</span></t>
+                                    </td>
+                                    <td>
+                                        <t t-if="r.model_name"><span class="tcm-obj"><t t-esc="r.model_name"/></span></t>
+                                        <t t-else=""><span class="tcm-muted">—</span></t>
+                                    </td>
+                                    <td><t t-esc="r.operator_label || '—'"/></td>
+                                    <td class="tcm-center"><t t-esc="r.filter_count"/></td>
+                                    <td>
+                                        <span class="tcm-status" t-att-class="r.active ? 'tcm-status-on' : 'tcm-status-off'">
+                                            <t t-esc="r.active ? 'Active' : 'Inactive'"/>
+                                        </span>
+                                    </td>
+                                    <td class="tcm-center">
+                                        <button class="tcm-icon" t-att-title="r.active ? 'Deactivate' : 'Activate'"
+                                                t-on-click="() => this.toggleActive(r.id)">
+                                            <i class="fa" t-att-class="r.active ? 'fa-eye' : 'fa-eye-slash'"/>
+                                        </button>
+                                        <button class="tcm-icon" title="Edit" t-on-click="() => this.openEdit(r.id)">
+                                            <i class="fa fa-pencil"/>
+                                        </button>
+                                        <button class="tcm-icon tcm-icon-danger" title="Delete"
+                                                t-on-click="() => this.deleteCriteria(r.id, r.name)">
+                                            <i class="fa fa-trash"/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </t>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ══════════════════════ WIZARD VIEW ══════════════════════ -->
+        <t t-else="">
+            <div class="tcm-header">
+                <div class="tcm-title">
+                    <a class="tcm-back" t-on-click="() => this.backToList()"><i class="fa fa-arrow-left"/></a>
+                    <t t-esc="state.form.id ? 'Edit Criteria' : 'New Criteria'"/>
+                </div>
+            </div>
+
+            <!-- Stepper -->
+            <div class="tcm-stepper">
+                <t t-foreach="[{n:1,l:'General'},{n:2,l:'Field Mapping'},{n:3,l:'Filters &amp; Logic'},{n:4,l:'Summary'}]" t-as="s" t-key="s.n">
+                    <div class="tcm-step" t-att-class="state.step === s.n ? 'tcm-step-active' : (state.step > s.n ? 'tcm-step-done' : '')"
+                         t-on-click="() => this.goToStep(s.n)">
+                        <div class="tcm-step-num"><t t-esc="s.n"/></div>
+                        <div class="tcm-step-lbl"><t t-esc="s.l"/></div>
+                    </div>
+                    <div t-if="s.n &lt; 4" class="tcm-step-line"/>
+                </t>
+            </div>
+
+            <!-- STEP 1 — General -->
+            <t t-if="state.step === 1">
+                <div class="tcm-panel">
+                    <div class="tcm-panel-title"><i class="fa fa-cog me-2"/>General Settings</div>
+                    <div class="tcm-grid">
+                        <div class="tcm-field">
+                            <label>Criteria Name <span class="tcm-req">*</span></label>
+                            <input type="text" class="tcm-input" t-model="state.form.name" placeholder="e.g. Revenue"/>
+                        </div>
+                        <div class="tcm-field">
+                            <label>Category</label>
+                            <select class="tcm-input" t-att-value="state.form.category || ''"
+                                    t-on-change="(ev) => this.setField('category', ev.target.value)">
+                                <option value="">— None —</option>
+                                <t t-foreach="state.options.categories" t-as="c" t-key="c.value">
+                                    <option t-att-value="c.value"><t t-esc="c.label"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="tcm-field tcm-col-span">
+                            <label>Search Object <span class="tcm-req">*</span></label>
+                            <div class="tcm-combo">
+                                <input type="text" class="tcm-input" t-att-value="state.objectSearch"
+                                       placeholder="Search object… (e.g. Sales Order)"
+                                       t-on-input="onObjectInput" t-on-focus="openObjectDropdown" t-on-blur="closeObjectDropdown"/>
+                                <t t-if="state.objectDropdownOpen and filteredModels.length">
+                                    <div class="tcm-combo-list">
+                                        <t t-foreach="filteredModels" t-as="m" t-key="m.id">
+                                            <div class="tcm-combo-item" t-on-click="() => this.selectModel(m)">
+                                                <span class="tcm-combo-name"><t t-esc="m.name"/></span>
+                                                <span class="tcm-combo-tech"><t t-esc="m.model"/></span>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tcm-panel">
+                    <div class="tcm-panel-title"><i class="fa fa-gift me-2"/>Incentive Configuration</div>
+                    <div class="tcm-grid">
+                        <div class="tcm-field">
+                            <label>Incentive Weight (%)</label>
+                            <input type="number" step="0.01" class="tcm-input" t-model="state.form.incentive_weight" placeholder="0.00"/>
+                        </div>
+                        <div class="tcm-field"/>
+                        <div class="tcm-field">
+                            <label>Prerequisite Criteria</label>
+                            <select class="tcm-input" t-att-value="state.form.prerequisite_criteria_id || ''"
+                                    t-on-change="(ev) => this.setField('prerequisite_criteria_id', ev.target.value)">
+                                <option value="">Search criteria… (leave empty for None)</option>
+                                <t t-foreach="state.options.criteria" t-as="c" t-key="c.id">
+                                    <option t-if="c.id !== state.form.id" t-att-value="c.id"><t t-esc="c.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="tcm-field">
+                            <label>Prerequisite Min %</label>
+                            <input type="number" step="0.01" class="tcm-input" t-model="state.form.prerequisite_min_pct" placeholder="90.00"/>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+            <!-- STEP 2 — Field Mapping -->
+            <t t-if="state.step === 2">
+                <div class="tcm-panel">
+                    <div class="tcm-panel-title"><i class="fa fa-link me-2"/>Field Mapping</div>
+                    <div class="tcm-grid">
+                        <div class="tcm-field">
+                            <label>Operator <span class="tcm-req">*</span></label>
+                            <select class="tcm-input" t-att-value="state.form.operator" t-on-change="onOperatorChange">
+                                <t t-foreach="state.options.operators" t-as="o" t-key="o.value">
+                                    <option t-att-value="o.value"><t t-esc="o.label"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="tcm-field">
+                            <label>SUM Field <t t-if="state.form.operator === 'sum'"><span class="tcm-req">*</span></t></label>
+                            <select class="tcm-input" t-att-disabled="state.form.operator !== 'sum'"
+                                    t-att-value="state.form.aggregate_field_id || ''"
+                                    t-on-change="(ev) => this.setField('aggregate_field_id', ev.target.value)">
+                                <option value="">Select an Option</option>
+                                <t t-foreach="state.modelFields.numeric" t-as="f" t-key="f.id">
+                                    <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="tcm-field">
+                            <label>Date Field <span class="tcm-req">*</span></label>
+                            <select class="tcm-input" t-att-value="state.form.date_field_id || ''"
+                                    t-on-change="(ev) => this.setField('date_field_id', ev.target.value)">
+                                <option value="">Select an Option</option>
+                                <t t-foreach="state.modelFields.date" t-as="f" t-key="f.id">
+                                    <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="tcm-field">
+                            <label>User Field <span class="tcm-req">*</span></label>
+                            <select class="tcm-input" t-att-value="state.form.user_field_id || ''"
+                                    t-on-change="(ev) => this.setField('user_field_id', ev.target.value)">
+                                <option value="">Select an Option</option>
+                                <t t-foreach="state.modelFields.user" t-as="f" t-key="f.id">
+                                    <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="tcm-field">
+                            <label>Display Format</label>
+                            <select class="tcm-input" t-att-value="state.form.display_format"
+                                    t-on-change="(ev) => this.setField('display_format', ev.target.value)">
+                                <t t-foreach="state.options.display_formats" t-as="d" t-key="d.value">
+                                    <option t-att-value="d.value"><t t-esc="d.label"/></option>
+                                </t>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tcm-hint">Operator, Date Field and User Field are mandatory. SUM Field is mandatory when Operator is SUM.</div>
+                </div>
+            </t>
+
+            <!-- STEP 3 — Filters & Logic -->
+            <t t-if="state.step === 3">
+                <div class="tcm-panel">
+                    <div class="tcm-panel-title"><i class="fa fa-filter me-2"/>Filters &amp; Filter Logic</div>
+                    <div class="tcm-hint tcm-mb">Add filters to restrict which records are counted.</div>
+
+                    <t t-if="!state.form.filters.length">
+                        <div class="tcm-empty tcm-empty-sm">No filters — this criterion matches all records.</div>
+                    </t>
+                    <t t-foreach="state.form.filters" t-as="flt" t-key="flt_index">
+                        <div class="tcm-filter-row">
+                            <div class="tcm-field tcm-grow">
+                                <label>Filter <t t-esc="flt_index + 1"/></label>
+                                <select class="tcm-input" t-att-value="flt.field_id || ''"
+                                        t-on-change="(ev) => this.onFilterField(flt_index, ev)">
+                                    <option value="">Search field (Amount, CloseDate…)</option>
+                                    <t t-foreach="state.modelFields.all" t-as="f" t-key="f.id">
+                                        <option t-att-value="f.id"><t t-esc="f.label"/> (<t t-esc="f.name"/>)</option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="tcm-field">
+                                <label>Operator</label>
+                                <select class="tcm-input" t-att-value="flt.operator"
+                                        t-on-change="(ev) => this.setFilter(flt_index, 'operator', ev.target.value)">
+                                    <t t-foreach="state.options.filter_operators" t-as="op" t-key="op.value">
+                                        <option t-att-value="op.value"><t t-esc="op.label"/></option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="tcm-field tcm-grow">
+                                <label>Value</label>
+                                <input type="text" class="tcm-input"
+                                       t-att-disabled="flt.operator === 'set' or flt.operator === 'not set'"
+                                       t-att-value="flt.value"
+                                       t-on-change="(ev) => this.setFilter(flt_index, 'value', ev.target.value)"/>
+                            </div>
+                            <button class="tcm-icon tcm-icon-danger tcm-filter-del" title="Remove"
+                                    t-on-click="() => this.removeFilter(flt_index)">
+                                <i class="fa fa-trash"/>
+                            </button>
+                        </div>
+                    </t>
+
+                    <button class="tcm-btn tcm-btn-outline tcm-mt" t-on-click="() => this.addFilter()">
+                        <i class="fa fa-plus me-1"/>Add Filter
+                    </button>
+                </div>
+
+                <div class="tcm-panel">
+                    <div class="tcm-panel-title"><i class="fa fa-code me-2"/>Filter Logic</div>
+                    <div class="tcm-field">
+                        <label>Logic Expression (e.g. 1 AND (2 OR 3))</label>
+                        <input type="text" class="tcm-input" t-model="state.form.filter_logic" placeholder="1 AND (2 OR 3)"/>
+                    </div>
+                    <div class="tcm-field tcm-mt">
+                        <label>Generated Domain Preview</label>
+                        <pre class="tcm-preview"><t t-esc="domainPreview"/></pre>
+                    </div>
+                </div>
+            </t>
+
+            <!-- STEP 4 — Summary -->
+            <t t-if="state.step === 4">
+                <div class="tcm-panel">
+                    <div class="tcm-panel-title"><i class="fa fa-list me-2"/>Summary</div>
+                    <div class="tcm-summary">
+                        <div><span class="tcm-sum-lbl">Criteria Name</span><span class="tcm-sum-val"><t t-esc="state.form.name || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Object</span><span class="tcm-sum-val"><t t-esc="state.form.model_label || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Category</span><span class="tcm-sum-val"><t t-esc="categoryLabel(state.form.category) || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Operator</span><span class="tcm-sum-val"><t t-esc="operatorLabel(state.form.operator) || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">SUM Field</span><span class="tcm-sum-val"><t t-esc="state.form.operator === 'sum' ? (fieldLabelById(state.form.aggregate_field_id) || '—') : '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Date Field</span><span class="tcm-sum-val"><t t-esc="fieldLabelById(state.form.date_field_id) || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">User Field</span><span class="tcm-sum-val"><t t-esc="fieldLabelById(state.form.user_field_id) || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Display Format</span><span class="tcm-sum-val"><t t-esc="displayFormatLabel(state.form.display_format) || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Incentive Weight</span><span class="tcm-sum-val"><t t-esc="state.form.incentive_weight || '0'"/>%</span></div>
+                        <div><span class="tcm-sum-lbl">Prerequisite</span><span class="tcm-sum-val"><t t-esc="prerequisiteLabel || '—'"/></span></div>
+                        <div><span class="tcm-sum-lbl">Total Filters</span><span class="tcm-sum-val"><t t-esc="state.form.filters.length"/></span></div>
+                        <div><span class="tcm-sum-lbl">Filter Logic</span><span class="tcm-sum-val"><t t-esc="state.form.filter_logic || '—'"/></span></div>
+                    </div>
+                    <div class="tcm-field tcm-mt">
+                        <label>Filter Details</label>
+                        <pre class="tcm-preview"><t t-esc="domainPreview"/></pre>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Wizard footer -->
+            <div class="tcm-footer">
+                <button class="tcm-btn tcm-btn-outline" t-on-click="() => this.backToList()">Cancel</button>
+                <div class="tcm-footer-right">
+                    <button t-if="state.step > 1" class="tcm-btn tcm-btn-outline" t-on-click="() => this.prevStep()">Previous</button>
+                    <button t-if="state.step &lt; 4" class="tcm-btn tcm-btn-primary" t-on-click="() => this.nextStep()">Next</button>
+                    <button class="tcm-btn tcm-btn-primary" t-att-disabled="!canSave or state.saving" t-on-click="() => this.save()">
+                        <i class="fa fa-save me-1"/><t t-esc="state.saving ? 'Saving…' : 'Save'"/>
+                    </button>
+                </div>
+            </div>
+        </t>
+    </div>
+</t>
+</templates>

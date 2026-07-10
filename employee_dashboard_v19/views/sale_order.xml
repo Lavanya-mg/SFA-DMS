@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ Reject Wizard ════════════════════════════════════════════════════ -->
+    <record id="view_sale_order_reject_wizard_form" model="ir.ui.view">
+        <field name="name">sale.order.reject.wizard.form</field>
+        <field name="model">sale.order.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Order">
+                <group>
+                    <field name="order_id" readonly="1"/>
+                    <field name="rejection_reason" placeholder="Enter rejection reason…" required="1"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_reject" type="object"
+                            string="Confirm Reject" class="btn-danger"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ══ Approval status bar + action buttons ══════════════════════════════ -->
+    <record id="view_order_form_approval_header" model="ir.ui.view">
+        <field name="name">sale.order.form.approval.header</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <!-- Submit / Recall by submitter -->
+                <button name="action_submit_approval" type="object"
+                        string="Submit for Approval" class="btn-primary"
+                        invisible="approval_state != 'draft'"/>
+                <button name="action_recall" type="object"
+                        string="Recall" class="btn-secondary"
+                        invisible="approval_state != 'pending'"/>
+                <!-- Approve / Reject — shown to approver -->
+                <button name="action_approve" type="object"
+                        string="Approve" class="btn-success"
+                        invisible="approval_state != 'pending'"/>
+                <button name="action_reject" type="object"
+                        string="Reject" class="btn-danger"
+                        invisible="approval_state != 'pending'"/>
+                <!-- Approval state bar -->
+                <field name="approval_state" widget="statusbar"
+                       statusbar_visible="draft,pending,approved"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ══ Details page — all custom field sections ══════════════════════════ -->
+    <record id="view_order_form_details_page" model="ir.ui.view">
+        <field name="name">sale.order.form.details.page</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+
+                <!-- ── Details Tab ────────────────────────────────────────── -->
+                <page string="Details" name="sfa_details">
+
+                    <!-- Section 1: Order Details -->
+                    <separator string="Order Details"/>
+                    <group>
+                        <group>
+                            <field name="name" string="Sales Order Number" readonly="1"/>
+                            <field name="partner_id" string="Account"/>
+                            <field name="date_order" string="Order Date"/>
+                            <field name="approval_state" string="Status" readonly="1"/>
+                            <field name="reward_points_redeemed"/>
+                            <field name="loyalty_discount"/>
+                        </group>
+                        <group>
+                            <field name="order_type"/>
+                            <field name="channel"/>
+                            <field name="trade_channel"/>
+                            <field name="commitment_date" string="Delivery Date"/>
+                            <field name="note" string="Notes"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 2: Ownership & Visit -->
+                    <separator string="Ownership &amp; Visit"/>
+                    <group>
+                        <group>
+                            <field name="user_id" string="Owner"/>
+                            <field name="team_id" string="Salesperson Team"/>
+                        </group>
+                        <group>
+                            <field name="visit_id" options="{'no_create': True}"
+                                   readonly="state not in ['draft']"/>
+                            <field name="beat_id" readonly="1"/>
+                            <field name="day_attendance_id" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 3: Territory -->
+                    <separator string="Territory"/>
+                    <group>
+                        <group>
+                            <field name="territory_id"/>
+                        </group>
+                        <group>
+                            <field name="region" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 4: Warehouse & Address -->
+                    <separator string="Warehouse &amp; Address"/>
+                    <group>
+                        <group>
+                            <field name="warehouse_state_id"/>
+                            <field name="partner_invoice_id" string="Billing Address"/>
+                        </group>
+                        <group>
+                            <field name="shipping_state_id"/>
+                            <field name="partner_shipping_id" string="Delivery Address"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 5: Priority Sell Compliance -->
+                    <separator string="Priority Sell Compliance"/>
+                    <group>
+                        <group>
+                            <field name="priority_sell_compliance"/>
+                        </group>
+                        <group>
+                            <field name="priority_sell_override"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 6: Approval Details -->
+                    <separator string="Approval Details"/>
+                    <group>
+                        <group>
+                            <field name="submitted_by" readonly="1"/>
+                            <field name="submitted_date" readonly="1"/>
+                            <field name="approver_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="approved_by" readonly="1"/>
+                            <field name="approval_date" readonly="1"/>
+                            <field name="rejection_reason" readonly="1"
+                                   invisible="not rejection_reason"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 7: Sync Details -->
+                    <separator string="Sync Details"/>
+                    <group>
+                        <group>
+                            <field name="offline_created"/>
+                        </group>
+                        <group>
+                            <field name="is_synced"/>
+                        </group>
+                    </group>
+
+                </page>
+
+                <!-- ── Approval Panel Tab ─────────────────────────────────── -->
+                <page string="Approval" name="approval_panel">
+                    <div class="o_field_widget">
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius:8px;overflow:hidden;">
+                            <div class="card-header d-flex align-items-center justify-content-between"
+                                 style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:12px 16px;">
+                                <span style="font-weight:700;font-size:15px;">
+                                    <i class="fa fa-check-circle me-2"/>Approval
+                                </span>
+                                <span class="badge px-3 py-1"
+                                      style="background:rgba(255,255,255,0.25);font-size:12px;border-radius:20px;">
+                                    <field name="approval_state" readonly="1"/>
+                                </span>
+                            </div>
+                            <div class="card-body" style="padding:16px;">
+                                <div class="row mb-3">
+                                    <div class="col-4 text-muted" style="font-size:11px;font-weight:600;">SUBMITTED BY</div>
+                                    <div class="col-8"><field name="submitted_by" readonly="1" nolabel="1"/></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-4 text-muted" style="font-size:11px;font-weight:600;">APPROVER</div>
+                                    <div class="col-8"><field name="approver_id" readonly="1" nolabel="1"/></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-4 text-muted" style="font-size:11px;font-weight:600;">SUBMITTED DATE</div>
+                                    <div class="col-8"><field name="submitted_date" readonly="1" nolabel="1"/></div>
+                                </div>
+                                <div class="row mb-3" invisible="approval_state not in ['approved']">
+                                    <div class="col-4 text-muted" style="font-size:11px;font-weight:600;">APPROVED BY</div>
+                                    <div class="col-8"><field name="approved_by" readonly="1" nolabel="1"/></div>
+                                </div>
+                                <div class="row mb-3" invisible="approval_state not in ['approved']">
+                                    <div class="col-4 text-muted" style="font-size:11px;font-weight:600;">APPROVAL DATE</div>
+                                    <div class="col-8"><field name="approval_date" readonly="1" nolabel="1"/></div>
+                                </div>
+                                <div class="row mb-3" invisible="not rejection_reason">
+                                    <div class="col-4 text-muted" style="font-size:11px;font-weight:600;color:#dc3545!important;">REJECTED — REASON</div>
+                                    <div class="col-8 text-danger"><field name="rejection_reason" readonly="1" nolabel="1"/></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </page>
+
+                <!-- ── Reward Points Tab ──────────────────────────────────── -->
+                <page string="Reward Points" name="reward_points_panel">
+                    <div class="o_field_widget">
+                        <div class="card border-0 shadow-sm" style="border-radius:8px;overflow:hidden;">
+                            <div class="card-header d-flex align-items-center justify-content-between"
+                                 style="background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;padding:12px 16px;">
+                                <span style="font-weight:700;font-size:15px;">
+                                    <i class="fa fa-star me-2"/>Reward Points
+                                </span>
+                            </div>
+                            <div class="card-body" style="padding:16px;">
+                                <!-- Warning when no points -->
+                                <div class="alert alert-warning py-2 mb-3"
+                                     invisible="customer_points_balance > 0"
+                                     style="font-size:13px;">
+                                    <i class="fa fa-exclamation-triangle me-1"/>
+                                    Customer has no points to redeem.
+                                </div>
+                                <!-- Points summary table -->
+                                <table class="table table-sm table-borderless mb-3">
+                                    <tr>
+                                        <td class="text-muted" style="font-size:13px;">Customer Balance</td>
+                                        <td class="text-end fw-bold">
+                                            <field name="customer_points_balance" readonly="1" nolabel="1"/>
+                                            <span class="text-muted ms-1">pts</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted" style="font-size:13px;">Redeemed on this order</td>
+                                        <td class="text-end fw-bold">
+                                            <field name="reward_points_redeemed" readonly="1" nolabel="1"/>
+                                            <span class="text-muted ms-1">pts</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-top">
+                                        <td class="text-muted" style="font-size:13px;">Available Headroom</td>
+                                        <td class="text-end fw-bold">
+                                            <field name="available_headroom" readonly="1" nolabel="1"/>
+                                            <span class="text-muted ms-1">pts</span>
+                                        </td>
+                                    </tr>
+                                    <tr invisible="not scheme_points_earned">
+                                        <td class="text-muted" style="font-size:13px;">Points Earned (this order)</td>
+                                        <td class="text-end fw-bold text-success">
+                                            <field name="scheme_points_earned" readonly="1" nolabel="1"/>
+                                            <span class="text-muted ms-1">pts</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <!-- Loyalty discount display -->
+                                <div invisible="not loyalty_discount" class="alert alert-success py-2 mb-3">
+                                    <i class="fa fa-tag me-1"/>
+                                    Loyalty discount applied: <field name="loyalty_discount" readonly="1" nolabel="1"/> ₹
+                                </div>
+                                <!-- Redeem button -->
+                                <button name="action_redeem_points" type="object"
+                                        string="Redeem Points" class="btn btn-success w-100"
+                                        invisible="customer_points_balance &lt;= 0 or reward_points_redeemed > 0 or state not in ['draft','sent']">
+                                    <i class="fa fa-gift me-1"/> Redeem Points
+                                </button>
+                                <div class="text-muted text-center" style="font-size:12px;margin-top:8px;"
+                                     invisible="reward_points_redeemed &lt;= 0">
+                                    <i class="fa fa-check-circle text-success me-1"/>
+                                    Points already redeemed on this order.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </page>
+
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ══ Add Visit / Beat to main form (quick access) ═════════════════════ -->
+    <record id="view_order_form_visit_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.visit.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="visit_id" options="{'no_create': True}"
+                       readonly="state not in ['draft']"/>
+                <field name="beat_id" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ══ Add Visit field to Sale Order list ══════════════════════════════ -->
+    <record id="view_order_list_visit_inherit" model="ir.ui.view">
+        <field name="name">sale.order.list.visit.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="visit_id" optional="hide"/>
+                <field name="channel" optional="show"/>
+                <field name="approval_state" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ══ Add Scheme + Must-Sell columns to Order Line ═══════════════════ -->
+    <record id="view_order_line_scheme_inherit" model="ir.ui.view">
+        <field name="name">sale.order.line.scheme.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list//field[@name='product_id']"
+                   position="after">
+                <field name="product_tag"    optional="show" readonly="1"/>
+                <field name="scheme_id"      optional="show" readonly="1" string="Scheme"/>
+                <field name="is_scheme_line" optional="hide" column_invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ══ Apply Schemes smart buttons ════════════════════════════════════ -->
+    <record id="view_order_form_scheme_buttons" model="ir.ui.view">
+        <field name="name">sale.order.form.scheme.buttons</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_apply_schemes"
+                        type="object"
+                        string="Apply Schemes"
+                        class="oe_stat_button"
+                        icon="fa-tags"
+                        invisible="state not in ('draft','sent')"/>
+                <button name="action_clear_schemes"
+                        type="object"
+                        string="Clear Schemes"
+                        class="oe_stat_button"
+                        icon="fa-times-circle"
+                        invisible="state not in ('draft','sent') or not applied_scheme_ids"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Schemes Applied" name="schemes_applied"
+                      invisible="not applied_scheme_ids and not scheme_summary">
+                    <group>
+                        <group string="Applied Schemes">
+                            <field name="applied_scheme_ids"
+                                   widget="many2many_tags" readonly="1" nolabel="1"/>
+                        </group>
+                        <group string="Points Earned">
+                            <field name="scheme_points_earned" readonly="1" nolabel="1"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-success mt-2"
+                         invisible="not scheme_summary"
+                         style="white-space:pre-line;font-size:13px;">
+                        <field name="scheme_summary" nolabel="1" readonly="1"/>
+                    </div>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ══ Must Sell / Focus Sell views ════════════════════════════════════ -->
+    <record id="view_must_sell_product_list" model="ir.ui.view">
+        <field name="name">must.sell.product.list</field>
+        <field name="model">must.sell.product</field>
+        <field name="arch" type="xml">
+            <list string="Must Sell / Focus Sell">
+                <field name="sequence" widget="handle"/>
+                <field name="product_id"/>
+                <field name="tag_type"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_must_sell_product_form" model="ir.ui.view">
+        <field name="name">must.sell.product.form</field>
+        <field name="model">must.sell.product</field>
+        <field name="arch" type="xml">
+            <form string="Must Sell / Focus Sell">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="tag_type"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_must_sell_product" model="ir.actions.act_window">
+        <field name="name">Must Sell / Focus Sell</field>
+        <field name="res_model">must.sell.product</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ══ Schemes menu in Configuration ═══════════════════════════════════ -->
+    <menuitem id="menu_schemes_promotions_emp360"
+              name="Schemes &amp; Promotions"
+              action="schemes_promotions_v19.action_scheme_promotion"
+              parent="employee_dashboard_v19.menu_employee_dashboard_config"
+              sequence="5"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_must_sell_product"
+              name="Must Sell / Focus Sell"
+              action="action_must_sell_product"
+              parent="employee_dashboard_v19.menu_employee_dashboard_config"
+              sequence="20"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+</odoo>

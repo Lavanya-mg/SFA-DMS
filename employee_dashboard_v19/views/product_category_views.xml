@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Product Category List View ─────────────────────────────────── -->
+    <record id="view_product_category_list_emp360" model="ir.ui.view">
+        <field name="name">product.category.list.emp360</field>
+        <field name="model">product.category</field>
+        <field name="arch" type="xml">
+            <list string="Product Categories">
+                <field name="complete_name"/>
+                <field name="parent_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Product Category Form View ────────────────────────────────── -->
+    <record id="view_product_category_form_emp360" model="ir.ui.view">
+        <field name="name">product.category.form.emp360</field>
+        <field name="model">product.category</field>
+        <field name="arch" type="xml">
+            <form string="Product Category">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Category Name"/>
+                        <h1><field name="name" placeholder="e.g. Food, Detergent, FMCG"/></h1>
+                    </div>
+                    <group>
+                        <field name="parent_id" options="{'no_create': False}"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Product Category Search View ──────────────────────────────── -->
+    <!-- <record id="view_product_category_search_emp360" model="ir.ui.view">
+        <field name="name">product.category.search.emp360</field>
+        <field name="model">product.category</field>
+        <field name="arch" type="xml">
+            <search string="Search Product Categories">
+                <field name="name" string="Category"/>
+                <field name="complete_name" string="Full Path"/>
+                <field name="parent_id" string="Parent Category"/>
+                <separator/>
+                <filter string="Top Level" name="top_level" domain="[('parent_id','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Parent Category" name="group_parent" context="{'group_by': 'parent_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <!-- ── Action ─────────────────────────────────────────────────────── -->
+    <!-- <record id="action_product_category_emp360" model="ir.actions.act_window">
+        <field name="name">Product Categories</field>
+        <field name="res_model">product.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_category_search_emp360"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first product category (e.g. Food, Detergent, FMCG).
+            </p>
+        </field>
+    </record> -->
+
+</odoo>

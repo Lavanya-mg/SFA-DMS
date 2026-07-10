@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- =============================================================
+         LOCATION MAP CARD — Analytics Board · Employee 360 (Odoo 18)
+         Full-width card with interactive Leaflet map + visit list.
+         ============================================================= -->
+    <t t-name="employee_dashboard_v19.LocationMapCard">
+        <div class="ab-location-card">
+
+            <!-- ── Card Header ──────────────────────────────────── -->
+            <div class="ab-loc-header">
+                <div class="ab-loc-header-left">
+                    <div class="ab-loc-header-icon">
+                        <i class="fa fa-map-marker"></i>
+                    </div>
+                    <div>
+                        <div class="ab-loc-header-title">Location View</div>
+                        <div class="ab-loc-header-sub">Today's visits &amp; check-in on live map</div>
+                    </div>
+                </div>
+                <div class="ab-loc-header-right">
+                    <!-- Visit mini-stats chips -->
+                    <t t-if="!state.loading and visitStats.total > 0">
+                        <div class="ab-loc-chip-row">
+                            <span class="ab-loc-chip ab-loc-chip-total">
+                                <i class="fa fa-map-marker"></i>
+                                <t t-esc="visitStats.total"/> Visits
+                            </span>
+                            <t t-if="visitStats.completed > 0">
+                                <span class="ab-loc-chip ab-loc-chip-done">
+                                    <i class="fa fa-check-circle"></i>
+                                    <t t-esc="visitStats.completed"/>
+                                </span>
+                            </t>
+                            <t t-if="visitStats.in_progress > 0">
+                                <span class="ab-loc-chip ab-loc-chip-active">
+                                    <i class="fa fa-circle"></i>
+                                    <t t-esc="visitStats.in_progress"/>
+                                </span>
+                            </t>
+                            <t t-if="visitStats.planned > 0">
+                                <span class="ab-loc-chip ab-loc-chip-planned">
+                                    <i class="fa fa-calendar"></i>
+                                    <t t-esc="visitStats.planned"/>
+                                </span>
+                            </t>
+                            <t t-if="visitStats.cancelled > 0">
+                                <span class="ab-loc-chip ab-loc-chip-cancelled">
+                                    <i class="fa fa-times-circle"></i>
+                                    <t t-esc="visitStats.cancelled"/>
+                                </span>
+                            </t>
+                        </div>
+                    </t>
+                    <!-- Refresh button -->
+                    <button class="ab-loc-refresh-btn"
+                            t-att-disabled="state.loading"
+                            t-on-click="refreshLocation"
+                            title="Refresh location data">
+                        <i t-att-class="'fa ' + (state.loading ? 'fa-spinner fa-spin' : 'fa-refresh')"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Map body: map + visit list side-by-side ─────── -->
+            <div class="ab-loc-body">
+
+                <!-- Map section -->
+                <div class="ab-loc-map-section">
+
+                    <!-- Colour legend -->
+                    <div class="ab-loc-legend">
+                        <div class="ab-loc-leg-item">
+                            <span class="ab-loc-leg-dot ab-loc-leg-checkin"></span>
+                            <span>Check-in</span>
+                        </div>
+                        <div class="ab-loc-leg-item">
+                            <span class="ab-loc-leg-dot ab-loc-leg-done"></span>
+                            <span>Completed</span>
+                        </div>
+                        <div class="ab-loc-leg-item">
+                            <span class="ab-loc-leg-dot ab-loc-leg-active"></span>
+                            <span>In Progress</span>
+                        </div>
+                        <div class="ab-loc-leg-item">
+                            <span class="ab-loc-leg-dot ab-loc-leg-planned"></span>
+                            <span>Planned</span>
+                        </div>
+                        <div class="ab-loc-leg-item">
+                            <span class="ab-loc-leg-dot ab-loc-leg-cancelled"></span>
+                            <span>Cancelled</span>
+                        </div>
+                        <t t-if="visitStats.withGps > 0 or state.checkin">
+                            <div class="ab-loc-leg-gps">
+                                <i class="fa fa-satellite-dish" style="color:#4361ee;"></i>
+                                <t t-esc="visitStats.withGps"/> GPS points
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- Leaflet map container -->
+                    <div class="ab-loc-map-wrap">
+                        <div t-ref="mapContainer" class="ab-loc-map"></div>
+
+                        <!-- Loading overlay -->
+                        <t t-if="state.loading">
+                            <div class="ab-loc-overlay">
+                                <div class="ab-loc-overlay-inner">
+                                    <div class="ab-loc-spinner-ring"></div>
+                                    <div class="ab-loc-overlay-title">Loading Map</div>
+                                    <div class="ab-loc-overlay-sub">Fetching visit locations…</div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Empty state overlay -->
+                        <t t-if="!state.loading and state.isEmpty">
+                            <div class="ab-loc-overlay ab-loc-overlay-empty">
+                                <div class="ab-loc-overlay-inner">
+                                    <div class="ab-loc-empty-icon">
+                                        <i class="fa fa-map-o"></i>
+                                    </div>
+                                    <div class="ab-loc-overlay-title" style="color:#6b7280;">No Location Data</div>
+                                    <div class="ab-loc-overlay-sub">No visits or check-in recorded for today.</div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- No GPS overlay (visits exist but none have coords) -->
+                        <t t-if="!state.loading and !state.isEmpty and !hasMapPoints">
+                            <div class="ab-loc-overlay ab-loc-overlay-warn">
+                                <div class="ab-loc-overlay-inner">
+                                    <div class="ab-loc-empty-icon" style="color:#f77f00;">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="ab-loc-overlay-title" style="color:#92400e;">No GPS Coordinates</div>
+                                    <div class="ab-loc-overlay-sub">
+                                        Partners are missing latitude/longitude.<br/>
+                                        Map showing default view.
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Error overlay -->
+                        <t t-if="state.error">
+                            <div class="ab-loc-overlay ab-loc-overlay-error">
+                                <div class="ab-loc-overlay-inner">
+                                    <div class="ab-loc-empty-icon" style="color:#ef476f;">
+                                        <i class="fa fa-times-circle"></i>
+                                    </div>
+                                    <div class="ab-loc-overlay-title" style="color:#991b1b;">Error</div>
+                                    <div class="ab-loc-overlay-sub"><t t-esc="state.error"/></div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- ── Visit list sidebar ────────────────────────── -->
+                <div class="ab-loc-visit-panel">
+
+                    <!-- Check-in info card -->
+                    <t t-if="state.checkin">
+                        <div class="ab-loc-checkin-card">
+                            <div class="ab-loc-checkin-icon">
+                                <i class="fa fa-user-circle"></i>
+                            </div>
+                            <div class="ab-loc-checkin-body">
+                                <div class="ab-loc-checkin-title">Check-in</div>
+                                <div class="ab-loc-checkin-time">
+                                    <i class="fa fa-clock-o me-1"></i>
+                                    <t t-esc="formatTime(state.checkin.check_in)"/>
+                                </div>
+                                <t t-if="state.checkin.checkin_full_address">
+                                    <div class="ab-loc-checkin-addr">
+                                        <i class="fa fa-map-marker me-1"></i>
+                                        <t t-esc="state.checkin.checkin_full_address"/>
+                                    </div>
+                                </t>
+                                <t t-if="state.checkin.checkin_latitude and state.checkin.checkin_longitude">
+                                    <div class="ab-loc-checkin-coords">
+                                        <i class="fa fa-crosshairs me-1"></i>
+                                        <t t-esc="formatCoord(state.checkin.checkin_latitude)"/>,
+                                        <t t-esc="formatCoord(state.checkin.checkin_longitude)"/>
+                                        <button class="ab-loc-gmaps-btn"
+                                                t-on-click="() => openGoogleMaps(state.checkin.checkin_latitude, state.checkin.checkin_longitude)"
+                                                title="Open in Google Maps">
+                                            <i class="fa fa-external-link me-1"></i>Maps
+                                        </button>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Visit list header -->
+                    <div class="ab-loc-vl-header">
+                        <i class="fa fa-list-ul me-1"></i>
+                        <span>Today's Visits</span>
+                        <span class="ab-loc-vl-count"><t t-esc="visitStats.total"/></span>
+                    </div>
+
+                    <!-- Visit items -->
+                    <div class="ab-loc-vl-scroll">
+                        <t t-if="state.visits.length > 0">
+                            <t t-foreach="state.visits" t-as="visit" t-key="visit.id">
+                                <div class="ab-loc-visit-item">
+                                    <!-- Status dot -->
+                                    <div class="ab-loc-vi-marker"
+                                         t-attf-style="background:{{_statusColor(visit.status)}};">
+                                        <i t-attf-class="fa {{_statusFaIcon(visit.status)}}"></i>
+                                    </div>
+
+                                    <!-- Visit info -->
+                                    <div class="ab-loc-vi-body">
+                                        <div class="ab-loc-vi-name">
+                                            <t t-esc="visit.partner_name"/>
+                                        </div>
+                                        <div class="ab-loc-vi-time">
+                                            <i class="fa fa-clock-o me-1"></i>
+                                            <t t-esc="formatTime(visit.actual_start_time)"/>
+                                        </div>
+                                        <div class="ab-loc-vi-coords">
+                                            <t t-if="visit.lat and visit.lng">
+                                                <i class="fa fa-crosshairs me-1" style="color:#4361ee;"></i>
+                                                <t t-esc="formatCoord(visit.lat)"/>,
+                                                <t t-esc="formatCoord(visit.lng)"/>
+                                                <button class="ab-loc-gmaps-btn"
+                                                        t-on-click="() => openGoogleMaps(visit.lat, visit.lng)"
+                                                        title="Open in Google Maps">
+                                                    <i class="fa fa-external-link me-1"></i>Maps
+                                                </button>
+                                            </t>
+                                            <t t-else="">
+                                                <i class="fa fa-exclamation-circle me-1" style="color:#fbbf24;"></i>
+                                                No GPS data
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status badge -->
+                                    <span class="ab-loc-vi-badge"
+                                          t-attf-style="{{statusBadgeStyle(visit.status)}}">
+                                        <t t-esc="statusLabel(visit.status)"/>
+                                    </span>
+                                </div>
+                            </t>
+                        </t>
+
+                        <!-- Empty visits -->
+                        <t t-if="!state.loading and state.visits.length === 0">
+                            <div class="ab-loc-vl-empty">
+                                <i class="fa fa-calendar-times-o fa-lg" style="color:#d1d5db;"></i>
+                                <div>No visits today</div>
+                            </div>
+                        </t>
+
+                        <!-- Loading skeleton -->
+                        <t t-if="state.loading">
+                            <t t-foreach="[1,2,3]" t-as="s" t-key="s">
+                                <div class="ab-loc-visit-item ab-loc-skeleton">
+                                    <div class="ab-loc-vi-marker ab-loc-skel-dot"></div>
+                                    <div class="ab-loc-vi-body">
+                                        <div class="ab-loc-skel-line ab-loc-skel-w70"></div>
+                                        <div class="ab-loc-skel-line ab-loc-skel-w40" style="margin-top:4px;"></div>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+
+                </div>
+                <!-- /visit panel -->
+
+            </div>
+            <!-- /ab-loc-body -->
+
+        </div>
+        <!-- /ab-location-card -->
+    </t>
+
+</templates>

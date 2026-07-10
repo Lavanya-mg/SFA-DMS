@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Geo-Fence Configuration ───────────────────────────── -->
+    <record id="view_geo_fence_config_list" model="ir.ui.view">
+        <field name="name">geo.fence.config.list</field>
+        <field name="model">geo.fence.config</field>
+        <field name="arch" type="xml">
+            <list string="Geo-Fence Configurations">
+                <field name="partner_id"/>
+                <field name="latitude"/>
+                <field name="longitude"/>
+                <field name="radius_meters"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_geo_fence_config_form" model="ir.ui.view">
+        <field name="name">geo.fence.config.form</field>
+        <field name="model">geo.fence.config</field>
+        <field name="arch" type="xml">
+            <form string="Geo-Fence Setup">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="radius_meters"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes about this geo-fence..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_geo_fence_config" model="ir.actions.act_window">
+        <field name="name">Geo-Fence Setup</field>
+        <field name="res_model">geo.fence.config</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_geo_fence_config"
+              name="Geo-Fence Setup"
+              action="action_geo_fence_config"
+              parent="employee_dashboard_v19.menu_employee_dashboard_config"
+              sequence="50"/>
+</odoo>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+ <record id="view_employee_form_inherit_beat" model="ir.ui.view">
+    <field name="name">hr.employee.form.inherit.beat</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.view_employee_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//notebook/page[@name='work_information']" position="inside">
+            <group>
+                <field name="territory_id"
+                       widget="many2many_tags"
+                       string="Territories"
+                       options="{'no_create': False}"/>
+            </group>
+            <group string="Weekoff Days"
+                   help="Select the days this employee does NOT work">
+                <div style="display:flex;gap:16px;flex-wrap:wrap;padding:4px 0 8px;">
+                    <label for="weekoff_monday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_monday" nolabel="1"/>
+                    <label for="weekoff_tuesday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_tuesday" nolabel="1"/>
+                    <label for="weekoff_wednesday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_wednesday" nolabel="1"/>
+                    <label for="weekoff_thursday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_thursday" nolabel="1"/>
+                    <label for="weekoff_friday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_friday" nolabel="1"/>
+                    <label for="weekoff_saturday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_saturday" nolabel="1"/>
+                    <label for="weekoff_sunday" class="o_form_label" style="margin:0;"/>
+                    <field name="weekoff_sunday" nolabel="1"/>
+                </div>
+            </group>
+            <group>
+                <field name="joining_date"/>
+                <field name="relieving_date"/>
+                <field name="pan_number"/>
+                <field name="aadhar_number"/>
+            </group>
+        </xpath>
+    </field>
+</record>
+
+<record id="view_employee_form_inherit_personal_emp_code" model="ir.ui.view">
+    <field name="name">hr.employee.form.inherit.personal.emp.code</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.view_employee_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='private_phone']" position="after">
+            <field name="employee_code"/>
+        </xpath>
+    </field>
+</record>
+</odoo>

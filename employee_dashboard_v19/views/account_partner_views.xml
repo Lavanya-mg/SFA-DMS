@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ WIZARD — Select Record Type ══════════════════════════════ -->
+    <record id="view_new_account_wizard_form" model="ir.ui.view">
+        <field name="name">new.account.wizard.form</field>
+        <field name="model">new.account.wizard</field>
+        <field name="arch" type="xml">
+            <form string="New Account">
+                <sheet>
+                    <div class="text-center mb-4 mt-2">
+                        <h2 style="font-weight:700;color:#1c2b4b;">Select a Record Type</h2>
+                        <p class="text-muted" style="font-size:14px;">Choose the type of account you want to create.</p>
+                    </div>
+                    <group>
+                        <field name="account_record_type" widget="radio" nolabel="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Next" type="object" name="action_next" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_new_account_wizard" model="ir.actions.act_window">
+        <field name="name">New Account</field>
+        <field name="res_model">new.account.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ══ KANBAN ══════════════════════════════════════════════════ -->
+    <record id="view_fmcg_account_kanban" model="ir.ui.view">
+        <field name="name">fmcg.account.kanban</field>
+        <field name="model">fmcg.account</field>
+        <field name="arch" type="xml">
+            <kanban sample="1" default_group_by="account_record_type" quick_create="0" create="0">
+                <field name="name"/>
+                <field name="account_number"/>
+                <field name="account_record_type"/>
+                <field name="territory"/>
+                <field name="phone"/>
+                <field name="user_id"/>
+                <field name="image_128"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="o_kanban_record_top">
+                            <div class="o_kanban_record_headings">
+                                <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                <small class="o_kanban_record_subtitle text-muted"><field name="account_number"/></small>
+                            </div>
+                            <field name="image_128" widget="image" options="{'size':[40,40]}"/>
+                        </div>
+                        <div class="o_kanban_record_body">
+                            <div><i class="fa fa-map-marker me-1 text-muted"/><field name="territory"/></div>
+                            <div t-if="record.phone.value"><i class="fa fa-phone me-1 text-muted"/><field name="phone"/></div>
+                        </div>
+                        <div class="o_kanban_record_bottom">
+                            <div class="oe_kanban_bottom_left">
+                                <field name="account_record_type" widget="badge"/>
+                            </div>
+                            <div class="oe_kanban_bottom_right">
+                                <field name="user_id" widget="many2one_avatar_user"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ══ FORM ════════════════════════════════════════════════════ -->
+    <record id="view_fmcg_account_form" model="ir.ui.view">
+        <field name="name">fmcg.account.form</field>
+        <field name="model">fmcg.account</field>
+        <field name="arch" type="xml">
+            <form string="Account">
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name" class="o_form_label"/>
+                        <h1><field name="name" placeholder="Account Name"/></h1>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <field name="account_record_type" widget="badge"/>
+                            <span class="text-muted" style="font-size:12px;">
+                                <field name="account_number" readonly="1"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Basic Information -->
+                    <group string="Basic Information">
+                        <group>
+                            <field name="user_id" string="Account Owner" widget="many2one_avatar_user"/>
+                            <field name="account_number" string="Account Number" readonly="1"/>
+                            <field name="partner_type_sel" string="Type"/>
+                            <field name="channel" required="1"/>
+                            <field name="parent_id" string="Parent Account"
+                                   invisible="account_record_type != 'retailer'"/>
+                        </group>
+                        <group>
+                            <field name="phone" widget="phone"/>
+                            <field name="email" widget="email"/>
+                            <field name="website" widget="url"/>
+                            <field name="active" string="Is Active"/>
+                            <field name="proprietor_name" string="Proprietor / Contact Name"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 2: Distribution Network (non-Retailer only) -->
+                    <group string="Distribution Network"
+                           invisible="account_record_type == 'retailer'">
+                        <group>
+                            <field name="parent_id" string="Supplied By (Parent Account)"/>
+                        </group>
+                        <group/>
+                    </group>
+
+                    <!-- Section 3: Territory &amp; Beat -->
+                    <group string="Territory &amp; Beat">
+                        <group>
+                            <field name="territory_id" widget="many2many_tags" options="{'no_create': False}"/>
+                            <field name="region"/>
+                        </group>
+                        <group>
+                            <field name="beat_id"
+                                   invisible="account_record_type != 'retailer'"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 4: Outlet Profile -->
+                    <group string="Outlet Profile">
+                        <group>
+                            <field name="outlet_type"/>
+                            <field name="visit_frequency"/>
+                        </group>
+                        <group>
+                            <field name="outlet_class"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 5: Addresses -->
+                    <group string="Addresses">
+                        <group string="Billing Address">
+                            <field name="billing_street" string="Street"/>
+                            <field name="billing_city" string="City"/>
+                            <field name="billing_zip" string="Zip / Postal Code"/>
+                            <field name="billing_state_id" string="State / Province" options="{'no_create': True}"/>
+                            <field name="billing_country_id" string="Country" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Shipping Address">
+                            <field name="shipping_street" string="Street"/>
+                            <field name="shipping_city" string="City"/>
+                            <field name="shipping_zip" string="Zip / Postal Code"/>
+                            <field name="shipping_state_id" string="State / Province" options="{'no_create': True}"/>
+                            <field name="shipping_country_id" string="Country" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 6: Compliance -->
+                    <group string="Compliance">
+                        <group>
+                            <field name="gstin" placeholder="22AAAAA0000A1Z5"/>
+                            <field name="fssai_license_no"/>
+                        </group>
+                        <group>
+                            <field name="pan" placeholder="AAAAA0000A"/>
+                            <field name="drug_license_no"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 7: Credit &amp; Outstanding -->
+                    <group string="Credit &amp; Outstanding">
+                        <group>
+                            <field name="credit_limit"/>
+                            <field name="credit_utilized" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="outstanding_balance" readonly="1"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 8: Geolocation &amp; Geo-Fence -->
+                    <group string="Geolocation &amp; Geo-Fence">
+                        <group>
+                            <field name="outlet_latitude"/>
+                            <field name="outlet_longitude"/>
+                        </group>
+                        <group>
+                            <field name="geofence_radius"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 9: Sales Activity -->
+                    <group string="Sales Activity">
+                        <group>
+                            <field name="last_order_date" readonly="1"/>
+                            <field name="last_order_value" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="last_visit_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Section 10: Notes -->
+                    <group string="Notes">
+                        <field name="notes" nolabel="1" placeholder="Add internal notes here..."/>
+                    </group>
+
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ══ CUSTOM LIST VIEW (uses fmcg_account_list JS controller) ═ -->
+    <record id="view_fmcg_account_list_custom" model="ir.ui.view">
+        <field name="name">fmcg.account.list.custom</field>
+        <field name="model">fmcg.account</field>
+        <field name="type">list</field>
+        <field name="arch" type="xml">
+            <list js_class="fmcg_account_list" string="Accounts" multi_edit="1">
+                <field name="name" string="Account Name"/>
+                <field name="account_record_type" widget="badge"
+                       decoration-info="account_record_type == 'retailer'"
+                       decoration-success="account_record_type == 'distributor'"
+                       decoration-warning="account_record_type == 'modern_trade'"
+                       decoration-danger="account_record_type == 'super_stockist'"/>
+                <field name="account_number" string="Account Number"/>
+                <field name="phone"/>
+                <field name="territory"/>
+                <field name="user_id" string="Account Owner" widget="many2one_avatar_user"/>
+                <field name="channel" optional="show"/>
+                <field name="beat_id" optional="show"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ══ ACTION ══════════════════════════════════════════════════ -->
+    <record id="action_accounts_emp360" model="ir.actions.act_window">
+        <field name="name">Accounts</field>
+        <field name="res_model">fmcg.account</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="view_id" ref="view_fmcg_account_list_custom"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No accounts yet.</p>
+            <p>Click <b>New Account</b> to create your first account.</p>
+        </field>
+    </record>
+
+</odoo>

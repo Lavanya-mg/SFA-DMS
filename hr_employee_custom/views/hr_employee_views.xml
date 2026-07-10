@@ -1,0 +1,31 @@
+<odoo>
+    <record id="view_employee_form_inherit_custom" model="ir.ui.view">
+    <field name="name">hr.employee.form.inherit.custom</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.view_employee_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='work_location_id']" position="after">
+            <group string="Territory &amp; Channels">
+                <!-- <field name="territory_id" options="{'no_create': False, 'no_open': False}"/> -->
+                <field name="channel_ids" widget="many2many_tags"/>
+            </group>
+             <!-- <group string="Week Off Configuration">
+                    <field name="work_days" widget="many2many_checkboxes"/>
+                    <field name="week_off_days" widget="many2many_checkboxes"/>
+                </group> -->
+        </xpath>
+    </field>
+</record>
+
+<record id="view_employee_filter_inherit_emp_code" model="ir.ui.view">
+    <field name="name">hr.employee.search.inherit.emp.code</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.view_employee_filter"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='name']" position="after">
+            <field name="employee_code" string="Employee Code" filter_domain="[('employee_code', 'ilike', self)]"/>
+        </xpath>
+    </field>
+</record>
+
+</odoo>

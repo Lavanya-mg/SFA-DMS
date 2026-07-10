@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         EMPLOYEE 360 APP
+         ══════════════════════════════════════════════════════════════ -->
+
+    <menuitem id="menu_emp360_manager_dashboard"
+              name="Dashboard"
+              parent="employee_dashboard_v19.menu_emp360_root"
+              action="employee_dashboard_v19.action_employee_component"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_dashboard"
+              name="Today"
+              parent="employee_dashboard_v19.menu_emp360_root"
+              action="employee_dashboard_v19.action_employee_component"
+              sequence="12"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_beats"
+              name="Beats"
+              parent="employee_dashboard_v19.menu_emp360_beat_root"
+              action="beat_module_v19.action_beat_module"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_analytics_dashboard"
+              name="Analytics Dashboard"
+              parent="employee_dashboard_v19.menu_emp360_root"
+              action="employee_dashboard_v19.action_dashboard_report"
+              sequence="25"
+              active="False"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_pjp_list"
+              name="Journey Plans"
+              parent="employee_dashboard_v19.menu_emp360_pjp_root"
+              action="employee_dashboard_v19.action_pjp_model"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_pjp_visits"
+              name="Visits"
+              parent="employee_dashboard_v19.menu_emp360_pjp_root"
+              action="employee_dashboard_v19.action_visit_model"
+              sequence="20"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_territory"
+              name="Territories"
+              parent="employee_dashboard_v19.menu_emp360_masters_root"
+              action="employee_dashboard_v19.action_fmcg_territory"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_uom_master"
+              name="Units of Measure"
+              parent="employee_dashboard_v19.menu_emp360_masters_root"
+              action="employee_dashboard_v19.action_uom_master_emp360"
+              sequence="20"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_uom_conversion"
+              name="UOM Conversions"
+              parent="employee_dashboard_v19.menu_emp360_masters_root"
+              action="uom_conversion_hub.action_uom_conversion_rule"
+              sequence="30"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <!-- ── Schemes ──────────────────────────────────────────────────── -->
+    <menuitem id="menu_emp360_schemes_list"
+              name="All Schemes"
+              parent="employee_dashboard_v19.menu_emp360_schemes_root"
+              action="schemes_promotions_v19.action_scheme_manager_client"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_schemes_active"
+              name="Active Schemes"
+              parent="employee_dashboard_v19.menu_emp360_schemes_root"
+              action="schemes_promotions_v19.action_scheme_manager_client"
+              sequence="20"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <!-- ── My Workday ─────────────────────────────────────────────── -->
+    <menuitem id="menu_emp360_user_today"
+              name="Today"
+              parent="employee_dashboard_v19.menu_emp360_user_root"
+              action="employee_dashboard_v19.action_employee_component"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_user"/>
+
+     <record id="action_yearly_holiday_dashboard" model="ir.actions.client">
+          <field name="name">Holiday Calendar</field>
+          <field name="tag">employee_dashboard_v19.YearlyCalendar</field>
+     </record>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         PRODUCT MANAGEMENT APP
+         ══════════════════════════════════════════════════════════════ -->
+
+    <!-- <menuitem id="menu_product_hub_action"
+              name="Product Hub"
+              parent="menu_product_hub_root"
+              action="employee_dashboard_v19.action_product_hub_component"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/> -->
+
+    <!-- <menuitem id="menu_product_mgmt_uom"
+              name="Units of Measure"
+              parent="menu_product_mgmt_masters_root"
+              action="employee_dashboard_v19.action_uom_master_emp360"
+              sequence="20"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_product_mgmt_uom_conv"
+              name="UOM Conversions"
+              parent="menu_product_mgmt_masters_root"
+              action="uom_conversion_hub.action_uom_conversion_rule"
+              sequence="30"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_product_mgmt_pb_priority"
+              name="Pricebook Priority"
+              parent="menu_product_mgmt_config_root"
+              action="employee_dashboard_v19.action_price_book_priority"
+              sequence="10"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/> -->
+
+</odoo>

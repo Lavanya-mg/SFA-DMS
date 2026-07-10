@@ -1,0 +1,44 @@
+/* ── Scheme & Promotion styles ─────────────────────────────────────── */
+
+/* Scheme type badge colours */
+.o_field_widget[name="scheme_type"] .badge {
+    font-size: 11px;
+}
+
+/* Highlight scheme lines in sale order */
+.o_data_row.scheme_line_row td {
+    background-color: #e8f5e9 !important;
+    color: #2e7d32;
+    font-style: italic;
+}
+
+/* Form header scheme code */
+.o_form_view .scheme_code_badge {
+    font-family: monospace;
+    background: #f0f4ff;
+    border: 1px solid #c5d0f5;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 13px;
+    color: #3954a5;
+}
+
+/* Invoice slab label column */
+.o_list_view td[name="label"] {
+    color: #555;
+    font-size: 12px;
+}
+
+/* Kanban — scheme type group header */
+.o_kanban_group .o_kanban_header_title {
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Benefit type chip colours */
+.badge[data-value="free_product"]     { background: #28a745 !important; }
+.badge[data-value="percent_discount"] { background: #17a2b8 !important; }
+.badge[data-value="price_discount"]   { background: #ffc107 !important; color: #333 !important; }
+.badge[data-value="points"]           { background: #dc3545 !important; }

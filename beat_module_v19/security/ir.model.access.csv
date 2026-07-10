@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_beat_module_user,beat.module.user,model_beat_module,base.group_user,1,1,1,0
+access_beat_module_manager,beat.module.manager,model_beat_module,base.group_system,1,1,1,1
+access_beat_line_user,beat.line.user,model_beat_line,base.group_user,1,1,1,1
+access_beat_switch_history_user,beat.switch.history.user,model_beat_switch_history,base.group_user,1,1,1,0
+access_beat_switch_history_mgr,beat.switch.history.mgr,model_beat_switch_history,base.group_system,1,1,1,1

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root menu — hidden from sidebar; accessed via Employee 360 top menu -->
+    <menuitem id="menu_schemes_root"
+              name="Schemes &amp; Promotions"
+              web_icon="schemes_promotions_v19,static/src/img/icon.png"
+              sequence="25"
+              active="0"/>
+
+    <!-- Schemes list -->
+    <menuitem id="menu_scheme_promotions"
+              name="Schemes"
+              parent="menu_schemes_root"
+              action="action_scheme_manager_client"
+              sequence="10"/>
+
+    <!-- Configuration sub-menu -->
+    <menuitem id="menu_schemes_config"
+              name="Configuration"
+              parent="menu_schemes_root"
+              sequence="90"
+              groups="schemes_promotions_v19.group_scheme_manager"/>
+</odoo>

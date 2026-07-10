@@ -1,0 +1,122 @@
+/* ── KPI Dashboard (Salesforce-style OWL UI) ───────────────────────────────── */
+.kdb-wrap { padding: 20px 28px; background: #f3f4f7; height: 100%; overflow-y: auto; font-size: 13px; color: #1a1a2e; }
+.kdb-empty { text-align: center; color: #9aa0ac; padding: 60px; }
+.kdb-muted { color: #9aa0ac; }
+.kdb-center { text-align: center; }
+.kdb-green { color: #16a34a; } .kdb-orange { color: #d97706; } .kdb-red { color: #dc2626; }
+.kdb-r { text-align: right; }
+.kdb-bold { font-weight: 700; color: #16192c; }
+
+/* Header */
+.kdb-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.kdb-title { display: flex; align-items: center; font-size: 22px; font-weight: 700; color: #16192c; }
+.kdb-title .fa-line-chart { color: #4b2fd6; }
+.kdb-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kdb-tabs { display: flex; background: #eceef3; border-radius: 20px; padding: 3px; }
+.kdb-tab { border: none; background: transparent; border-radius: 18px; padding: 6px 16px; font-size: 12px; font-weight: 600; color: #6b7280; cursor: pointer; }
+.kdb-tab-active { background: #2563eb; color: #fff; }
+.kdb-select { border: 1px solid #d7dae2; border-radius: 8px; padding: 7px 10px; font-size: 12px; background: #fff; color: #1a1a2e; }
+.kdb-refresh { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #d4d0e8; background: #fff; color: #4b2fd6; cursor: pointer; }
+.kdb-refresh:hover { background: #f5f3ff; }
+
+/* Stat boxes */
+.kdb-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+.kdb-stat { background: #fff; border: 1px solid #eceef3; border-radius: 12px; padding: 18px 20px; text-align: center; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.kdb-stat-accent { border-top: 3px solid #2563eb; }
+.kdb-stat-purple { border-top: 3px solid #7c3aed; }
+.kdb-stat-num { font-size: 28px; font-weight: 800; color: #16192c; line-height: 1.1; }
+.kdb-stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: #9aa0ac; margin-top: 4px; }
+.kdb-stat-cmp { font-size: 10px; color: #9aa0ac; margin-top: 3px; }
+
+/* Filter pills */
+.kdb-filters { background: #fff; border: 1px solid #eceef3; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.kdb-filters-lbl { font-size: 12px; color: #6b7280; font-weight: 600; margin-right: 4px; }
+.kdb-pill { border: 1px solid #dbe0ea; background: #fff; color: #2563eb; border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.kdb-pill:hover { background: #eff6ff; }
+.kdb-pill-active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+/* Panels + 2-column rows */
+.kdb-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.kdb-panel { background: #fff; border: 1px solid #eceef3; border-radius: 12px; box-shadow: 0 1px 2px rgba(16,24,40,.04); overflow: hidden; }
+.kdb-panel-hd { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; color: #16192c; padding: 14px 18px; border-bottom: 1px solid #f0f1f4; background: #fafbfc; }
+.kdb-panel-ttl { display: flex; align-items: center; }
+
+/* Chart-type toggle */
+.kdb-chart-toggle { display: flex; gap: 4px; }
+.kdb-chart-toggle button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e0e0ec; background: #fff; color: #6b7280; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.kdb-chart-toggle button:hover { background: #f5f3ff; }
+.kdb-ct-active { background: #4b2fd6 !important; color: #fff !important; border-color: #4b2fd6 !important; }
+
+/* SVG grouped bars (Performance Trend bar mode) */
+.kdb-svgbar-target { fill: #93c5fd; }
+.kdb-svgbar-ach { fill: #16a34a; }
+
+/* Pie chart (Achievement by Criteria) */
+.kdb-pie-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.kdb-pie { width: 190px; height: 190px; flex-shrink: 0; }
+.kdb-pie-legend { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 160px; }
+.kdb-pie-li { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.kdb-pie-sw { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.kdb-pie-nm { color: #374151; flex: 1; }
+.kdb-pie-pct { font-weight: 700; color: #16192c; }
+.kdb-panel-bd { padding: 16px 18px; min-height: 80px; }
+.kdb-nopad { padding: 0; }
+.kdb-section-lbl { font-size: 12px; font-weight: 700; letter-spacing: .05em; color: #6b7280; margin: 6px 2px 12px; }
+
+/* Top performers */
+.kdb-perf { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.kdb-rank { width: 26px; height: 26px; border-radius: 50%; background: #fbbf24; color: #fff; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.kdb-perf-body { flex: 1; }
+.kdb-perf-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.kdb-perf-name { font-weight: 600; color: #16192c; }
+.kdb-perf-pct { font-weight: 700; font-size: 13px; }
+.kdb-perf-val { display: block; font-size: 10px; color: #9aa0ac; font-weight: 500; text-align: right; }
+.kdb-track { height: 7px; background: #eef0f4; border-radius: 4px; overflow: hidden; }
+.kdb-track-sm { height: 5px; margin-top: 4px; }
+.kdb-track-fill { height: 100%; border-radius: 4px; }
+.kdb-bar-green { background: #16a34a; } .kdb-bar-orange { background: #f59e0b; } .kdb-bar-red { background: #ef4444; }
+.kdb-incentive-total { font-size: 30px; font-weight: 800; color: #7c3aed; }
+
+/* KPI breakdown cards */
+.kdb-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 16px; }
+@media (max-width: 1300px) { .kdb-cards { grid-template-columns: repeat(3, 1fr); } .kdb-stats { grid-template-columns: repeat(2, 1fr); } .kdb-row2 { grid-template-columns: 1fr; } }
+.kdb-card { background: #fff; border: 1px solid #eceef3; border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.kdb-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.kdb-gauge { width: 64px; height: 64px; flex-shrink: 0; }
+.kdb-gauge-bg { fill: none; stroke: #eef0f4; stroke-width: 7; }
+.kdb-gauge-fg { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dasharray .4s ease; }
+.kdb-stroke-green { stroke: #16a34a; } .kdb-stroke-orange { stroke: #f59e0b; } .kdb-stroke-red { stroke: #ef4444; }
+.kdb-gauge-text { font-size: 18px; font-weight: 800; }
+.kdb-card-name { font-size: 15px; font-weight: 700; color: #16192c; }
+.kdb-card-foot { display: flex; justify-content: space-between; border-top: 1px solid #f3f4f6; padding-top: 12px; }
+.kdb-card-k { font-size: 10px; font-weight: 700; color: #9aa0ac; letter-spacing: .04em; }
+.kdb-card-v { font-size: 15px; font-weight: 800; color: #16192c; margin-top: 2px; }
+
+/* Line chart */
+.kdb-legend { display: flex; gap: 18px; justify-content: center; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.kdb-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.kdb-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.kdb-dot-target { background: #93c5fd; } .kdb-dot-ach { background: #16a34a; }
+.kdb-linechart { width: 100%; height: 220px; }
+.kdb-line-target { fill: none; stroke: #3b82f6; stroke-width: 2; }
+.kdb-line-ach { fill: none; stroke: #16a34a; stroke-width: 2; }
+.kdb-area-target { fill: rgba(59,130,246,.12); stroke: none; }
+.kdb-area-ach { fill: rgba(22,163,74,.12); stroke: none; }
+.kdb-mk-target { fill: #3b82f6; } .kdb-mk-ach { fill: #16a34a; }
+.kdb-xlabel { fill: #9aa0ac; font-size: 11px; }
+
+/* Achievement by criteria (horizontal bars) */
+.kdb-hbar-row { display: grid; grid-template-columns: 120px 1fr 54px; align-items: center; gap: 10px; margin-bottom: 12px; }
+.kdb-hbar-lbl { font-size: 12px; color: #4b5563; text-align: right; }
+.kdb-hbar-track { height: 18px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+.kdb-hbar-fill { height: 100%; border-radius: 4px; }
+.kdb-hbar-pct { font-size: 12px; font-weight: 700; text-align: right; }
+
+/* Team table */
+.kdb-team-table { width: 100%; border-collapse: collapse; }
+.kdb-team-table th { text-align: left; padding: 12px 18px; font-size: 11px; font-weight: 700; color: #8a90a0; background: #fafbfc; border-bottom: 1px solid #eceef3; letter-spacing: .04em; }
+.kdb-team-table td { padding: 13px 18px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.kdb-team-table tr:last-child td { border-bottom: none; }
+.kdb-badge { background: #ede9fe; color: #6d28d9; border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 600; }
+.kdb-team-ach { min-width: 130px; }
+.kdb-team-ach > span { font-weight: 700; font-size: 12px; }

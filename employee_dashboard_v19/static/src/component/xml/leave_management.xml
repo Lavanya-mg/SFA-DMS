@@ -1,0 +1,402 @@
+<templates xml:space="preserve">
+    <t t-name="employee_dashboard_v19.LeaveManagement">
+        <div style="flex:1;display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;background:#f8fafc;">
+
+            <!-- Header -->
+            <div class="emp360-page-header" style="flex-shrink:0;background:linear-gradient(135deg,#4361ee,#7209b7);padding:18px 24px 14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <h3 style="margin:0;font-size:18px;font-weight:800;color:#fff;"><i class="fa fa-calendar-check-o me-2"></i>Leave Management</h3>
+                        <p style="margin:2px 0 0;font-size:12px;color:rgba(255,255,255,.7);">Apply for leave, track requests, and manage team approvals</p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <select style="padding:6px 10px;border-radius:8px;border:none;font-size:13px;font-weight:700;color:#4361ee;background:#fff;cursor:pointer;"
+                                t-on-change="changeYear">
+                            <t t-foreach="[2024,2025,2026,2027]" t-as="yr" t-key="yr">
+                                <option t-att-value="yr" t-att-selected="state.selectedYear === yr"><t t-esc="yr"/></option>
+                            </t>
+                        </select>
+                        <button style="padding:7px 16px;background:#fff;color:#4361ee;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"
+                                t-on-click="openApplyForm">
+                            <i class="fa fa-plus"></i> Apply for Leave
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div style="flex-shrink:0;background:#fff;border-bottom:2px solid #e5e7eb;display:flex;gap:0;padding:0 16px;">
+                <div t-attf-style="padding:12px 16px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid {{state.activeTab==='my'?'#4361ee':'transparent'}};color:{{state.activeTab==='my'?'#4361ee':'#6b7280'}};display:flex;align-items:center;gap:6px;"
+                     t-on-click="() => this.switchTab('my')">
+                    <i class="fa fa-user"></i> My Leaves
+                </div>
+                <t t-if="props.isManager">
+                    <div t-attf-style="padding:12px 16px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid {{state.activeTab==='team'?'#4361ee':'transparent'}};color:{{state.activeTab==='team'?'#4361ee':'#6b7280'}};display:flex;align-items:center;gap:6px;"
+                         t-on-click="() => this.switchTab('team')">
+                        <i class="fa fa-users"></i> Team Approvals
+                        <t t-if="state.pendingLeaves.length > 0">
+                            <span style="background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;">
+                                <t t-esc="state.pendingLeaves.length"/>
+                            </span>
+                        </t>
+                    </div>
+                </t>
+            </div>
+
+            <!-- Loading -->
+            <t t-if="state.loading">
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+                    <div style="text-align:center;color:#6b7280;">
+                        <i class="fa fa-spinner fa-spin" style="font-size:28px;margin-bottom:10px;display:block;"></i>
+                        Loading leave data...
+                    </div>
+                </div>
+            </t>
+
+            <t t-else="">
+                <!-- ══ MY LEAVES TAB ══ -->
+                <t t-if="state.activeTab === 'my'">
+                    <div style="flex:1;overflow-y:auto;padding:16px;">
+
+                        <!-- Leave Type Balance Cards -->
+                        <t t-if="state.leaveTypes.length > 0">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px;">
+                                <t t-foreach="state.leaveTypes" t-as="ltype" t-key="ltype.id">
+                                    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:16px;border:1px solid #e5e7eb;">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                                            <div style="font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;"><t t-esc="ltype.name"/></div>
+                                            <span style="background:#4361ee15;color:#4361ee;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;"><t t-esc="ltype.code"/></span>
+                                        </div>
+                                        <!-- Donut-style available count -->
+                                        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+                                            <div style="width:56px;height:56px;border-radius:50%;background:conic-gradient(#4361ee calc(var(--pct)*1%),#e5e7eb 0);display:flex;align-items:center;justify-content:center;position:relative;"
+                                                 t-att-style="'width:56px;height:56px;border-radius:50%;background:conic-gradient(#4361ee ' + (ltype.accrued &gt; 0 ? Math.round((ltype.available/ltype.accrued)*100) : 0) + '%,#e5e7eb 0);display:flex;align-items:center;justify-content:center;'">
+                                                <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#4361ee;">
+                                                    <t t-esc="ltype.available"/>
+                                                </div>
+                                            </div>
+                                            <div style="flex:1;">
+                                                <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">Available</div>
+                                                <div style="font-size:20px;font-weight:800;color:#111827;line-height:1;"><t t-esc="ltype.available"/></div>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px solid #f3f4f6;padding-top:8px;">
+                                            <div style="text-align:center;">
+                                                <div style="color:#6b7280;font-size:10px;">Accrued</div>
+                                                <div style="font-weight:700;color:#374151;"><t t-esc="ltype.accrued"/></div>
+                                            </div>
+                                            <div style="text-align:center;">
+                                                <div style="color:#6b7280;font-size:10px;">Carry Fwd</div>
+                                                <div style="font-weight:700;color:#374151;"><t t-esc="ltype.carry_fwd"/></div>
+                                            </div>
+                                            <div style="text-align:center;">
+                                                <div style="color:#6b7280;font-size:10px;">Used</div>
+                                                <div style="font-weight:700;color:#ef4444;"><t t-esc="ltype.used"/></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+
+                        <!-- Status Filter Pills -->
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+                            <t t-foreach="[
+                                {val:'all',label:'All',count: state.myLeaves.length},
+                                {val:'confirm',label:'Submitted'},
+                                {val:'validate1',label:'Pending'},
+                                {val:'validate',label:'Approved'},
+                                {val:'refuse',label:'Rejected'},
+                                {val:'cancel',label:'Cancelled'}
+                            ]" t-as="f" t-key="f.val">
+                                <div t-attf-style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid {{state.statusFilter===f.val?'#4361ee':'#e5e7eb'}};background:{{state.statusFilter===f.val?'#4361ee':'#fff'}};color:{{state.statusFilter===f.val?'#fff':'#6b7280'}};display:flex;align-items:center;gap:6px;"
+                                     t-on-click="() => this.setStatusFilter(f.val)">
+                                    <t t-esc="f.label"/>
+                                    <t t-if="f.count !== undefined">
+                                        <span t-attf-style="background:{{state.statusFilter===f.val?'rgba(255,255,255,.3)':'#f3f4f6'}};border-radius:10px;padding:0 6px;font-size:11px;">
+                                            <t t-esc="f.count"/>
+                                        </span>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Leave Request List -->
+                        <t t-if="state.myLeaves.length > 0">
+                            <div style="display:flex;flex-direction:column;gap:10px;">
+                                <t t-foreach="state.myLeaves" t-as="lv" t-key="lv.id">
+                                    <div style="background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 6px rgba(0,0,0,.06);border:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;">
+                                        <!-- Type badge -->
+                                        <div style="width:40px;height:40px;border-radius:10px;background:#4361ee15;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                            <span style="font-size:11px;font-weight:800;color:#4361ee;"><t t-esc="lv.typeCode.substring(0,2)"/></span>
+                                        </div>
+                                        <div style="flex:1;min-width:0;">
+                                            <div style="font-size:13px;font-weight:700;color:#111827;"><t t-esc="lv.label"/></div>
+                                            <div style="font-size:12px;color:#6b7280;margin-top:1px;">
+                                                <i class="fa fa-calendar-o me-1"></i><t t-esc="lv.dateRange"/>
+                                            </div>
+                                            <t t-if="lv.name">
+                                                <div style="font-size:11px;color:#9ca3af;margin-top:2px;"><t t-esc="lv.name"/></div>
+                                            </t>
+                                        </div>
+                                        <div style="text-align:right;flex-shrink:0;">
+                                            <div style="font-size:14px;font-weight:800;color:#374151;"><t t-esc="lv.days"/> <span style="font-size:11px;font-weight:600;color:#6b7280;">day<t t-if="lv.days !== 1">s</t></span></div>
+                                            <span t-attf-style="display:inline-block;margin-top:4px;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:{{lv.stateColor}}18;color:{{lv.stateColor}};">
+                                                <t t-esc="lv.stateLabel"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div style="text-align:center;padding:40px 20px;color:#9ca3af;">
+                                <i class="fa fa-calendar-o" style="font-size:36px;display:block;margin-bottom:10px;opacity:.4;"></i>
+                                <div style="font-size:14px;font-weight:600;">No leave records found</div>
+                                <div style="font-size:12px;margin-top:4px;">Apply for leave using the button above</div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- ══ TEAM APPROVALS TAB ══ -->
+                <t t-if="state.activeTab === 'team' and props.isManager">
+                    <div style="flex:1;overflow-y:auto;padding:16px;">
+
+                        <!-- Pending Approvals -->
+                        <div style="margin-bottom:20px;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                                <i class="fa fa-clock-o" style="color:#f59e0b;font-size:14px;"></i>
+                                <span style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;">Pending Approvals</span>
+                                <t t-if="state.pendingLeaves.length > 0">
+                                    <span style="background:#ef4444;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">
+                                        <t t-esc="state.pendingLeaves.length"/>
+                                    </span>
+                                </t>
+                            </div>
+
+                            <t t-if="state.pendingLeaves.length > 0">
+                                <div style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);border:1px solid #e5e7eb;">
+                                    <table style="width:100%;border-collapse:collapse;">
+                                        <thead>
+                                            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                                                <th style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Employee</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Type</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Date Range</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:center;text-transform:uppercase;">Days</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Reason</th>
+                                                <th style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7280;text-align:center;text-transform:uppercase;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.pendingLeaves" t-as="lv" t-key="lv.id">
+                                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                                    <td style="padding:10px 14px;">
+                                                        <div style="display:flex;align-items:center;gap:8px;">
+                                                            <div style="width:30px;height:30px;border-radius:50%;background:#4361ee20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#4361ee;">
+                                                                <t t-esc="lv.empName.charAt(0)"/>
+                                                            </div>
+                                                            <span style="font-size:13px;font-weight:600;color:#111827;"><t t-esc="lv.empName"/></span>
+                                                        </div>
+                                                    </td>
+                                                    <td style="padding:10px 8px;">
+                                                        <span style="background:#4361ee15;color:#4361ee;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;"><t t-esc="lv.typeCode"/></span>
+                                                    </td>
+                                                    <td style="padding:10px 8px;font-size:12px;color:#374151;"><t t-esc="lv.dateRange"/></td>
+                                                    <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:#374151;">
+                                                        <t t-esc="lv.days"/>
+                                                        <span style="font-size:10px;font-weight:500;color:#9ca3af;"> day<t t-if="lv.days !== 1">s</t></span>
+                                                    </td>
+                                                    <td style="padding:10px 8px;font-size:12px;color:#6b7280;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                        <t t-esc="lv.reason || '--'"/>
+                                                    </td>
+                                                    <td style="padding:10px 14px;text-align:center;">
+                                                        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                                                            <button style="width:30px;height:30px;border-radius:8px;border:none;background:#d1fae5;color:#059669;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;"
+                                                                    t-on-click="() => this.approveLeave(lv.id)"
+                                                                    title="Approve">
+                                                                <i class="fa fa-check"></i>
+                                                            </button>
+                                                            <button style="width:30px;height:30px;border-radius:8px;border:none;background:#fee2e2;color:#ef4444;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;"
+                                                                    t-on-click="() => this.refuseLeave(lv.id)"
+                                                                    title="Refuse">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div style="background:#fff;border-radius:10px;padding:24px;text-align:center;color:#9ca3af;border:1px solid #e5e7eb;">
+                                    <i class="fa fa-check-circle" style="font-size:28px;color:#059669;display:block;margin-bottom:8px;"></i>
+                                    All caught up — no pending approvals
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Recent Decisions -->
+                        <div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                                <i class="fa fa-history" style="color:#6b7280;font-size:14px;"></i>
+                                <span style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;">Recent Decisions</span>
+                            </div>
+
+                            <t t-if="state.recentDecisions.length > 0">
+                                <div style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);border:1px solid #e5e7eb;">
+                                    <table style="width:100%;border-collapse:collapse;">
+                                        <thead>
+                                            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                                                <th style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Employee</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Type</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Date Range</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:center;text-transform:uppercase;">Days</th>
+                                                <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Status</th>
+                                                <th style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7280;text-align:left;text-transform:uppercase;">Decision Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.recentDecisions" t-as="lv" t-key="lv.id">
+                                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                                    <td style="padding:10px 14px;">
+                                                        <div style="display:flex;align-items:center;gap:8px;">
+                                                            <div style="width:30px;height:30px;border-radius:50%;background:#4361ee20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#4361ee;">
+                                                                <t t-esc="lv.empName.charAt(0)"/>
+                                                            </div>
+                                                            <span style="font-size:13px;font-weight:600;color:#111827;"><t t-esc="lv.empName"/></span>
+                                                        </div>
+                                                    </td>
+                                                    <td style="padding:10px 8px;">
+                                                        <span style="background:#4361ee15;color:#4361ee;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;"><t t-esc="lv.typeCode"/></span>
+                                                    </td>
+                                                    <td style="padding:10px 8px;font-size:12px;color:#374151;"><t t-esc="lv.dateRange"/></td>
+                                                    <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:#374151;">
+                                                        <t t-esc="lv.days"/>
+                                                        <span style="font-size:10px;font-weight:500;color:#9ca3af;"> day<t t-if="lv.days !== 1">s</t></span>
+                                                    </td>
+                                                    <td style="padding:10px 8px;">
+                                                        <span t-attf-style="padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:{{lv.stateLabel==='Approved'?'#d1fae5':'#fee2e2'}};color:{{lv.stateLabel==='Approved'?'#059669':'#ef4444'}};">
+                                                            <t t-esc="lv.stateLabel"/>
+                                                        </span>
+                                                    </td>
+                                                    <td style="padding:10px 14px;font-size:12px;color:#6b7280;"><t t-esc="lv.decisionDate"/></td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div style="background:#fff;border-radius:10px;padding:20px;text-align:center;color:#9ca3af;border:1px solid #e5e7eb;font-size:13px;">
+                                    No recent decisions
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+            </t>
+
+            <!-- ── Apply for Leave Modal ── -->
+            <t t-if="state.showApplyForm">
+                <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1050;display:flex;align-items:center;justify-content:center;padding:16px;">
+                    <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+                        <!-- Modal header -->
+                        <div style="background:linear-gradient(135deg,#4361ee,#7209b7);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-calendar-plus-o" style="color:#fff;font-size:16px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:15px;font-weight:800;color:#fff;">Apply for Leave</div>
+                                    <div style="font-size:11px;color:rgba(255,255,255,.7);">Submit a new leave request</div>
+                                </div>
+                            </div>
+                            <button style="background:rgba(255,255,255,.2);border:none;border-radius:8px;width:30px;height:30px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;"
+                                    t-on-click="closeApplyForm">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                        <!-- Modal body -->
+                        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+                            <!-- Leave Type -->
+                            <div>
+                                <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">
+                                    <span style="color:#ef4444;">*</span> Leave Type
+                                </label>
+                                <select style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;background:#fff;"
+                                        t-on-change="(ev) => this.onApplyFormChange('holiday_status_id', ev)">
+                                    <option value="">— Select leave type —</option>
+                                    <t t-foreach="state.availableLeaveTypes" t-as="ltype" t-key="ltype.id">
+                                        <option t-att-value="ltype.id" t-att-selected="state.applyForm.holiday_status_id === ltype.id">
+                                            <t t-esc="ltype.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <!-- Date Range -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                <div>
+                                    <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;"><span style="color:#ef4444;">*</span> From Date</label>
+                                    <input type="date" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;"
+                                           t-att-value="state.applyForm.date_from"
+                                           t-on-change="(ev) => this.onApplyFormChange('date_from', ev)"/>
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;"><span style="color:#ef4444;">*</span> To Date</label>
+                                    <input type="date" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;"
+                                           t-att-value="state.applyForm.date_to"
+                                           t-on-change="(ev) => this.onApplyFormChange('date_to', ev)"/>
+                                </div>
+                            </div>
+                            <!-- Session Selection -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+                                <div>
+                                    <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">From Session</label>
+                                    <select style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;background:#fff;"
+                                            t-on-change="(ev) => this.onApplyFormChange('request_session_from', ev)">
+                                        <option value="am" t-att-selected="state.applyForm.request_session_from === 'am'">Session 1</option>
+                                        <option value="pm" t-att-selected="state.applyForm.request_session_from === 'pm'">Session 2</option>
+
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">To Session</label>
+                                    <select style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;background:#fff;"
+                                            t-on-change="(ev) => this.onApplyFormChange('request_session_to', ev)">
+                                        <option value="am" t-att-selected="state.applyForm.request_session_from === 'am'">Session 1</option>
+                                        <option value="pm" t-att-selected="state.applyForm.request_session_from === 'pm'">Session 2</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Reason -->
+                            <div>
+                                <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Reason / Notes</label>
+                                <textarea style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;resize:none;" rows="3"
+                                          placeholder="Optional reason for leave..."
+                                          t-on-change="(ev) => this.onApplyFormChange('name', ev)"><t t-esc="state.applyForm.name"/></textarea>
+                            </div>
+                        </div>
+                        <!-- Modal footer -->
+                        <div style="padding:14px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;">
+                            <button style="padding:9px 18px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-weight:700;color:#6b7280;background:#fff;cursor:pointer;"
+                                    t-on-click="closeApplyForm" t-att-disabled="state.submitting">
+                                Cancel
+                            </button>
+                            <button style="padding:9px 18px;border:none;border-radius:8px;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,#4361ee,#7209b7);cursor:pointer;display:flex;align-items:center;gap:6px;"
+                                    t-on-click="submitLeave" t-att-disabled="state.submitting">
+                                <i t-if="!state.submitting" class="fa fa-paper-plane"></i>
+                                <i t-else="" class="fa fa-spinner fa-spin"></i>
+                                <t t-if="!state.submitting">Submit Request</t>
+                                <t t-else="">Submitting...</t>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+        </div>
+    </t>
+</templates>

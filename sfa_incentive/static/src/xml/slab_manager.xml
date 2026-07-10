@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="sfa_incentive.SlabManager">
+    <div class="sfa-slab-manager">
+
+        <!-- ── Stat boxes ── -->
+        <div class="sfa-slb-stats">
+            <div class="sfa-slb-stat" t-att-class="state.activeFilter === 'all' ? 'active' : ''"
+                 t-on-click="() => this.setActiveFilter('all')">
+                <div class="slb-stat-num"><t t-esc="state.stats.total"/></div>
+                <div class="slb-stat-lbl">TOTAL</div>
+            </div>
+            <div class="sfa-slb-stat" t-att-class="state.activeFilter === 'active' ? 'active' : ''"
+                 t-on-click="() => this.setActiveFilter('active')">
+                <div class="slb-stat-num"><t t-esc="state.stats.active"/></div>
+                <div class="slb-stat-lbl">ACTIVE</div>
+            </div>
+            <div class="sfa-slb-stat" t-att-class="state.activeFilter === 'inactive' ? 'active' : ''"
+                 t-on-click="() => this.setActiveFilter('inactive')">
+                <div class="slb-stat-num"><t t-esc="state.stats.inactive"/></div>
+                <div class="slb-stat-lbl">INACTIVE</div>
+            </div>
+        </div>
+
+        <!-- ── Filter bar + New Slab ── -->
+        <div class="sfa-slb-toolbar">
+            <div class="sfa-slb-filters">
+                <!-- Target Criteria -->
+                <div class="sfa-filter-group">
+                    <label class="sfa-filter-label">Target Criteria</label>
+                    <select class="sfa-filter-select" t-on-change="onCriteriaChange">
+                        <option value="">-- Universal (All Criteria) --</option>
+                        <t t-foreach="state.filterOptions.criteria" t-as="c" t-key="c.id">
+                            <option t-att-value="c.id"
+                                    t-att-selected="c.id === state.criteriaId ? 'selected' : false">
+                                <t t-esc="c.name"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+                <!-- Profile -->
+                <div class="sfa-filter-group">
+                    <label class="sfa-filter-label">Profile</label>
+                    <select class="sfa-filter-select" t-on-change="onProfileChange">
+                        <option value="">-- Universal (All Profiles) --</option>
+                        <t t-foreach="state.filterOptions.profiles" t-as="p" t-key="p.id">
+                            <option t-att-value="p.id"
+                                    t-att-selected="p.id === state.profileId ? 'selected' : false">
+                                <t t-esc="p.name"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+                <!-- Territory -->
+                <div class="sfa-filter-group">
+                    <label class="sfa-filter-label">Territory</label>
+                    <select class="sfa-filter-select" t-on-change="onTerritoryChange">
+                        <option value="">-- Universal (All Territories) --</option>
+                        <t t-foreach="state.filterOptions.territories" t-as="tr" t-key="tr.id">
+                            <option t-att-value="tr.id"
+                                    t-att-selected="tr.id === state.territoryId ? 'selected' : false">
+                                <t t-esc="tr.name"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+                <!-- Payout Type -->
+                <div class="sfa-filter-group">
+                    <label class="sfa-filter-label">Payout Type</label>
+                    <select class="sfa-filter-select" t-on-change="onPayoutTypeChange">
+                        <option value="">-- All Types --</option>
+                        <option value="percentage"
+                                t-att-selected="state.payoutType === 'percentage' ? 'selected' : false">
+                            Percentage (of Target Value)
+                        </option>
+                        <option value="fixed"
+                                t-att-selected="state.payoutType === 'fixed' ? 'selected' : false">
+                            Fixed Amount
+                        </option>
+                        <option value="salary_pct"
+                                t-att-selected="state.payoutType === 'salary_pct' ? 'selected' : false">
+                            Salary Percentage (of Gross Salary)
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="sfa-slb-new-btn" t-on-click="openNewSlab">
+                <i class="fa fa-plus"/> New Slab
+            </button>
+        </div>
+
+        <!-- ── Table ── -->
+        <div class="sfa-slb-table-wrap">
+            <t t-if="state.loading">
+                <div class="sfa-empty-state">
+                    <i class="fa fa-spinner fa-spin" style="font-size:1.5rem;"/>
+                    <div class="mt-2">Loading…</div>
+                </div>
+            </t>
+            <t t-elif="state.slabs.length === 0">
+                <div class="sfa-empty-state">
+                    <i class="fa fa-list" style="font-size:2rem;opacity:.2;"/>
+                    <div style="margin-top:8px;font-weight:600;">No Slabs Found</div>
+                    <div style="font-size:.85rem;color:#9ca3af;">No slabs match the selected filters.</div>
+                </div>
+            </t>
+            <t t-else="">
+                <table class="sfa-slb-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox"/></th>
+                            <th>Slab Name</th>
+                            <th>Criteria</th>
+                            <th>Profile</th>
+                            <th>Territory</th>
+                            <th>Range</th>
+                            <th>Payout</th>
+                            <th>Multiplier</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.slabs" t-as="slab" t-key="slab.id">
+                            <tr>
+                                <td><input type="checkbox"/></td>
+                                <td>
+                                    <a href="#" t-on-click.prevent="() => this.editSlab(slab.id)"
+                                       style="color:#1d4ed8;font-weight:500;text-decoration:none;">
+                                        <t t-esc="slab.name"/>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="slb-badge"
+                                          t-att-class="criteriaColor(slab.criteria)">
+                                        <t t-esc="slab.criteria"/>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="slb-badge"
+                                          t-att-class="profileColor(slab.profile)">
+                                        <t t-esc="slab.profile"/>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="slb-badge gray">
+                                        <t t-esc="slab.territory"/>
+                                    </span>
+                                </td>
+                                <td style="white-space:nowrap;"><t t-esc="slab.range"/></td>
+                                <td style="white-space:nowrap;"><t t-esc="slab.payout"/></td>
+                                <td style="text-align:center;font-weight:600;"><t t-esc="slab.multiplier"/></td>
+                                <td>
+                                    <span class="slb-status-badge"
+                                          t-att-class="slab.active ? 'active' : 'inactive'">
+                                        <t t-esc="slab.active ? 'Active' : 'Inactive'"/>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="slb-actions">
+                                        <button class="slb-act-btn toggle"
+                                                t-on-click="() => this.toggleActive(slab.id)"
+                                                t-att-title="slab.active ? 'Deactivate' : 'Activate'">
+                                            <i t-att-class="slab.active ? 'fa fa-toggle-on' : 'fa fa-toggle-off'"/>
+                                        </button>
+                                        <button class="slb-act-btn edit"
+                                                t-on-click="() => this.editSlab(slab.id)"
+                                                title="Edit">
+                                            <i class="fa fa-pencil"/>
+                                        </button>
+                                        <button class="slb-act-btn delete"
+                                                t-on-click="() => this.deleteSlab(slab.id, slab.name)"
+                                                title="Delete">
+                                            <i class="fa fa-trash"/>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </t>
+        </div>
+
+    </div>
+</t>
+
+</templates>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<!-- ============================================================
+     EMPLOYEE 360 — MOBILE APP SHELL
+     Main container: status bar + topbar + content + bottom nav
+     ============================================================ -->
+
+<t t-name="employee_mobile_v19.MobileApp">
+    <div class="mobile360-root">
+
+        <!-- ── Splash / loading screen ─────────────────────── -->
+        <t t-if="state.loading">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d0d1f,#1a1a3e,#0f3460);gap:16px;">
+                <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#4361ee,#3a0ca3);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;box-shadow:0 12px 40px rgba(67,97,238,0.5);">
+                    <i class="fa fa-briefcase"/>
+                </div>
+                <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">Employee 360</div>
+                <div style="font-size:13px;color:rgba(255,255,255,0.6);">Loading your workspace...</div>
+                <div class="mobile360-spinner" style="border-color:rgba(255,255,255,0.2);border-top-color:#4361ee;margin-top:8px;"/>
+            </div>
+        </t>
+
+        <!-- ── Error screen ────────────────────────────────── -->
+        <t t-elif="state.initError">
+            <div class="mobile360-empty" style="flex:1;background:#f0f4f8;">
+                <div class="mobile360-empty-icon"><i class="fa fa-exclamation-triangle"/></div>
+                <div class="mobile360-empty-title">Connection Error</div>
+                <div class="mobile360-empty-sub">Unable to load your workspace. Please check your connection and try again.</div>
+            </div>
+        </t>
+
+        <!-- ── App content ──────────────────────────────────── -->
+        <t t-else="">
+            <!-- Top Navigation Bar -->
+            <div class="mobile360-topbar" t-attf-style="background: {{topbarGradient()}};">
+                <button class="mobile360-topbar-btn" t-if="canGoBack" t-on-click="goBack">
+                    <i class="fa fa-arrow-left"/>
+                </button>
+                <button class="mobile360-topbar-btn" t-else="">
+                    <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">
+                        <t t-esc="employeeInitials"/>
+                    </div>
+                </button>
+
+                <div class="mobile360-topbar-center">
+                    <span class="mobile360-topbar-title"><t t-esc="currentTitle()"/></span>
+                    <span class="mobile360-topbar-subtitle"><t t-esc="todayDate"/></span>
+                </div>
+
+                <button class="mobile360-topbar-btn" t-on-click="onRefresh">
+                    <i class="fa fa-refresh"/>
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="mobile360-content">
+
+                <!-- HOME screen -->
+                <div t-if="state.activeScreen === 'home'" class="mobile360-screen">
+                    <MobileHome
+                        employeeId="state.employeeId"
+                        employeeName="state.employeeName"
+                        isManager="state.isManager"
+                        employees="state.employees"
+                        onNavigate.bind="onNavigate"
+                    />
+                </div>
+
+                <!-- TODAY / WORKDAY screen (field users) -->
+                <div t-if="state.activeScreen === 'today'" class="mobile360-screen">
+                    <MobileToday employeeId="state.employeeId"/>
+                </div>
+
+                <!-- VISITS screen -->
+                <div t-if="state.activeScreen === 'visits'" class="mobile360-screen">
+                    <MobileVisits
+                        employeeId="state.employeeId"
+                        isManager="state.isManager"
+                    />
+                </div>
+
+                <!-- ORDERS screen -->
+                <div t-if="state.activeScreen === 'orders'" class="mobile360-screen">
+                    <MobileOrders
+                        employeeId="state.employeeId"
+                        isManager="state.isManager"
+                    />
+                </div>
+
+                <!-- SCHEMES screen -->
+                <div t-if="state.activeScreen === 'schemes'" class="mobile360-screen">
+                    <MobileSchemes
+                        employeeId="state.employeeId"
+                        isManager="state.isManager"
+                    />
+                </div>
+
+                <!-- TEAM / MANAGER screen -->
+                <div t-if="state.activeScreen === 'team' and state.isManager" class="mobile360-screen">
+                    <MobileManager employeeId="state.employeeId"/>
+                </div>
+
+                <!-- PROFILE / MORE screen -->
+                <div t-if="state.activeScreen === 'profile'" class="mobile360-screen">
+                    <MobileProfile
+                        employeeId="state.employeeId"
+                        isManager="state.isManager"
+                    />
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <nav class="mobile360-bottom-nav">
+                <t t-foreach="navItems" t-as="nav" t-key="nav.id">
+                    <button
+                        t-attf-class="mobile360-nav-item {{state.activeScreen === nav.id ? 'active' : ''}}"
+                        t-on-click="() => this.navigate(nav.id)">
+                        <i t-attf-class="fa {{nav.icon}} mobile360-nav-icon"/>
+                        <span class="mobile360-nav-label"><t t-esc="nav.label"/></span>
+                        <t t-if="getBadge(nav.id)">
+                            <span class="mobile360-nav-badge"><t t-esc="getBadge(nav.id)"/></span>
+                        </t>
+                    </button>
+                </t>
+            </nav>
+        </t>
+    </div>
+</t>
+
+</templates>

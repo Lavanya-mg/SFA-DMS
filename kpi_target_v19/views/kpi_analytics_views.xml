@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════
+         KPI TARGET — GRAPH & PIVOT ANALYTICS  (Odoo 19 Enterprise)
+    ══════════════════════════════════════════════════════════ -->
+
+    <!-- Individual Achievement — Bar by Employee -->
+    <record id="view_kpi_target_graph_achievement" model="ir.ui.view">
+        <field name="name">kpi.target.graph.achievement</field>
+        <field name="model">kpi.target</field>
+        <field name="arch" type="xml">
+            <graph string="KPI Achievement by Employee" type="bar">
+                <field name="employee_id" type="row"/>
+                <field name="overall_achievement" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Individual Achievement — Period Line -->
+    <record id="view_kpi_target_graph_period_line" model="ir.ui.view">
+        <field name="name">kpi.target.graph.period.line</field>
+        <field name="model">kpi.target</field>
+        <field name="arch" type="xml">
+            <graph string="Achievement Trend by Period" type="line">
+                <field name="period_id" type="row"/>
+                <field name="overall_achievement" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Targets vs Actuals Pivot -->
+    <record id="view_kpi_target_pivot" model="ir.ui.view">
+        <field name="name">kpi.target.pivot</field>
+        <field name="model">kpi.target</field>
+        <field name="arch" type="xml">
+            <pivot string="KPI Targets vs Actuals">
+                <field name="employee_id" type="row"/>
+                <field name="period_id" type="col"/>
+                <field name="overall_achievement" type="measure"/>
+                <field name="actual_orders" type="measure"/>
+                <field name="actual_visits" type="measure"/>
+                <field name="actual_order_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Individual Analytics Action -->
+    <record id="action_kpi_target_analytics" model="ir.actions.act_window">
+        <field name="name">KPI Individual Analytics</field>
+        <field name="res_model">kpi.target</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_kpi_target_graph_achievement"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No KPI data to analyse yet.</p>
+        </field>
+    </record>
+
+    <!-- Team Achievement — Bar -->
+    <record id="view_kpi_manager_graph_achievement" model="ir.ui.view">
+        <field name="name">kpi.manager.target.graph.achievement</field>
+        <field name="model">kpi.manager.target</field>
+        <field name="arch" type="xml">
+            <graph string="Team Achievement by Manager" type="bar">
+                <field name="manager_id" type="row"/>
+                <field name="team_overall_achievement" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Team Analytics Pivot -->
+    <record id="view_kpi_manager_pivot" model="ir.ui.view">
+        <field name="name">kpi.manager.target.pivot</field>
+        <field name="model">kpi.manager.target</field>
+        <field name="arch" type="xml">
+            <pivot string="Team KPI Targets vs Actuals">
+                <field name="manager_id" type="row"/>
+                <field name="period_id" type="col"/>
+                <field name="team_overall_achievement" type="measure"/>
+                <field name="team_actual_orders" type="measure"/>
+                <field name="team_actual_visits" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Team Analytics Action -->
+    <record id="action_kpi_manager_analytics" model="ir.actions.act_window">
+        <field name="name">KPI Team Analytics</field>
+        <field name="res_model">kpi.manager.target</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_kpi_manager_graph_achievement"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No team KPI data to analyse yet.</p>
+        </field>
+    </record>
+</odoo>

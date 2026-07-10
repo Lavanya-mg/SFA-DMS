@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Target Allocation (OWL client action, Salesforce-style) -->
+    <record id="action_sfa_target_allocation" model="ir.actions.client">
+        <field name="name">Target Allocation</field>
+        <field name="tag">sfa_target_allocation</field>
+    </record>
+
+    <!-- KPI Dashboard (OWL client action) -->
+    <record id="action_sfa_kpi_dashboard" model="ir.actions.client">
+        <field name="name">KPI Dashboard</field>
+        <field name="tag">sfa_kpi_dashboard</field>
+    </record>
+</odoo>

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="sfa_incentive.SfaKpiDashboard">
+    <div class="kdb-wrap">
+
+        <!-- Header -->
+        <div class="kdb-header">
+            <div class="kdb-title"><i class="fa fa-line-chart me-2"/>KPI Dashboard</div>
+            <div class="kdb-controls">
+                <div class="kdb-tabs">
+                    <button class="kdb-tab" t-att-class="state.view === 'my' ? 'kdb-tab-active' : ''" t-on-click="() => this.setView('my')">My KPIs</button>
+                    <button class="kdb-tab" t-att-class="state.view === 'team' ? 'kdb-tab-active' : ''" t-on-click="() => this.setView('team')">Team</button>
+                    <button class="kdb-tab" t-att-class="state.view === 'org' ? 'kdb-tab-active' : ''" t-on-click="() => this.setView('org')">Organization</button>
+                </div>
+                <select class="kdb-select" t-att-value="state.periodId || ''" t-on-change="onPeriodChange">
+                    <t t-foreach="state.periods" t-as="p" t-key="p.id">
+                        <option t-att-value="p.id"><t t-esc="p.name"/></option>
+                    </t>
+                </select>
+                <select class="kdb-select" t-att-value="state.comparePeriodId || ''" t-on-change="onCompareChange">
+                    <option value="">-- No Comparison --</option>
+                    <t t-foreach="state.periods" t-as="p" t-key="p.id">
+                        <option t-att-value="p.id"><t t-esc="p.name"/></option>
+                    </t>
+                </select>
+                <button class="kdb-refresh" title="Refresh" t-on-click="() => this.loadData()"><i class="fa fa-refresh"/></button>
+            </div>
+        </div>
+
+        <t t-if="!state.data">
+            <div class="kdb-empty">Loading dashboard…</div>
+        </t>
+        <t t-else="">
+            <!-- Summary stat boxes -->
+            <div class="kdb-stats">
+                <div class="kdb-stat kdb-stat-accent">
+                    <div class="kdb-stat-num" t-att-class="textColorClass(state.data.summary.overall_pct)"><t t-esc="state.data.summary.overall_pct"/>%</div>
+                    <div class="kdb-stat-lbl">OVERALL ACHIEVEMENT</div>
+                </div>
+                <div class="kdb-stat">
+                    <div class="kdb-stat-num"><t t-esc="fmt(state.data.summary.total_target)"/></div>
+                    <div class="kdb-stat-lbl">TOTAL TARGET</div>
+                </div>
+                <div class="kdb-stat">
+                    <div class="kdb-stat-num"><t t-esc="fmt(state.data.summary.total_actual)"/></div>
+                    <div class="kdb-stat-lbl">TOTAL ACTUAL</div>
+                    <t t-if="state.data.summary.compare">
+                        <div class="kdb-stat-cmp">vs <t t-esc="state.data.summary.compare.name"/>: <t t-esc="fmt(state.data.summary.compare.total_actual)"/></div>
+                    </t>
+                </div>
+                <div class="kdb-stat kdb-stat-purple">
+                    <div class="kdb-stat-num"><t t-esc="fmt(state.data.summary.incentive)"/></div>
+                    <div class="kdb-stat-lbl">INCENTIVE EARNED</div>
+                </div>
+            </div>
+
+            <!-- Filter tags -->
+            <div class="kdb-filters">
+                <span class="kdb-filters-lbl">Filter KPIs:</span>
+                <button class="kdb-pill" t-att-class="state.activeFilter === 'all' ? 'kdb-pill-active' : ''" t-on-click="() => this.setFilter('all')">All</button>
+                <t t-foreach="state.data.criteria" t-as="c" t-key="c.id">
+                    <button class="kdb-pill" t-att-class="state.activeFilter === c.id ? 'kdb-pill-active' : ''" t-on-click="() => this.setFilter(c.id)"><t t-esc="c.name"/></button>
+                </t>
+            </div>
+
+            <!-- Top Performers + Incentive Breakdown -->
+            <div class="kdb-row2">
+                <div class="kdb-panel">
+                    <div class="kdb-panel-hd"><i class="fa fa-trophy me-2"/>Top Performers</div>
+                    <div class="kdb-panel-bd">
+                        <t t-if="!state.data.top_performers.length"><div class="kdb-muted">No data.</div></t>
+                        <t t-foreach="state.data.top_performers" t-as="p" t-key="p_index">
+                            <div class="kdb-perf">
+                                <div class="kdb-rank"><t t-esc="p_index + 1"/></div>
+                                <div class="kdb-perf-body">
+                                    <div class="kdb-perf-top">
+                                        <span class="kdb-perf-name"><t t-esc="p.name"/></span>
+                                        <span class="kdb-perf-pct" t-att-class="textColorClass(p.pct)"><t t-esc="p.pct"/>%<span class="kdb-perf-val"><t t-esc="fmt(p.actual)"/></span></span>
+                                    </div>
+                                    <div class="kdb-track"><div class="kdb-track-fill" t-att-class="barColorClass(p.pct)" t-attf-style="width:{{ perfBarWidth(p.pct) }}%;"/></div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+                <div class="kdb-panel">
+                    <div class="kdb-panel-hd"><i class="fa fa-money me-2"/>Incentive Breakdown</div>
+                    <div class="kdb-panel-bd">
+                        <t t-if="state.data.summary.incentive">
+                            <div class="kdb-incentive-total"><t t-esc="fmt(state.data.summary.incentive)"/></div>
+                            <div class="kdb-muted">Total incentive earned this period.</div>
+                        </t>
+                        <t t-else="">
+                            <div class="kdb-muted kdb-center">No incentive earned yet for this period.</div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Breakdown cards -->
+            <div class="kdb-section-lbl">KPI BREAKDOWN</div>
+            <div class="kdb-cards">
+                <t t-foreach="filteredBreakdown" t-as="b" t-key="b.criteria_id">
+                    <div class="kdb-card">
+                        <div class="kdb-card-top">
+                            <svg viewBox="0 0 80 80" class="kdb-gauge">
+                                <circle cx="40" cy="40" r="34" class="kdb-gauge-bg"/>
+                                <circle cx="40" cy="40" r="34" class="kdb-gauge-fg" t-att-class="gaugeColorClass(b.pct)"
+                                        t-att-stroke-dasharray="gaugeDash(b.pct)" transform="rotate(-90 40 40)"/>
+                                <text x="40" y="45" text-anchor="middle" class="kdb-gauge-text" t-att-class="textColorClass(b.pct)"><t t-esc="Math.round(b.pct)"/>%</text>
+                            </svg>
+                            <div class="kdb-card-name"><t t-esc="b.name"/></div>
+                        </div>
+                        <div class="kdb-card-foot">
+                            <div><div class="kdb-card-k">TARGET</div><div class="kdb-card-v"><t t-esc="fmt(b.target)"/></div></div>
+                            <div><div class="kdb-card-k">ACTUAL</div><div class="kdb-card-v kdb-green"><t t-esc="fmt(b.actual)"/></div></div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+
+            <!-- Performance Trend + Achievement by Criteria -->
+            <div class="kdb-row2">
+                <div class="kdb-panel">
+                    <div class="kdb-panel-hd">
+                        <span class="kdb-panel-ttl"><i class="fa fa-area-chart me-2"/>Performance Trend</span>
+                        <div class="kdb-chart-toggle">
+                            <button t-att-class="state.trendChart === 'line' ? 'kdb-ct-active' : ''" title="Line" t-on-click="() => this.setTrendChart('line')"><i class="fa fa-line-chart"/></button>
+                            <button t-att-class="state.trendChart === 'bar' ? 'kdb-ct-active' : ''" title="Bar" t-on-click="() => this.setTrendChart('bar')"><i class="fa fa-bar-chart"/></button>
+                        </div>
+                    </div>
+                    <div class="kdb-panel-bd">
+                        <div class="kdb-legend">
+                            <span><span class="kdb-dot kdb-dot-target"/>Target</span>
+                            <span><span class="kdb-dot kdb-dot-ach"/>Achievement</span>
+                        </div>
+                        <t t-if="!trend.length"><div class="kdb-muted kdb-center">No trend data.</div></t>
+                        <t t-elif="state.trendChart === 'bar'">
+                            <svg viewBox="0 0 600 200" class="kdb-linechart">
+                                <t t-foreach="trendBars" t-as="b" t-key="b_index">
+                                    <rect t-att-x="b.tx" t-att-y="b.ty" t-att-width="b.bw" t-att-height="b.th" class="kdb-svgbar-target"/>
+                                    <rect t-att-x="b.ax" t-att-y="b.ay" t-att-width="b.bw" t-att-height="b.ah" class="kdb-svgbar-ach"/>
+                                    <text t-att-x="b.labelX" y="194" text-anchor="middle" class="kdb-xlabel"><t t-esc="b.label"/></text>
+                                </t>
+                            </svg>
+                        </t>
+                        <t t-else="">
+                            <svg viewBox="0 0 600 200" class="kdb-linechart">
+                                <polygon t-att-points="targetArea" class="kdb-area-target"/>
+                                <polygon t-att-points="achievementArea" class="kdb-area-ach"/>
+                                <polyline t-att-points="targetPoints" class="kdb-line-target"/>
+                                <polyline t-att-points="achievementPoints" class="kdb-line-ach"/>
+                                <t t-foreach="targetDots" t-as="d" t-key="d_index"><circle t-att-cx="d.x" t-att-cy="d.y" r="3" class="kdb-mk-target"/></t>
+                                <t t-foreach="achievementDots" t-as="d" t-key="d_index"><circle t-att-cx="d.x" t-att-cy="d.y" r="3" class="kdb-mk-ach"/></t>
+                                <t t-foreach="trendLabels" t-as="l" t-key="l_index"><text t-att-x="l.x" y="194" text-anchor="middle" class="kdb-xlabel"><t t-esc="l.label"/></text></t>
+                            </svg>
+                        </t>
+                    </div>
+                </div>
+                <div class="kdb-panel">
+                    <div class="kdb-panel-hd">
+                        <span class="kdb-panel-ttl"><i class="fa fa-bar-chart me-2"/>Achievement by Criteria</span>
+                        <div class="kdb-chart-toggle">
+                            <button t-att-class="state.critChart === 'bar' ? 'kdb-ct-active' : ''" title="Bar" t-on-click="() => this.setCritChart('bar')"><i class="fa fa-bar-chart"/></button>
+                            <button t-att-class="state.critChart === 'pie' ? 'kdb-ct-active' : ''" title="Pie" t-on-click="() => this.setCritChart('pie')"><i class="fa fa-pie-chart"/></button>
+                        </div>
+                    </div>
+                    <div class="kdb-panel-bd">
+                        <t t-if="state.critChart === 'pie'">
+                            <t t-if="!critPie.length"><div class="kdb-muted kdb-center">No achievement data to chart.</div></t>
+                            <t t-else="">
+                                <div class="kdb-pie-wrap">
+                                    <svg viewBox="0 0 200 200" class="kdb-pie">
+                                        <t t-foreach="critPie" t-as="s" t-key="s_index">
+                                            <path t-att-d="s.d" t-att-fill="s.color" stroke="#ffffff" stroke-width="1.5"/>
+                                        </t>
+                                    </svg>
+                                    <div class="kdb-pie-legend">
+                                        <t t-foreach="critPie" t-as="s" t-key="s_index">
+                                            <div class="kdb-pie-li">
+                                                <span class="kdb-pie-sw" t-attf-style="background:{{ s.color }};"/>
+                                                <span class="kdb-pie-nm"><t t-esc="s.name"/></span>
+                                                <span class="kdb-pie-pct"><t t-esc="s.pct"/>%</span>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="state.data.by_criteria" t-as="c" t-key="c_index">
+                                <div class="kdb-hbar-row">
+                                    <div class="kdb-hbar-lbl"><t t-esc="c.name"/></div>
+                                    <div class="kdb-hbar-track"><div class="kdb-hbar-fill" t-att-class="barColorClass(c.pct)" t-attf-style="width:{{ critBarWidth(c.pct) }}%;"/></div>
+                                    <div class="kdb-hbar-pct" t-att-class="textColorClass(c.pct)"><t t-esc="c.pct"/>%</div>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Performance (Team / Organization views only) -->
+            <t t-if="state.view !== 'my'">
+            <div class="kdb-panel">
+                <div class="kdb-panel-hd"><i class="fa fa-users me-2"/>Team Performance</div>
+                <div class="kdb-panel-bd kdb-nopad">
+                    <table class="kdb-team-table">
+                        <thead><tr><th>NAME</th><th>PROFILE</th><th class="kdb-r">TARGET</th><th class="kdb-r">ACTUAL</th><th>ACHIEVEMENT</th><th class="kdb-r">INCENTIVE</th></tr></thead>
+                        <tbody>
+                            <t t-if="!state.data.team_performance.length"><tr><td colspan="6" class="kdb-center kdb-muted">No data.</td></tr></t>
+                            <t t-foreach="state.data.team_performance" t-as="p" t-key="p_index">
+                                <tr>
+                                    <td class="kdb-bold"><t t-esc="p.name"/></td>
+                                    <td><t t-if="p.profile"><span class="kdb-badge"><t t-esc="p.profile"/></span></t><t t-else=""><span class="kdb-muted">—</span></t></td>
+                                    <td class="kdb-r"><t t-esc="fmt(p.target)"/></td>
+                                    <td class="kdb-r"><t t-esc="fmt(p.actual)"/></td>
+                                    <td>
+                                        <div class="kdb-team-ach">
+                                            <span t-att-class="textColorClass(p.pct)"><t t-esc="p.pct"/>%</span>
+                                            <div class="kdb-track kdb-track-sm"><div class="kdb-track-fill" t-att-class="barColorClass(p.pct)" t-attf-style="width:{{ perfBarWidth(p.pct) }}%;"/></div>
+                                        </div>
+                                    </td>
+                                    <td class="kdb-r"><t t-esc="fmt(p.incentive)"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </t>
+        </t>
+    </div>
+</t>
+</templates>

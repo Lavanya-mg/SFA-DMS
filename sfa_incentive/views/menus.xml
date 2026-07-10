@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- App root menu -->
+    <menuitem id="menu_sfa_incentive_root"
+              name="Incentive Manager"
+              sequence="85"
+              web_icon="sfa_incentive,static/description/icon.png"/>
+
+    <!-- Incentive Slab Manager -->
+    <menuitem id="menu_sfa_incentive_slabs"
+              name="Slab Manager"
+              parent="menu_sfa_incentive_root"
+              action="action_sfa_slab_manager"
+              sequence="10"/>
+
+    <!-- Incentive Dashboard -->
+    <menuitem id="menu_sfa_incentive_dashboard"
+              name="Incentive Dashboard"
+              parent="menu_sfa_incentive_root"
+              action="action_sfa_incentive_dashboard"
+              sequence="20"/>
+
+    <!-- Records -->
+    <menuitem id="menu_sfa_incentive_records"
+              name="Incentive Records"
+              parent="menu_sfa_incentive_root"
+              action="action_sfa_incentive_record"
+              sequence="30"/>
+
+    <!-- Configuration -->
+    <menuitem id="menu_sfa_incentive_config"
+              name="Configuration"
+              parent="menu_sfa_incentive_root"
+              sequence="90"/>
+
+    <!-- <menuitem id="menu_sfa_target_criteria_manager"
+              name="Target Criteria Manager"
+              parent="menu_sfa_incentive_root"
+              action="action_sfa_target_criteria_manager"
+              sequence="5"/>
+
+    <menuitem id="menu_sfa_target_allocation"
+              name="Target Allocation"
+              parent="menu_sfa_incentive_root"
+              action="action_sfa_target_allocation"
+              sequence="7"/>
+
+    <menuitem id="menu_sfa_kpi_dashboard"
+              name="KPI Dashboard"
+              parent="menu_sfa_incentive_root"
+              action="action_sfa_kpi_dashboard"
+              sequence="8"/> -->
+
+    <menuitem id="menu_sfa_target_criteria"
+              name="Target Criteria (Table)"
+              parent="menu_sfa_incentive_config"
+              action="action_sfa_target_criteria"
+              sequence="10"/>
+
+    <menuitem id="menu_sfa_incentive_profile"
+              name="Profiles"
+              parent="menu_sfa_incentive_config"
+              action="action_sfa_incentive_profile"
+              sequence="20"/>
+
+    <!-- Also surface these three screens inside the KPI Targets app menu bar
+         (parent lives in kpi_target_v19, which sfa_incentive depends on) -->
+    <menuitem id="menu_kpi_target_criteria_manager"
+              name="Target Criteria Manager"
+              parent="kpi_target_v19.menu_kpi_root"
+              action="action_sfa_target_criteria_manager"
+              sequence="42"/>
+
+    <menuitem id="menu_kpi_target_allocation"
+              name="Target Allocation"
+              parent="kpi_target_v19.menu_kpi_root"
+              action="action_sfa_target_allocation"
+              sequence="44"/>
+
+    <menuitem id="menu_kpi_sfa_kpi_dashboard"
+              name="KPI Dashboard"
+              parent="kpi_target_v19.menu_kpi_root"
+              action="action_sfa_kpi_dashboard"
+              sequence="5"/>
+</odoo>

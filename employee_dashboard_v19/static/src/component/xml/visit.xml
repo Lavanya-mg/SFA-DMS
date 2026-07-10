@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- ============================================================
+         VISIT HISTORY — redesigned table view (Odoo 18)
+         ============================================================ -->
+    <t t-name="employee_dashboard_v19.VisitList">
+        <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+
+            <!-- Header -->
+            <div class="emp360-page-header">
+                <div class="emp360-ph-top">
+                    <div>
+                        <h3 class="emp360-ph-name">
+                            <i class="fa fa-history me-2"></i> Visit History
+                        </h3>
+                        <p class="emp360-ph-role">All customer visits record</p>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <select class="emp360-form-control emp360-form-select"
+                                style="width:auto;height:34px;padding:0 30px 0 10px;font-size:12px;"
+                                t-model="state.filterStatus"
+                                t-on-change="loadVisits">
+                            <option value="">All Status</option>
+                            <option value="planned">Planned</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button class="emp360-btn emp360-btn-primary emp360-btn-sm"
+                                t-on-click="refreshVisits">
+                            <i class="fa fa-refresh me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;background:#f0f4f8;padding:16px 24px;">
+
+                <!-- No employee selected -->
+                <t t-if="!getEmployeeId()">
+                    <div class="emp360-empty">
+                        <div class="emp360-empty-icon"><i class="fa fa-user-circle"></i></div>
+                        <div class="emp360-empty-title">No Employee Selected</div>
+                        <div class="emp360-empty-desc">Select an employee from the sidebar to view visits.</div>
+                    </div>
+                </t>
+
+                <!-- Loading -->
+                <t t-elif="state.loading">
+                    <div class="emp360-loading">
+                        <div class="emp360-spinner"></div>
+                        <div class="emp360-loading-text">Loading visits…</div>
+                    </div>
+                </t>
+
+                <!-- Empty -->
+                <t t-elif="state.visits.length === 0">
+                    <div class="emp360-empty">
+                        <div class="emp360-empty-icon"><i class="fa fa-calendar-times-o"></i></div>
+                        <div class="emp360-empty-title">No visits found</div>
+                        <div class="emp360-empty-desc">No visits match the current filter.</div>
+                    </div>
+                </t>
+
+                <!-- Visit list -->
+                <t t-else="">
+                    <div class="emp360-card" style="overflow:hidden;">
+                        <div class="emp360-table-wrap">
+                            <table class="emp360-table">
+                                <thead>
+                                    <tr>
+                                        <th>Visit ID</th>
+                                        <th>Customer</th>
+                                        <th>Beat</th>
+                                        <th>Date</th>
+                                        <th>Check-In</th>
+                                        <th>Check-Out</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>Productive</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.visits" t-as="visit" t-key="visit.id">
+                                        <tr>
+                                            <td>
+                                                <span style="font-family:monospace;font-size:12px;font-weight:700;color:#4361ee;">
+                                                    <t t-esc="visit.name"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style="display:flex;align-items:center;gap:8px;">
+                                                    <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4361ee,#7209b7);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">
+                                                        <t t-esc="visit.partner_id ? visit.partner_id[1][0].toUpperCase() : 'C'"/>
+                                                    </div>
+                                                    <span style="font-weight:600;color:#111827;font-size:13px;">
+                                                        <t t-esc="visit.partner_id ? visit.partner_id[1] : '-'"/>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#6b7280;">
+                                                    <i class="fa fa-map-marker" style="color:#4cc9f0;"></i>
+                                                    <t t-esc="visit.beat_id ? visit.beat_id[1] : '-'"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="emp360-badge emp360-badge-secondary" style="font-family:monospace;font-size:11px;">
+                                                    <t t-esc="formatDate(visit.actual_start_time)"/>
+                                                </span>
+                                            </td>
+                                            <td style="color:#374151;font-size:12px;">
+                                                <t t-esc="formatTime(visit.actual_start_time)"/>
+                                            </td>
+                                            <td style="color:#374151;font-size:12px;">
+                                                <t t-esc="formatTime(visit.actual_end_time)"/>
+                                            </td>
+                                            <td>
+                                                <span class="emp360-badge emp360-badge-info">
+                                                    <i class="fa fa-clock-o me-1"></i>
+                                                    <t t-esc="visit.duration_display"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span t-attf-class="emp360-badge {{visit.status === 'completed' ? 'emp360-badge-success' : visit.status === 'in_progress' ? 'emp360-badge-warning' : visit.status === 'cancelled' ? 'emp360-badge-danger' : 'emp360-badge-info'}}">
+                                                    <t t-esc="getStatusText(visit.status)"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <t t-if="visit.is_productive">
+                                                    <span class="emp360-badge emp360-badge-success">
+                                                        <i class="fa fa-check me-1"></i> Yes
+                                                    </span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="emp360-badge emp360-badge-danger">
+                                                        <i class="fa fa-times me-1"></i> No
+                                                    </span>
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <button class="emp360-btn emp360-btn-ghost emp360-btn-sm"
+                                                        t-on-click="() => this.viewVisit(visit.id)"
+                                                        title="View Details">
+                                                    <i class="fa fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:13px;">
+                        <span style="color:#9ca3af;">
+                            Showing <strong><t t-esc="state.visits.length"/></strong> visits
+                        </span>
+                        <button t-if="state.hasMore"
+                                class="emp360-btn emp360-btn-outline emp360-btn-sm"
+                                t-on-click="loadMoreVisits">
+                            <i class="fa fa-angle-down me-1"></i> Load More
+                        </button>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sale Order scheme views are injected by employee_dashboard_v19/views/sale_order.xml
+         when employee_dashboard_v19 is installed.
+         This file is intentionally empty to avoid duplicate view inheritance. -->
+</odoo>

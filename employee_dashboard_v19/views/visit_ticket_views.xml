@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Visit Ticket ───────────────────────────────────────── -->
+    <record id="view_visit_ticket_list" model="ir.ui.view">
+        <field name="name">visit.ticket.list</field>
+        <field name="model">visit.ticket</field>
+        <field name="arch" type="xml">
+            <list string="Tickets" default_order="date desc"
+                  decoration-danger="priority=='Critical'"
+                  decoration-warning="priority=='High'"
+                  decoration-success="state=='resolved' or state=='closed'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="employee_id"/>
+                <field name="subject"/>
+                <field name="category"/>
+                <field name="priority"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_visit_ticket_form" model="ir.ui.view">
+        <field name="name">visit.ticket.form</field>
+        <field name="model">visit.ticket</field>
+        <field name="arch" type="xml">
+            <form string="Support Ticket">
+                <header>
+                    <button name="action_start" string="Start" type="object" class="btn-secondary"
+                     invisible="state != 'open'"
+                          />
+                    <button name="action_resolve" string="Mark Resolved" type="object" class="btn-success"
+                     invisible="state not in  ['open','in_progress']"
+                         />
+                    <button name="action_close" string="Close" type="object"
+                        invisible="state not in  ['resolved']"
+                            />
+                    <button name="action_reopen" string="Reopen" type="object"
+                     invisible="state not in  ['closed','resolved']"
+                        />
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="open,in_progress,resolved,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="visit_id"/>
+                            <field name="partner_id"/>
+                            <field name="employee_id"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="category"/>
+                            <field name="priority"/>
+                            <field name="resolved_date"
+                            invisible="state not in  ['resolved','closed']"
+                           />
+                            <field name="resolved_by" 
+
+                           invisible="state not in  ['resolved','closed']"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="subject"/>
+                    </group>
+                    <field name="description" placeholder="Describe the issue..."/>
+                    <field name="image" widget="image" 
+                     invisible="image == False"
+                   />
+                    <group invisible="state not in  ['resolved','closed']">
+                        <field name="resolution_notes" placeholder="Resolution notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_visit_ticket" model="ir.actions.act_window">
+        <field name="name">Tickets</field>
+        <field name="res_model">visit.ticket</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_visit_ticket"
+              name="Tickets"
+              action="action_visit_ticket"
+              parent="employee_dashboard_v19.menu_employee_dashboard_reports"
+              sequence="65"/>
+</odoo>

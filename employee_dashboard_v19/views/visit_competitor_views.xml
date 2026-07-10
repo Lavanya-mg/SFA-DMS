@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Competitor Master ──────────────────────────────────── -->
+    <record id="view_competitor_master_list" model="ir.ui.view">
+        <field name="name">competitor.master.list</field>
+        <field name="model">competitor.master</field>
+        <field name="arch" type="xml">
+            <list string="Competitors">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_competitor_master_form" model="ir.ui.view">
+        <field name="name">competitor.master.form</field>
+        <field name="model">competitor.master</field>
+        <field name="arch" type="xml">
+            <form string="Competitor Master">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_competitor_master" model="ir.actions.act_window">
+        <field name="name">Competitor Master</field>
+        <field name="res_model">competitor.master</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ── Visit Competitor Tracking ─────────────────────────── -->
+    <record id="view_visit_competitor_list" model="ir.ui.view">
+        <field name="name">visit.competitor.list</field>
+        <field name="model">visit.competitor</field>
+        <field name="arch" type="xml">
+            <list string="Competitor Tracking">
+                <field name="visit_id"/>
+                <field name="partner_id"/>
+                <field name="employee_id"/>
+                <field name="brand_name"/>
+                <field name="product_name"/>
+                <field name="price"/>
+                <field name="shelf_share_pct" string="Shelf %"/>
+                <field name="scheme_details"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_visit_competitor_form" model="ir.ui.view">
+        <field name="name">visit.competitor.form</field>
+        <field name="model">visit.competitor</field>
+        <field name="arch" type="xml">
+            <form string="Competitor Entry">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="visit_id"/>
+                            <field name="partner_id"/>
+                            <field name="employee_id"/>
+                            <field name="competitor_id"/>
+                            <field name="brand_name"/>
+                        </group>
+                        <group>
+                            <field name="product_name"/>
+                            <field name="price"/>
+                            <field name="shelf_share_pct"/>
+                        </group>
+                    </group>
+                    <field name="scheme_details" placeholder="Scheme / offer details..."/>
+                    <field name="remarks" placeholder="Remarks..."/>
+                    <field name="photo" widget="image"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_visit_competitor" model="ir.actions.act_window">
+        <field name="name">Competitor Tracking</field>
+        <field name="res_model">visit.competitor</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_competitor_config"
+              name="Competitor Master"
+              action="action_competitor_master"
+              parent="employee_dashboard_v19.menu_employee_dashboard_config"
+              sequence="30"/>
+
+    <menuitem id="menu_visit_competitor"
+              name="Competitor Report"
+              action="action_visit_competitor"
+              parent="employee_dashboard_v19.menu_employee_dashboard_reports"
+              sequence="70"/>
+</odoo>

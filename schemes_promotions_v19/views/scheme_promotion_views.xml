@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     FORM VIEW
+══════════════════════════════════════════════════════════════════════════ -->
+<record id="view_scheme_promotion_form" model="ir.ui.view">
+    <field name="name">scheme.promotion.form</field>
+    <field name="model">scheme.promotion</field>
+    <field name="arch" type="xml">
+        <form string="Scheme / Promotion">
+            <header>
+                <button name="action_activate"    string="Activate"   type="object"
+                        class="btn-primary"
+                        invisible="state not in ('draft',)"/>
+                <button name="action_expire"      string="Mark Expired" type="object"
+                        invisible="state not in ('active',)"/>
+                <button name="action_cancel"      string="Cancel"     type="object"
+                        invisible="state in ('cancelled','draft')"/>
+                <button name="action_reset_draft" string="Reset Draft" type="object"
+                        invisible="state not in ('cancelled','expired')"/>
+                <field name="state" widget="statusbar"
+                       statusbar_visible="draft,active,expired"/>
+            </header>
+            <sheet>
+                <div class="oe_button_box" name="button_box"/>
+                <div class="oe_title">
+                    <label for="name"/>
+                    <h1>
+                        <field name="name" placeholder="Scheme Name…"/>
+                    </h1>
+                    <div class="d-flex gap-2 align-items-center mt-1">
+                        <field name="scheme_code" readonly="1" class="text-muted"/>
+                        <field name="benefit_type" widget="badge"
+                               decoration-success="benefit_type == 'free_product'"
+                               decoration-info="benefit_type == 'percent_discount'"
+                               decoration-warning="benefit_type == 'price_discount'"
+                               decoration-danger="benefit_type == 'points'"/>
+                    </div>
+                </div>
+
+                <!-- ── Row 1: type + dates ── -->
+                <group>
+                    <group string="Scheme Configuration">
+                        <field name="scheme_type" required="1"/>
+                        <field name="benefit_type" required="1"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <group string="Validity">
+                        <field name="date_from" required="1"/>
+                        <field name="date_to"   required="1"/>
+                        <field name="active"/>
+                    </group>
+                </group>
+
+                <!-- ── Filters ── -->
+                <group string="Applicable To" collapsible="1">
+                    <group>
+                        <field name="customer_ids" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="channel_ids" widget="many2many_tags"/>
+                    </group>
+                </group>
+
+                <!-- ═══════════════════════════════════════════════════════════
+                     INVOICE VALUE (type 7) — single threshold + benefit
+                ═══════════════════════════════════════════════════════════ -->
+                <group string="Invoice Condition &amp; Benefit"
+                       invisible="scheme_type != 'invoice_value'">
+                    <group string="Condition">
+                        <field name="min_invoice_value" string="Min Invoice Value (₹)"
+                               invisible="scheme_type != 'invoice_value'"/>
+                    </group>
+                    <group string="Benefit">
+                        <!-- A: Free Product -->
+                        <field name="inv_free_product_id"
+                               invisible="benefit_type != 'free_product' or scheme_type != 'invoice_value'"
+                               string="Free Product"/>
+                        <field name="inv_free_qty"
+                               invisible="benefit_type != 'free_product' or scheme_type != 'invoice_value'"
+                               string="Free Qty"/>
+                        <!-- B: % Discount -->
+                        <field name="inv_discount_pct"
+                               invisible="benefit_type != 'percent_discount' or scheme_type != 'invoice_value'"
+                               string="Discount %"/>
+                        <!-- C: Price Discount -->
+                        <field name="inv_discount_amount"
+                               invisible="benefit_type != 'price_discount' or scheme_type != 'invoice_value'"
+                               string="Discount Amount (₹)"/>
+                        <!-- D: Points -->
+                        <field name="inv_reward_points"
+                               invisible="benefit_type != 'points' or scheme_type != 'invoice_value'"
+                               string="Reward Points"/>
+                    </group>
+                </group>
+
+                <!-- ═══════════════════════════════════════════════════════════
+                     NOTEBOOK TABS
+                ═══════════════════════════════════════════════════════════ -->
+                <notebook>
+
+                    <!-- ── Tab 1: Product Lines (types 1–6) ── -->
+                    <page string="Product Lines" name="product_lines"
+                          invisible="scheme_type in ('invoice_value','slab_invoice_value')">
+                        <field name="line_ids" widget="one2many">
+                            <list editable="bottom" optional="show">
+                                <field name="sequence" widget="handle"/>
+                                <field name="product_id"/>
+
+                                <!-- Condition columns -->
+                                <field name="min_qty"
+                                       string="Min Qty"
+                                       optional="show"
+                                       column_invisible="parent.scheme_type not in ('each_product_qty','assorted_product_qty')"/>
+                                <field name="min_value"
+                                       string="Min Value (₹)"
+                                       optional="show"
+                                       column_invisible="parent.scheme_type not in ('each_product_value','assorted_product_value')"/>
+
+                                <!-- Benefit columns — A -->
+                                <field name="free_product_id"
+                                       string="Free Product"
+                                       optional="show"
+                                       column_invisible="parent.benefit_type != 'free_product'"/>
+                                <field name="free_qty"
+                                       string="Free Qty"
+                                       optional="show"
+                                       column_invisible="parent.benefit_type != 'free_product'"/>
+
+                                <!-- Benefit columns — B -->
+                                <field name="discount_pct"
+                                       string="Discount %"
+                                       optional="show"
+                                       column_invisible="parent.benefit_type != 'percent_discount'"/>
+
+                                <!-- Benefit columns — C -->
+                                <field name="discount_amount"
+                                       string="Disc. Amt (₹)"
+                                       optional="show"
+                                       column_invisible="parent.benefit_type != 'price_discount'"/>
+
+                                <!-- Benefit columns — D -->
+                                <field name="reward_points"
+                                       string="Points"
+                                       optional="show"
+                                       column_invisible="parent.benefit_type != 'points'"/>
+                            </list>
+
+                            <!-- Product line FORM (for complex entries) -->
+                            <form string="Product Line">
+                                <sheet>
+                                    <group>
+                                        <group string="Product &amp; Condition">
+                                            <field name="product_id"/>
+                                            <field name="min_qty"
+                                                   invisible="scheme_type not in ('each_product_qty','assorted_product_qty')"/>
+                                            <field name="min_value"
+                                                   invisible="scheme_type not in ('each_product_value','assorted_product_value')"/>
+                                        </group>
+                                        <group string="Benefit">
+                                            <field name="free_product_id"
+                                                   invisible="benefit_type != 'free_product'"/>
+                                            <field name="free_qty"
+                                                   invisible="benefit_type != 'free_product'"/>
+                                            <field name="discount_pct"
+                                                   invisible="benefit_type != 'percent_discount'"/>
+                                            <field name="discount_amount"
+                                                   invisible="benefit_type != 'price_discount'"/>
+                                            <field name="reward_points"
+                                                   invisible="benefit_type != 'points'"/>
+                                        </group>
+                                    </group>
+
+                                    <!-- Slabs sub-tab (for qty/value multi-tier) -->
+                                    <notebook>
+                                        <page string="Qty / Value Slabs" name="slabs"
+                                              invisible="scheme_type not in ('each_product_qty','each_product_value','assorted_product_qty','assorted_product_value')">
+                                            <p class="text-muted" style="font-size:12px;">
+                                                Add multiple thresholds for this product. The highest qualifying slab is applied.
+                                            </p>
+                                            <field name="slab_ids" widget="one2many">
+                                                <list editable="bottom">
+                                                    <field name="min_qty"
+                                                           string="Min Qty"
+                                                           column_invisible="parent.scheme_type not in ('each_product_qty','assorted_product_qty')"/>
+                                                    <field name="min_value"
+                                                           string="Min Value (₹)"
+                                                           column_invisible="parent.scheme_type not in ('each_product_value','assorted_product_value')"/>
+                                                    <field name="free_product_id"
+                                                           string="Free Product"
+                                                           column_invisible="parent.benefit_type != 'free_product'"/>
+                                                    <field name="free_qty"
+                                                           string="Free Qty"
+                                                           column_invisible="parent.benefit_type != 'free_product'"/>
+                                                    <field name="discount_pct"
+                                                           string="Discount %"
+                                                           column_invisible="parent.benefit_type != 'percent_discount'"/>
+                                                    <field name="discount_amount"
+                                                           string="Disc. Amt (₹)"
+                                                           column_invisible="parent.benefit_type != 'price_discount'"/>
+                                                    <field name="reward_points"
+                                                           string="Points"
+                                                           column_invisible="parent.benefit_type != 'points'"/>
+                                                </list>
+                                            </field>
+                                        </page>
+                                    </notebook>
+                                </sheet>
+                            </form>
+                        </field>
+                    </page>
+
+                    <!-- ── Tab 2: Invoice Slabs (type 8) ── -->
+                    <page string="Invoice Slabs" name="invoice_slabs"
+                          invisible="scheme_type != 'slab_invoice_value'">
+                        <p class="text-muted" style="font-size:12px;">
+                            Define invoice value tiers. The highest qualifying slab is applied.
+                        </p>
+                        <field name="slab_ids" widget="one2many">
+                            <list editable="bottom">
+                                <field name="min_invoice_value" string="Min Invoice Value (₹)"/>
+
+                                <!-- A: Free Product -->
+                                <field name="free_product_id"
+                                       string="Free Product"
+                                       column_invisible="parent.benefit_type != 'free_product'"/>
+                                <field name="free_qty"
+                                       string="Free Qty"
+                                       column_invisible="parent.benefit_type != 'free_product'"/>
+
+                                <!-- B: % Discount -->
+                                <field name="discount_pct"
+                                       string="Discount %"
+                                       column_invisible="parent.benefit_type != 'percent_discount'"/>
+
+                                <!-- C: Price Discount -->
+                                <field name="discount_amount"
+                                       string="Disc. Amt (₹)"
+                                       column_invisible="parent.benefit_type != 'price_discount'"/>
+
+                                <!-- D: Points -->
+                                <field name="reward_points"
+                                       string="Points"
+                                       column_invisible="parent.benefit_type != 'points'"/>
+
+                                <field name="label" string="Summary" readonly="1"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- ── Tab 3: Terms ── -->
+                    <page string="Terms &amp; Conditions" name="terms">
+                        <field name="notes" placeholder="Enter terms, exclusions, or notes…"/>
+                    </page>
+
+                </notebook>
+            </sheet>
+            <chatter/>
+        </form>
+    </field>
+</record>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     LIST VIEW
+══════════════════════════════════════════════════════════════════════════ -->
+<record id="view_scheme_promotion_list" model="ir.ui.view">
+    <field name="name">scheme.promotion.list</field>
+    <field name="model">scheme.promotion</field>
+    <field name="arch" type="xml">
+        <list string="Schemes &amp; Promotions"
+              decoration-success="state == 'active'"
+              decoration-muted="state in ('expired','cancelled')"
+              decoration-warning="state == 'draft'">
+            <field name="scheme_code"/>
+            <field name="name"/>
+            <field name="scheme_type"/>
+            <field name="benefit_type" widget="badge"
+                   decoration-success="benefit_type == 'free_product'"
+                   decoration-info="benefit_type == 'percent_discount'"
+                   decoration-warning="benefit_type == 'price_discount'"
+                   decoration-danger="benefit_type == 'points'"/>
+            <field name="date_from"/>
+            <field name="date_to"/>
+            <field name="state" widget="badge"
+                   decoration-success="state == 'active'"
+                   decoration-warning="state == 'draft'"
+                   decoration-muted="state in ('expired','cancelled')"/>
+        </list>
+    </field>
+</record>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     KANBAN VIEW
+══════════════════════════════════════════════════════════════════════════ -->
+<record id="view_scheme_promotion_kanban" model="ir.ui.view">
+    <field name="name">scheme.promotion.kanban</field>
+    <field name="model">scheme.promotion</field>
+    <field name="arch" type="xml">
+        <kanban default_group_by="scheme_type" quick_create="0"
+                class="o_kanban_small_column">
+            <field name="scheme_code"/>
+            <field name="name"/>
+            <field name="scheme_type"/>
+            <field name="benefit_type"/>
+            <field name="date_from"/>
+            <field name="date_to"/>
+            <field name="state"/>
+            <templates>
+                <t t-name="card">
+                    <div class="oe_kanban_global_click">
+                        <div class="o_kanban_record_top">
+                            <div class="o_kanban_record_headings">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <small class="o_kanban_record_subtitle text-muted">
+                                    <field name="scheme_code"/>
+                                </small>
+                            </div>
+                            <field name="state" widget="label_selection"
+                                   options="{'classes': {'active': 'success','draft': 'warning','expired': 'secondary','cancelled': 'danger'}}"/>
+                        </div>
+                        <div class="o_kanban_record_body mt-2">
+                            <field name="benefit_type" widget="badge"/>
+                        </div>
+                        <div class="o_kanban_record_bottom">
+                            <div class="oe_kanban_bottom_left">
+                                <span class="text-muted" style="font-size:11px;">
+                                    <field name="date_from"/> → <field name="date_to"/>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     SEARCH VIEW
+══════════════════════════════════════════════════════════════════════════ -->
+<record id="view_scheme_promotion_search" model="ir.ui.view">
+    <field name="name">scheme.promotion.search</field>
+    <field name="model">scheme.promotion</field>
+    <field name="arch" type="xml">
+        <search string="Search Schemes">
+            <field name="name"/>
+            <field name="scheme_code"/>
+            <separator/>
+            <filter string="Active"    name="active"   domain="[('state','=','active')]"/>
+            <filter string="Draft"     name="draft"    domain="[('state','=','draft')]"/>
+            <filter string="Expired"   name="expired"  domain="[('state','=','expired')]"/>
+            <separator/>
+            <filter string="Free Products"    name="type_a" domain="[('benefit_type','=','free_product')]"/>
+            <filter string="% Discount"       name="type_b" domain="[('benefit_type','=','percent_discount')]"/>
+            <filter string="Price Discount"   name="type_c" domain="[('benefit_type','=','price_discount')]"/>
+            <filter string="Points"           name="type_d" domain="[('benefit_type','=','points')]"/>
+            <separator/>
+            <filter string="Valid Today" name="valid_today"
+                    domain="[('date_from','&lt;=', context_today()),('date_to','&gt;=', context_today())]"/>
+            <group>
+                <filter string="Scheme Type"   name="grp_type"    context="{'group_by':'scheme_type'}"/>
+                <filter string="Benefit Type"  name="grp_benefit" context="{'group_by':'benefit_type'}"/>
+                <filter string="Status"        name="grp_state"   context="{'group_by':'state'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     WINDOW ACTION
+══════════════════════════════════════════════════════════════════════════ -->
+<record id="action_scheme_promotion" model="ir.actions.act_window">
+    <field name="name">Schemes &amp; Promotions</field>
+    <field name="res_model">scheme.promotion</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="search_view_id" ref="view_scheme_promotion_search"/>
+    <field name="context">{'search_default_active': 1}</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">Create your first Scheme</p>
+        <p>
+            Define promotions across 8 scheme types:<br/>
+            Each Product · Qty · Value · Assorted · Invoice · Slab Invoice<br/>
+            with 4 benefit types: Free Product · % Discount · Price Discount · Points
+        </p>
+    </field>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CLIENT ACTION — OWL Scheme Manager Dashboard
+══════════════════════════════════════════════════════════════════════════ -->
+<record id="action_scheme_manager_client" model="ir.actions.client">
+    <field name="name">Scheme Management</field>
+    <field name="tag">scheme_manager_v19</field>
+</record>
+
+</odoo>

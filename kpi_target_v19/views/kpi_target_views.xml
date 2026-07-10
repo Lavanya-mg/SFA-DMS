@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════
+         KPI TARGET PERIOD VIEWS  (Odoo 19 Enterprise)
+    ══════════════════════════════════════════════════════════ -->
+
+    <record id="view_kpi_target_period_list" model="ir.ui.view">
+        <field name="name">kpi.target.period.list</field>
+        <field name="model">kpi.target.period</field>
+        <field name="arch" type="xml">
+            <list string="Target Periods" decoration-muted="not active">
+                <field name="name"/>
+                <field name="period_type" widget="badge"
+                       decoration-info="period_type == 'monthly'"
+                       decoration-warning="period_type == 'quarterly'"
+                       decoration-success="period_type == 'yearly'"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="parent_period_id" optional="show"/>
+                <field name="is_default" widget="boolean_toggle"/>
+                <field name="cumulative_calculation" optional="hide"/>
+                <field name="target_count" string="Individual Targets"/>
+                <field name="team_target_count" string="Team Targets"/>
+                <field name="active" widget="toggle_button"/>
+                <button name="action_clone" type="object" string="Clone" icon="fa-copy"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_kpi_target_period_form" model="ir.ui.view">
+        <field name="name">kpi.target.period.form</field>
+        <field name="model">kpi.target.period</field>
+        <field name="arch" type="xml">
+            <form string="Target Period">
+                <header>
+                    <button name="action_clone" type="object" string="Clone" class="btn-secondary" icon="fa-copy"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_targets" type="object"
+                                class="oe_stat_button" icon="fa-user">
+                            <field name="target_count" widget="statinfo" string="Individual"/>
+                        </button>
+                        <button name="action_view_team_targets" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="team_target_count" widget="statinfo" string="Teams"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="Period Name"/>
+                        <h1><field name="name" placeholder="e.g. January 2026"/></h1>
+                    </div>
+                    <group>
+                        <group string="Period Configuration">
+                            <field name="period_type"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="parent_period_id"
+                                   domain="[('id', '!=', id)]"/>
+                        </group>
+                        <group string="Status">
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="is_default" widget="boolean_toggle"/>
+                            <field name="cumulative_calculation" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kpi_target_period" model="ir.actions.act_window">
+        <field name="name">Target Periods</field>
+        <field name="res_model">kpi.target.period</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create Your First Period</p>
+            <p>Define monthly, quarterly, or yearly periods to track KPI targets.</p>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════
+         KPI MANAGER TARGET VIEWS
+    ══════════════════════════════════════════════════════════ -->
+
+    <record id="view_kpi_manager_target_list" model="ir.ui.view">
+        <field name="name">kpi.manager.target.list</field>
+        <field name="model">kpi.manager.target</field>
+        <field name="arch" type="xml">
+            <list string="Team Targets"
+                  decoration-muted="state == 'done'"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'confirmed'">
+                <field name="manager_id" string="Manager / Executive"/>
+                <field name="department_id" optional="show"/>
+                <field name="period_id"/>
+                <field name="period_type" widget="badge"
+                       decoration-info="period_type == 'monthly'"
+                       decoration-warning="period_type == 'quarterly'"
+                       decoration-success="period_type == 'yearly'"/>
+                <field name="assignment_mode" widget="badge"
+                       decoration-primary="assignment_mode == 'distribute'"
+                       decoration-warning="assignment_mode == 'individual'"/>
+                <field name="member_count" string="Members"/>
+                <field name="total_target_orders" string="Orders Target" optional="show"/>
+                <field name="total_target_visits" string="Visits Target" optional="show"/>
+                <field name="team_actual_orders" string="Actual Orders" optional="show"/>
+                <field name="team_actual_visits" string="Actual Visits" optional="show"/>
+                <field name="team_overall_achievement" string="Achievement %" widget="progressbar"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'"
+                       decoration-muted="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_kpi_manager_target_form" model="ir.ui.view">
+        <field name="name">kpi.manager.target.form</field>
+        <field name="model">kpi.manager.target</field>
+        <field name="arch" type="xml">
+            <form string="Team Target">
+                <header>
+                    <button name="action_confirm" string="Confirm Targets" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Mark Done" type="object"
+                            class="btn-primary" invisible="state != 'confirmed'"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_member_targets" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="member_count" widget="statinfo" string="Members"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" placeholder="Team Target"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Assignment">
+                            <field name="manager_id" options="{'no_create': True}"/>
+                            <field name="department_id" readonly="1"/>
+                            <field name="period_id"/>
+                            <field name="period_type" readonly="1"/>
+                        </group>
+                        <group string="Mode">
+                            <field name="assignment_mode" widget="radio"/>
+                        </group>
+                    </group>
+
+                    <div invisible="assignment_mode != 'distribute'">
+                        <group>
+                            <group string="Total Team Targets">
+                                <field name="total_target_orders"/>
+                                <field name="total_target_visits"/>
+                                <field name="total_target_new_dealers"/>
+                            </group>
+                            <group string=" ">
+                                <field name="total_target_payment_collected"/>
+                                <field name="total_target_complaints_solved"/>
+                            </group>
+                        </group>
+                        <group string="Allocation Balance">
+                            <group>
+                                <field name="team_allocated_orders" readonly="1"/>
+                                <field name="team_allocated_visits" readonly="1"/>
+                                <field name="unallocated_orders" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="is_fully_allocated" readonly="1" widget="boolean_toggle"/>
+                            </group>
+                        </group>
+                    </div>
+
+                    <notebook>
+                        <page string="Team Member Targets" name="member_targets">
+                            <div class="d-flex justify-content-end mb-2">
+                                <button name="action_distribute_equally" type="object"
+                                        string="Distribute Equally"
+                                        class="btn btn-sm btn-outline-secondary me-2"
+                                        invisible="assignment_mode != 'distribute' or member_count == 0"/>
+                                <button name="action_add_member_target" type="object"
+                                        string="+ Add Member"
+                                        class="btn btn-sm btn-primary"/>
+                            </div>
+                            <field name="member_target_ids" nolabel="1">
+                                <list editable="bottom" string="Member Targets"
+                                      decoration-success="overall_achievement >= 100"
+                                      decoration-warning="overall_achievement >= 50 and overall_achievement &lt; 100"
+                                      decoration-danger="overall_achievement &lt; 50 and overall_achievement &gt; 0">
+                                    <field name="employee_id" options="{'no_create': True}"/>
+                                    <field name="department_id" readonly="1" optional="show"/>
+                                    <field name="target_orders" string="Orders T."/>
+                                    <field name="target_visits" string="Visits T."/>
+                                    <field name="target_new_dealers" string="Dealers T."/>
+                                    <field name="target_payment_collected" string="Payment T."/>
+                                    <field name="target_complaints_solved" string="Complaints T."/>
+                                    <field name="actual_orders" string="Orders A." readonly="1"/>
+                                    <field name="actual_visits" string="Visits A." readonly="1"/>
+                                    <field name="overall_achievement" string="Achievement %"
+                                           widget="progressbar" readonly="1"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="manager_target_id" column_invisible="1"/>
+                                    <field name="period_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Team Performance" name="team_performance">
+                            <group>
+                                <group string="Team Actuals">
+                                    <field name="team_actual_orders" readonly="1"/>
+                                    <field name="team_actual_visits" readonly="1"/>
+                                    <field name="team_actual_new_dealers" readonly="1"/>
+                                    <field name="team_actual_payment_collected" readonly="1"/>
+                                    <field name="team_actual_complaints_solved" readonly="1"/>
+                                </group>
+                                <group string="Achievement %">
+                                    <field name="team_achievement_orders" readonly="1" widget="progressbar"/>
+                                    <field name="team_achievement_visits" readonly="1" widget="progressbar"/>
+                                    <field name="team_overall_achievement" readonly="1" widget="progressbar"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add team notes…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kpi_manager_target" model="ir.actions.act_window">
+        <field name="name">Team Targets</field>
+        <field name="res_model">kpi.manager.target</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create Your First Team Target</p>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════
+         KPI INDIVIDUAL TARGET VIEWS
+    ══════════════════════════════════════════════════════════ -->
+
+    <record id="view_kpi_target_list" model="ir.ui.view">
+        <field name="name">kpi.target.list</field>
+        <field name="model">kpi.target</field>
+        <field name="arch" type="xml">
+            <list string="Individual KPI Targets"
+                  decoration-success="overall_achievement >= 100"
+                  decoration-warning="overall_achievement >= 50 and overall_achievement &lt; 100"
+                  decoration-danger="overall_achievement &lt; 50 and overall_achievement &gt; 0">
+                <field name="employee_id"/>
+                <field name="department_id" optional="show"/>
+                <field name="period_id"/>
+                <field name="period_type" widget="badge"
+                       decoration-info="period_type == 'monthly'"
+                       decoration-warning="period_type == 'quarterly'"
+                       decoration-success="period_type == 'yearly'"/>
+                <field name="target_orders" string="T.Orders"/>
+                <field name="target_visits" string="T.Visits"/>
+                <field name="actual_orders" string="A.Orders" readonly="1"/>
+                <field name="actual_visits" string="A.Visits" readonly="1"/>
+                <field name="actual_order_amount" string="Order Amt" readonly="1" optional="show"/>
+                <field name="overall_achievement" string="Achievement %" widget="progressbar"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'"
+                       decoration-muted="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_kpi_target_form" model="ir.ui.view">
+        <field name="name">kpi.target.form</field>
+        <field name="model">kpi.target</field>
+        <field name="arch" type="xml">
+            <form string="Individual KPI Target">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Mark Done" type="object"
+                            class="btn-primary" invisible="state != 'confirmed'"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1" placeholder="Target"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee">
+                            <field name="employee_id" options="{'no_create': True}"/>
+                            <field name="department_id" readonly="1"/>
+                            <field name="job_id" readonly="1"/>
+                            <field name="manager_target_id" optional="show"/>
+                        </group>
+                        <group string="Period">
+                            <field name="period_id"/>
+                            <field name="period_type" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Targets vs Actuals" name="kpi_table">
+                            <div class="row">
+                                <div class="col-12">
+                                    <table class="table table-sm table-bordered"
+                                           style="font-size: 13px;">
+                                        <thead class="table-primary">
+                                            <tr>
+                                                <th>KPI Type</th>
+                                                <th class="text-end">Target</th>
+                                                <th class="text-end">Actual</th>
+                                                <th class="text-end">Achievement %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Orders</strong></td>
+                                                <td class="text-end">
+                                                    <field name="target_orders" nolabel="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="actual_orders" nolabel="1" readonly="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="achievement_orders" nolabel="1"
+                                                           readonly="1" widget="progressbar"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Visits</strong></td>
+                                                <td class="text-end">
+                                                    <field name="target_visits" nolabel="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="actual_visits" nolabel="1" readonly="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="achievement_visits" nolabel="1"
+                                                           readonly="1" widget="progressbar"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>New Dealers</strong></td>
+                                                <td class="text-end">
+                                                    <field name="target_new_dealers" nolabel="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="actual_new_dealers" nolabel="1" readonly="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="achievement_new_dealers" nolabel="1"
+                                                           readonly="1" widget="progressbar"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Payment Collected</strong></td>
+                                                <td class="text-end">
+                                                    <field name="target_payment_collected" nolabel="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="actual_payment_collected" nolabel="1" readonly="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="achievement_payment_collected" nolabel="1"
+                                                           readonly="1" widget="progressbar"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Complaints Solved</strong></td>
+                                                <td class="text-end">
+                                                    <field name="target_complaints_solved" nolabel="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="actual_complaints_solved" nolabel="1" readonly="1"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <field name="achievement_complaints_solved" nolabel="1"
+                                                           readonly="1" widget="progressbar"/>
+                                                </td>
+                                            </tr>
+                                            <tr class="table-success">
+                                                <td colspan="3"><strong>Overall Achievement</strong></td>
+                                                <td class="text-end">
+                                                    <field name="overall_achievement" nolabel="1"
+                                                           readonly="1" widget="progressbar"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-2" style="font-size: 12px;">
+                                <i class="fa fa-info-circle"/>
+                                Order Amount:
+                                <field name="actual_order_amount" nolabel="1" readonly="1"
+                                       widget="monetary" class="d-inline"/>
+                                (auto-computed from confirmed sale orders in the period)
+                            </div>
+                        </page>
+                        <page string="Manual Actual Entries" name="actuals">
+                            <field name="actual_ids">
+                                <list editable="bottom">
+                                    <field name="kpi_type"/>
+                                    <field name="value"/>
+                                    <field name="date"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_kpi_target_search" model="ir.ui.view">
+        <field name="name">kpi.target.search</field>
+        <field name="model">kpi.target</field>
+        <field name="arch" type="xml">
+            <search string="Search KPI Targets">
+                <field name="employee_id"/>
+                <field name="period_id"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Achieved (100%+)" name="achieved"
+                        domain="[('overall_achievement', '>=', 100)]"/>
+                <group>
+                    <filter string="Employee" name="group_employee"
+                            context="{'group_by': 'employee_id'}"/>
+                    <filter string="Department" name="group_dept"
+                            context="{'group_by': 'department_id'}"/>
+                    <filter string="Period" name="group_period"
+                            context="{'group_by': 'period_id'}"/>
+                    <filter string="Status" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_kpi_target" model="ir.actions.act_window">
+        <field name="name">Individual KPI Targets</field>
+        <field name="res_model">kpi.target</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_kpi_target_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create Your First KPI Target</p>
+        </field>
+    </record>
+
+    <!-- KPI Dashboard Client Action -->
+    <record id="action_kpi_target_dashboard_client" model="ir.actions.client">
+        <field name="name">KPI Dashboard</field>
+        <field name="tag">kpi_target_dashboard_v19</field>
+    </record>
+
+</odoo>

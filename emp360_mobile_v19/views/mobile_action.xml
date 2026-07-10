@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Employee 360 Mobile App
+        Standalone client action registered in the Odoo action registry as
+        "employee_mobile_app". Users open it from the top-level menu or by
+        navigating to /odoo/mobile on their phone browser.
+    -->
+
+    <record id="action_emp360_mobile" model="ir.actions.client">
+        <field name="name">Employee 360 Mobile</field>
+        <field name="tag">employee_mobile_app_v19</field>
+        <field name="target">main</field>
+    </record>
+
+    <!-- Top-level menu — visible to every internal user -->
+    <menuitem
+        id="menu_emp360_mobile_root"
+        name="Mobile App"
+        action="action_emp360_mobile"
+        sequence="3"
+    />
+
+</odoo>

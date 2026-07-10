@@ -1,0 +1,710 @@
+<templates xml:space="preserve">
+
+    <t t-name="employee_dashboard_v19.PJPList">
+
+        <t t-if="state.showCustomerSelection">
+            <div style="flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
+                <div style="background:linear-gradient(135deg,#1a1a3e,#0f3460);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0;">
+                    <button class="emp360-btn emp360-btn-ghost emp360-btn-sm" t-on-click="goBackToPJP"
+                            style="color:#fff;border-color:rgba(255,255,255,.3);">
+                        <i class="fa fa-arrow-left me-1"></i> Back
+                    </button>
+                    <div style="font-size:16px;font-weight:800;color:#fff;">
+                        <i class="fa fa-users me-2"></i> Add Customers to Beat
+                    </div>
+                </div>
+
+                <div class="row mb-3" style="flex-shrink: 0;">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Select Beat</label>
+                        <select class="form-select" t-on-change="onBeatChange" t-model="state.selectedBeatId" t-att-disabled="state.beatReadonly ? 'disabled' : null">
+                            <t t-foreach="state.availableBeats" t-as="beat" t-key="beat.id">
+                                <option t-att-value="beat.id" t-att-selected="beat.id === state.selectedBeatId">
+                                    <t t-esc="beat.beat_number"/> - <t t-esc="beat.name"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Search by name</label>
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Search..."
+                               t-on-input="onSearchChange"
+                               t-model="state.customerSearchText"/>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Search by Area</label>
+                        <select class="form-select" t-on-change="onAreaChange">
+                            <option value="All">All</option>
+                            <t t-foreach="getUniqueAreas()" t-as="area" t-key="area">
+                                <option t-att-value="area">
+                                    <t t-esc="area"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Search by City</label>
+                        <select class="form-select" t-on-change="onCityChange">
+                            <option value="All">All</option>
+                            <t t-foreach="getUniqueCities()" t-as="city" t-key="city">
+                                <option t-att-value="city">
+                                    <t t-esc="city"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Search by Category</label>
+                        <select class="form-select" t-on-change="onCategoryChange">
+                            <option value="All">All</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" t-on-click="saveCustomerSelection">
+                            Save
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto;">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-light sticky-top" style="top: 0; z-index: 10; background: white;">
+                            <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" class="form-check-input"/>
+                                </th>
+                                <th>Name ▲</th>
+                                <th>Date</th>
+                                <th>Area</th>
+                                <th>AVG Sales</th>
+                                <th>Outstanding</th>
+                                <th style="width: 100px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="state.filteredCustomers.length === 0">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No customers found
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-foreach="state.filteredCustomers" t-as="customer" t-key="customer.id">
+                                <tr t-att-class="{'table-secondary': isCustomerAlreadyInBeat(customer.id)}">
+                                    <td>
+                                        <input type="checkbox"
+                                               class="form-check-input"
+                                               t-att-checked="isCustomerSelected(customer.id)"
+                                               t-att-disabled="isCustomerAlreadyInBeat(customer.id)"
+                                               t-on-click="() => this.toggleCustomerSelection(customer.id)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="customer.name"/>
+                                        <t t-if="isCustomerAlreadyInBeat(customer.id)">
+                                            <span class="badge bg-info ms-2">Already Added</span>
+                                        </t>
+                                    </td>
+                                    <td>
+                                        <t t-esc="customer.create_date ? customer.create_date.split(' ')[0] : '-'"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="customer.state_id ? customer.state_id[1] : '-'"/>
+                                    </td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td class="text-center">
+                                        <t t-if="!isCustomerAlreadyInBeat(customer.id)">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                    t-on-click="() => this.addSingleCustomerToBeat(customer.id)"
+                                                    title="Add to Beat">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </t>
+                                        <t t-else="">
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    t-on-click="() => this.removeSingleCustomerFromBeat(customer.id)"
+                                                    title="Remove from Beat">
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+
+        <t t-elif="state.showCalendarSelection">
+            <div class="calendar-view-wrapper">
+                <div class="calendar-header-section">
+                    <!-- Calendar header - emp360 styled -->
+                    <div style="background:linear-gradient(135deg,#1a1a3e,#0f3460);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <button class="emp360-btn emp360-btn-ghost emp360-btn-sm" t-on-click="goBackToPJP"
+                                    style="color:#fff;border-color:rgba(255,255,255,.3);">
+                                <i class="fa fa-arrow-left me-1"></i> Back
+                            </button>
+                            <div style="font-size:16px;font-weight:800;color:#fff;">
+                                <i class="fa fa-calendar me-2"></i> Calendar View — Beat Rotation
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <button class="emp360-btn emp360-btn-ghost emp360-btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);" t-on-click="previousMonth">
+                                <i class="fa fa-chevron-left"></i>
+                            </button>
+                            <span style="font-size:14px;font-weight:800;color:#fff;min-width:130px;text-align:center;">
+                                <t t-esc="getMonthName()"/> <t t-esc="state.currentYear"/>
+                            </span>
+                            <button class="emp360-btn emp360-btn-ghost emp360-btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);" t-on-click="nextMonth">
+                                <i class="fa fa-chevron-right"></i>
+                            </button>
+                            <div style="display:flex;align-items:center;gap:6px;margin-left:8px;">
+                                <input type="number"
+                                       style="width:70px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;color:#fff;padding:5px 8px;font-size:12px;"
+                                       t-att-min="state.beats.length"
+                                       step="1"
+                                       t-model="state.rotationFrequency"
+                                       t-on-input="onRotationFrequencyChange"
+                                       placeholder="Days"/>
+                                <button class="emp360-btn emp360-btn-success emp360-btn-sm" t-on-click="rotateBeats">
+                                    <i class="fa fa-refresh me-1"></i> Rotate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="calendar-content-section">
+                    <!-- Selected beat banner -->
+                    <t t-if="state.selectedBeat">
+                        <div style="background:linear-gradient(135deg,#4361ee,#7209b7);color:#fff;padding:8px 20px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;">
+                            <i class="fa fa-hand-pointer-o"/>
+                            <span>Beat selected: <b><t t-esc="state.selectedBeat.beat_number || state.selectedBeat.name"/></b> — click any date to assign</span>
+                            <button t-on-click="() => { this.state.selectedBeat = null; }"
+                                    style="margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:2px 10px;cursor:pointer;">
+                                <i class="fa fa-times"/> Cancel
+                            </button>
+                        </div>
+                    </t>
+                    <div class="row gx-3" style="height: 100%;">
+                        <div class="col-md-3 beats-sidebar">
+                            <div class="beats-sidebar-content">
+                                <h5 class="mb-2">
+                                    <i class="fa fa-map-marker me-2"></i>
+                                    Beats (<t t-esc="state.beats.length"/>)
+                                </h5>
+
+                                <div class="mb-3">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           placeholder="Search beats..."
+                                           t-model="state.beatSearchText"
+                                           t-on-input="onBeatSearchChange"/>
+                                </div>
+
+                                <div class="beats-list-scroll">
+                                    <t t-if="state.filteredBeats.length === 0">
+                                        <div class="text-center text-muted py-3">
+                                            <i class="fa fa-exclamation-circle fa-2x mb-2 d-block"></i>
+                                            <t t-if="state.beatSearchText">
+                                                No beats found
+                                            </t>
+                                            <t t-else="">
+                                                No beats available
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-foreach="state.filteredBeats" t-as="beat" t-key="beat.id">
+                                            <div t-attf-class="draggable-beat card mb-2 p-2 shadow-sm {{state.selectedBeat and state.selectedBeat.id === beat.id ? 'beat-selected' : ''}}"
+                                                 draggable="true"
+                                                 t-on-click="() => this.selectBeat(beat)"
+                                                 t-on-dragstart="(ev) => this.onBeatDragStart(ev, beat)"
+                                                 t-on-dragend="(ev) => this.onBeatDragEnd(ev)">
+                                                <div class="d-flex align-items-center" style="pointer-events:none;">
+                                                    <i class="fa fa-bars me-2" style="color:#4361ee;font-size:14px;"/>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-bold" style="font-size: 0.9em;">
+                                                            <t t-esc="beat.beat_number || 'N/A'"/>
+                                                        </div>
+                                                        <div class="text-muted small">
+                                                            <t t-esc="beat.name"/>
+                                                        </div>
+                                                        <div class="small">
+                                                            <span class="badge bg-info">
+                                                                <t t-esc="beat.customer_count || 0"/> customers
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <i t-if="state.selectedBeat and state.selectedBeat.id === beat.id"
+                                                       class="fa fa-check-circle" style="color:#4361ee;font-size:16px;"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 calendar-main-area">
+                            <div class="calendar-scroll-wrapper">
+                                <div class="calendar-container">
+                                    <div class="calendar-header">
+                                        <div class="calendar-day-header">Sun</div>
+                                        <div class="calendar-day-header">Mon</div>
+                                        <div class="calendar-day-header">Tue</div>
+                                        <div class="calendar-day-header">Wed</div>
+                                        <div class="calendar-day-header">Thu</div>
+                                        <div class="calendar-day-header">Fri</div>
+                                        <div class="calendar-day-header">Sat</div>
+                                    </div>
+
+                                    <div class="calendar-grid">
+                                        <t t-foreach="state.calendarDates" t-as="dateData" t-key="dateData.fullDate">
+                                            <div class="calendar-date-cell"
+                                                 t-att-class="{
+                                                     'current-month': dateData.isCurrentMonth,
+                                                     'other-month': !dateData.isCurrentMonth,
+                                                     'today': dateData.isToday,
+                                                     'rotation-highlight': dateData.isInRotationCycle
+                                                 }"
+                                                 t-on-click="() => this.assignBeatToDate(dateData)"
+                                                 t-on-dragover="(ev) => this.onCalendarDragOver(ev, dateData)"
+                                                 t-on-dragenter="(ev) => this.onCalendarDragEnter(ev, dateData)"
+                                                 t-on-dragleave="(ev) => this.onCalendarDragLeave(ev)"
+                                                 t-on-drop="(ev) => this.onCalendarDrop(ev, dateData)">
+                                                
+                                                <div class="calendar-date-number">
+                                                    <t t-esc="dateData.date"/>
+                                                </div>
+
+                                                <div class="calendar-date-beats">
+                                                    <t t-set="beat" t-value="getBeatForDate(dateData.fullDate)"/>
+                                                    <t t-if="beat">
+                                                        <div class="calendar-beat-badge">
+                                                            <span><t t-esc="beat.beat_number || beat.name"/></span>
+                                                            <button class="btn-remove" 
+                                                                    t-on-click="() => this.removeBeatFromDate(beat)"
+                                                                    title="Remove">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <t t-else="">
+            <!-- ═══════════════════════════════════════════
+                 PJP — Main Beat List View (emp360 design)
+                 ═══════════════════════════════════════════ -->
+            <div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow-x:hidden;overflow-y:auto;background:#f0f4f8;">
+
+                <!-- Page Header -->
+                <div class="emp360-page-header" style="background:linear-gradient(135deg,#1a1a3e,#0f3460);color:#fff;padding:18px 24px;flex-shrink:0;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                        <div>
+                            <div style="font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px;">
+                                <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7209b7,#560bad);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-map" style="font-size:15px;"></i>
+                                </div>
+                                Planned Journey Programme
+                            </div>
+                            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">
+                                Beat management and route planning
+                                <t t-if="state.beats.length > 0">
+                                    <span style="margin-left:8px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">
+                                        <t t-esc="state.beats.length"/> Beat(s)
+                                    </span>
+                                </t>
+                            </div>
+                        </div>
+                        <!-- Action buttons -->
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="emp360-btn emp360-btn-success emp360-btn-sm" t-on-click="openCreatePJPModal">
+                                <i class="fa fa-calendar-plus-o me-1"></i> Create PJP
+                            </button>
+                            <button class="emp360-btn emp360-btn-primary emp360-btn-sm" t-on-click="addBeat">
+                                <i class="fa fa-plus me-1"></i> Add Beat
+                            </button>
+                            <button class="emp360-btn emp360-btn-outline emp360-btn-sm"  t-on-click="addCustomers">
+                                <i class="fa fa-edit me-1"></i> Edit Beat
+                            </button>
+                            <button class="emp360-btn emp360-btn-outline emp360-btn-sm"  t-on-click="cloneBeatPopup">
+                                <i class="fa fa-copy me-1"></i> Clone
+                            </button>
+                            <button class="emp360-btn emp360-btn-outline emp360-btn-sm"  t-on-click="movetoCalendar">
+                                <i class="fa fa-calendar me-1"></i> Calendar
+                            </button>
+                            <button class="emp360-btn emp360-btn-outline emp360-btn-sm" t-on-click="actionUpload">
+                                <i class="fa fa-upload me-1"></i> Upload
+                            </button>
+                            <button t-attf-class="emp360-btn emp360-btn-sm {{state.showCustomerList ? 'emp360-btn-warning' : 'emp360-btn-ghost'}}"
+                                    style="color:#fff;" t-on-click="toggleCustomerList">
+                                <i t-attf-class="fa {{state.showCustomerList ? 'fa-eye-slash' : 'fa-eye'}} me-1"></i>
+                                Customers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No employee selected -->
+                <div t-if="!props.employeeId" style="padding:24px;">
+                    <div class="emp360-alert emp360-alert-warning">
+                        <i class="fa fa-info-circle me-2"></i>
+                        Please select an employee to view PJP beats.
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div t-elif="state.loading" class="emp360-loading">
+                    <div class="emp360-spinner"></div>
+                    <div class="emp360-loading-text">Loading beats...</div>
+                </div>
+
+                <!-- No beats -->
+                <div t-elif="state.beats.length === 0" style="padding:24px;">
+                    <div class="emp360-empty" style="padding:48px 0;">
+                        <div class="emp360-empty-icon">
+                            <i class="fa fa-map-marker" style="color:#7209b7;"></i>
+                        </div>
+                        <div class="emp360-empty-title">No beats assigned</div>
+                        <div class="emp360-empty-desc">No beats mapped to this employee. Click "Add Beat" to create one.</div>
+                        <button class="emp360-btn emp360-btn-primary" style="margin-top:16px;" t-on-click="addBeat">
+                            <i class="fa fa-plus me-1"></i> Add Beat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Beat Grid -->
+                <div t-else="" style="padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-content:start;">
+                    <t t-foreach="state.beats" t-as="beat" t-key="beat.id">
+                        <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 6px 24px rgba(67,97,238,.15)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(0,0,0,.07)'">
+                            <!-- Beat card header -->
+                            <div style="background:linear-gradient(135deg,#7209b7,#3a0ca3);padding:14px 16px;color:#fff;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:15px;">
+                                            <i class="fa fa-map-marker"></i>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:14px;font-weight:800;">
+                                                <t t-esc="beat.beat_number || 'Beat'"/>
+                                            </div>
+                                            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:1px;">
+                                                <t t-esc="beat.name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <div style="background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">
+                                            <i class="fa fa-users me-1"></i>
+                                            <t t-esc="beat.customer_count || 0"/>
+                                        </div>
+                                        <t t-if="beat.beat_date">
+                                            <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px;">
+                                                <i class="fa fa-calendar me-1"></i><t t-esc="beat.beat_date"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                                <!-- Status badge -->
+                                <t t-if="beat.status">
+                                    <div style="margin-top:8px;">
+                                        <span t-attf-style="background:{{beat.status === 'completed' ? 'rgba(6,214,160,.25)' : beat.status === 'in_progress' ? 'rgba(245,158,11,.25)' : 'rgba(255,255,255,.15)'}};color:#fff;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;">
+                                            <t t-esc="beat.status.replace('_',' ')"/>
+                                        </span>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- Customer list (when toggled) -->
+                            <t t-if="state.showCustomerList">
+                                <div style="flex:1;overflow-y:auto;max-height:240px;padding:8px 10px;">
+                                    <t t-if="state.beatCustomers[beat.id] and state.beatCustomers[beat.id].length > 0">
+                                        <t t-foreach="state.beatCustomers[beat.id]" t-as="beatLine" t-key="beatLine.id">
+                                            <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;border-bottom:1px solid #f9fafb;transition:background .15s;"
+                                                 t-on-click="() => this.openBeatLineForm(beatLine.id)"
+                                                 onmouseover="this.style.background='#f0f4ff'"
+                                                 onmouseout="this.style.background='transparent'">
+                                                <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#4361ee,#7209b7);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#fff;font-weight:700;">
+                                                    <t t-esc="beatLine.partner_id[1][0].toUpperCase()"/>
+                                                </div>
+                                                <div style="flex:1;min-width:0;">
+                                                    <!-- <div style="font-size:12px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                        <t t-esc="beatLine.partner_id[1]"/>
+                                                    </div> -->
+                                                    <!-- NEW CODE (SAFE) -->
+                                                    <div style="font-size:12px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                        <t t-if="beatLine.partner_id and Array.isArray(beatLine.partner_id)">
+                                                            <t t-esc="beatLine.partner_id[1]"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="text-danger">No Partner</span>
+                                                        </t>
+                                                    </div>
+                                                    <div t-if="beatLine.partner_phone" style="font-size:10px;color:#9ca3af;">
+                                                        <i class="fa fa-phone me-1"></i>
+                                                        <t t-esc="beatLine.partner_phone"/>
+                                                    </div>
+                                                </div>
+                                                <i class="fa fa-pencil" style="color:#9ca3af;font-size:11px;flex-shrink:0;"></i>
+                                            </div>
+                                        </t>
+                                    </t>
+                                    <div t-else="" style="text-align:center;padding:16px 0;color:#9ca3af;">
+                                        <i class="fa fa-users" style="font-size:24px;opacity:.4;display:block;margin-bottom:6px;"></i>
+                                        <span style="font-size:12px;">No customers mapped</span>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Card footer (always shown) -->
+                            <div style="padding:10px 14px;border-top:1px solid #f0f0f0;display:flex;gap:8px;background:#fafafa;">
+                                <button class="emp360-btn emp360-btn-ghost emp360-btn-sm" style="flex:1;justify-content:center;font-size:11px;"
+                                        t-on-click="addCustomers">
+                                    <i class="fa fa-edit me-1"></i> Edit
+                                </button>
+                                <button class="emp360-btn emp360-btn-ghost emp360-btn-sm" style="flex:1;justify-content:center;font-size:11px;"
+                                        t-on-click="movetoCalendar">
+                                    <i class="fa fa-calendar me-1"></i> Plan
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+
+        <!-- ═══════════════════════════════════════════
+             CREATE PJP MODAL (redesigned)
+             ═══════════════════════════════════════════ -->
+        <t t-if="state.showCreatePJPModal">
+            <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;">
+                <div style="background:#fff;border-radius:20px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden;">
+                    <div style="background:linear-gradient(135deg,#1a1a3e,#0f3460);padding:18px 24px;color:#fff;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;">
+                                <i class="fa fa-calendar-plus-o" style="font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:15px;font-weight:800;">Create PJP from Calendar</div>
+                                <div style="font-size:11px;color:rgba(255,255,255,.6);">Select date range for PJP creation</div>
+                            </div>
+                        </div>
+                        <button style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;" t-on-click="closeCreatePJPModal">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    <div style="padding:20px 24px;">
+                        <div style="background:#f0f4ff;border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;">
+                            <i class="fa fa-info-circle" style="color:#4361ee;margin-top:2px;"></i>
+                            <span style="font-size:12px;color:#4361ee;">PJP will be created for beats already assigned in the calendar for the selected future date range.</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                            <div>
+                                <label class="emp360-form-label">Start Date <span style="color:#ef476f;">*</span></label>
+                                <input type="date" class="emp360-form-input"
+                                       t-model="state.createPJPForm.startDate"
+                                       t-att-min="getToday()"
+                                       required="required"/>
+                                <div style="font-size:11px;color:#9ca3af;margin-top:4px;">Today or future date</div>
+                            </div>
+                            <div>
+                                <label class="emp360-form-label">End Date <span style="color:#ef476f;">*</span></label>
+                                <input type="date" class="emp360-form-input"
+                                       t-model="state.createPJPForm.endDate"
+                                       t-att-min="state.createPJPForm.startDate || getToday()"
+                                       required="required"/>
+                                <div style="font-size:11px;color:#9ca3af;margin-top:4px;">On or after start date</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:14px 24px;background:#f8fafc;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:10px;">
+                        <button class="emp360-btn emp360-btn-outline" t-on-click="closeCreatePJPModal">
+                            <i class="fa fa-times me-1"></i> Cancel
+                        </button>
+                        <button class="emp360-btn emp360-btn-primary" t-on-click="saveCreatePJP">
+                            <i class="fa fa-check me-1"></i> Create PJP
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ═══════════════════════════════════════════
+             CLONE BEAT MODAL (redesigned)
+             ═══════════════════════════════════════════ -->
+        <t t-if="state.cloneBeatForm.show">
+            <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;">
+                <div style="background:#fff;border-radius:20px;width:400px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden;">
+                    <div style="background:linear-gradient(135deg,#7209b7,#3a0ca3);padding:16px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fa fa-copy" style="font-size:16px;"></i>
+                            <span style="font-size:15px;font-weight:800;">Clone Beat</span>
+                        </div>
+                        <button style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;" t-on-click="closeClonePopup">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    <div style="padding:20px;">
+                        <div class="emp360-form-group">
+                            <label class="emp360-form-label">Select Beat to Clone</label>
+                            <select class="emp360-form-select"
+                                    t-model="state.cloneBeatForm.selectedBeatId">
+                                <option value="">-- Select Beat --</option>
+                                <t t-foreach="state.beats" t-as="b" t-key="b.id">
+                                    <option t-att-value="b.id">
+                                        <t t-esc="b.beat_number"/> – <t t-esc="b.name"/>
+                                    </option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="emp360-form-group">
+                            <label class="emp360-form-label">New Beat Name</label>
+                            <input type="text" class="emp360-form-input" placeholder="Enter new beat name..."
+                                   t-model="state.cloneBeatForm.newBeatName"/>
+                        </div>
+                    </div>
+                    <div style="padding:12px 20px;background:#f8fafc;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:10px;">
+                        <button class="emp360-btn emp360-btn-outline" t-on-click="closeClonePopup">Cancel</button>
+                        <button class="emp360-btn emp360-btn-primary" t-on-click="cloneBeat">
+                            <i class="fa fa-copy me-1"></i> Clone Beat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <style>
+            /* ── PJP Calendar wrapper ── */
+            .calendar-view-wrapper {
+                display: flex; flex-direction: column; flex: 1;
+                height: 100%; min-height: 0; overflow: hidden;
+                background: #f0f4f8;
+            }
+            .calendar-header-section {
+                flex-shrink: 0; z-index: 10;
+            }
+            .calendar-content-section {
+                flex: 1; overflow: hidden; display: flex; flex-direction: column;
+                padding: 12px;
+            }
+            .beats-sidebar {
+                display: flex; flex-direction: column; height: 100%;
+                border-right: 2px solid #e5e7eb; padding-right: 12px;
+            }
+            .beats-sidebar-content {
+                display: flex; flex-direction: column; height: 100%; overflow: hidden;
+                background: #fff; border-radius: 14px; padding: 14px;
+                box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            }
+            .beats-list-scroll {
+                flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 4px;
+            }
+            /* Draggable beat cards */
+            .draggable-beat {
+                border: 1px solid #e5e7eb !important;
+                border-radius: 10px !important;
+                padding: 10px 12px !important;
+                background: #fff !important;
+                cursor: grab !important;
+                transition: box-shadow .2s, transform .15s !important;
+                box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+                user-select: none !important;
+                -webkit-user-select: none !important;
+                -webkit-user-drag: element !important;
+                touch-action: none !important;
+            }
+            .draggable-beat:hover { box-shadow: 0 4px 16px rgba(67,97,238,.15) !important; transform: translateY(-1px) !important; }
+            .draggable-beat:active { cursor: grabbing !important; }
+            .draggable-beat.dragging { opacity: 0.45; transform: scale(0.95); cursor: grabbing !important; }
+            .draggable-beat.beat-selected { border: 2px solid #4361ee !important; background: #eff6ff !important; box-shadow: 0 0 0 3px rgba(67,97,238,.2) !important; }
+            .calendar-date-cell.current-month:hover { cursor: pointer; }
+
+            .calendar-main-area {
+                display: flex; flex-direction: column; height: 100%; overflow: hidden;
+            }
+            .calendar-scroll-wrapper {
+                flex: 1; overflow-y: auto; overflow-x: auto; padding: 8px 4px;
+            }
+            .calendar-container {
+                background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+                padding: 16px; min-width: 700px;
+                box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            }
+            .calendar-header {
+                display: grid; grid-template-columns: repeat(7, 1fr);
+                gap: 4px; margin-bottom: 8px;
+            }
+            .calendar-day-header {
+                text-align: center; font-weight: 800; padding: 8px 4px;
+                background: linear-gradient(135deg,#f0f4ff,#e8eeff);
+                border-radius: 6px; font-size: 11px; color: #4361ee;
+                text-transform: uppercase; letter-spacing: .5px;
+            }
+            .calendar-grid {
+                display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+            }
+            .calendar-date-cell {
+                min-height: 90px; border: 1px solid #e5e7eb; border-radius: 8px;
+                padding: 6px; background: #fff; transition: all .2s ease;
+            }
+            .calendar-date-cell.current-month { background: #fff; }
+            .calendar-date-cell.other-month { background: #f8fafc; opacity: 0.5; }
+            .calendar-date-cell.today {
+                border: 2px solid #4361ee !important; background: #f0f4ff !important;
+            }
+            .calendar-date-cell.rotation-highlight {
+                background: #fffbeb !important; border: 2px solid #f59e0b !important;
+            }
+            .calendar-date-cell:hover { background: #f0f4ff; cursor: pointer; }
+            .calendar-date-cell.drag-over {
+                background: #d1fae5 !important; border: 2px dashed #06d6a0 !important;
+                transform: scale(1.02);
+            }
+            .calendar-date-number {
+                font-weight: 800; font-size: 13px; margin-bottom: 4px; color: #374151;
+            }
+            .calendar-date-beats { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; }
+            .calendar-beat-badge {
+                display: flex; align-items: center; justify-content: space-between;
+                background: linear-gradient(135deg,#4361ee,#7209b7);
+                color: #fff; padding: 3px 7px; border-radius: 6px;
+                font-size: 10px; font-weight: 700;
+            }
+            .calendar-beat-badge .btn-remove {
+                background: none; border: none; color: rgba(255,255,255,.8);
+                padding: 0 2px; cursor: pointer; transition: opacity .2s;
+            }
+            .calendar-beat-badge .btn-remove:hover { color: #fff; opacity: 1; }
+
+            /* ── Dynamic grid for beat cards ── */
+            .dynamic-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 16px; padding: 16px 20px; align-content: start;
+            }
+        </style>
+
+    </t>
+
+</templates>

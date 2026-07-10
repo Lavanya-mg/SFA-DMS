@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Product Batch
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_product_batch_list" model="ir.ui.view">
+        <field name="name">product.batch.list</field>
+        <field name="model">product.batch</field>
+        <field name="arch" type="xml">
+            <list string="Product Batches">
+                <field name="batch_number"/>
+                <field name="product_id"/>
+                <field name="mfg_date"/>
+                <field name="expiry_date"/>
+                <field name="qty_manufactured"/>
+                <field name="shelf_life"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'active'"
+                       decoration-warning="status == 'near_expiry'"
+                       decoration-danger="status == 'expired'"/>
+                <field name="near_expiry" widget="boolean_toggle"/>
+                <field name="active" widget="boolean_toggle" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_product_batch_form" model="ir.ui.view">
+        <field name="name">product.batch.form</field>
+        <field name="model">product.batch</field>
+        <field name="arch" type="xml">
+            <form string="Product Batch">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="batch_number" string="Batch Number"/>
+                        <h1><field name="batch_number" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Product Info">
+                            <field name="product_id"/>
+                            <field name="qty_manufactured"/>
+                        </group>
+                        <group string="Dates">
+                            <field name="mfg_date"/>
+                            <field name="expiry_date"/>
+                            <field name="shelf_life" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Status">
+                        <field name="status" readonly="1" widget="badge"
+                               decoration-success="status == 'active'"
+                               decoration-warning="status == 'near_expiry'"
+                               decoration-danger="status == 'expired'"/>
+                        <field name="near_expiry" readonly="1"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_product_batch_search" model="ir.ui.view">
+        <field name="name">product.batch.search</field>
+        <field name="model">product.batch</field>
+        <field name="arch" type="xml">
+            <search string="Product Batches">
+                <field name="batch_number"/>
+                <field name="product_id"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Near Expiry" name="near_expiry" domain="[('near_expiry','=',True)]"/>
+                <filter string="Expired" name="expired" domain="[('status','=','expired')]"/>
+                <filter string="Archived" name="archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Product" name="by_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Status" name="by_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_product_batch" model="ir.actions.act_window">
+        <field name="name">Product Batches</field>
+        <field name="res_model">product.batch</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_batch_search"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Priority Sell Config
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_priority_sell_config_list" model="ir.ui.view">
+        <field name="name">priority.sell.config.list</field>
+        <field name="model">priority.sell.config</field>
+        <field name="arch" type="xml">
+            <list string="Priority Sell Config">
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <field name="classification" widget="badge"
+                       decoration-info="classification == 'must_sell'"
+                       decoration-warning="classification == 'focused_sell'"/>
+                <field name="channel"/>
+                <field name="customer_type"/>
+                <field name="territory"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="min_qty"/>
+                <field name="active" widget="boolean_toggle" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_priority_sell_config_form" model="ir.ui.view">
+        <field name="name">priority.sell.config.form</field>
+        <field name="model">priority.sell.config</field>
+        <field name="arch" type="xml">
+            <form string="Priority Sell Config">
+                <sheet>
+                    <group>
+                        <group string="Product">
+                            <field name="product_id"/>
+                            <field name="default_code" readonly="1"/>
+                            <field name="classification"/>
+                        </group>
+                        <group string="Target">
+                            <field name="channel"/>
+                            <field name="customer_type"/>
+                            <field name="territory"/>
+                            <field name="min_qty"/>
+                        </group>
+                    </group>
+                    <group string="Validity">
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_priority_sell_config_search" model="ir.ui.view">
+        <field name="name">priority.sell.config.search</field>
+        <field name="model">priority.sell.config</field>
+        <field name="arch" type="xml">
+            <search string="Priority Sell Config">
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <field name="territory"/>
+                <filter string="Must Sell" name="must_sell" domain="[('classification','=','must_sell')]"/>
+                <filter string="Focused Sell" name="focused_sell" domain="[('classification','=','focused_sell')]"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Classification" name="by_class" context="{'group_by': 'classification'}"/>
+                    <filter string="Channel" name="by_channel" context="{'group_by': 'channel'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_priority_sell_config" model="ir.actions.act_window">
+        <field name="name">Priority Sell Config</field>
+        <field name="res_model">priority.sell.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_priority_sell_config_search"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Price Change Log
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_price_change_log_list" model="ir.ui.view">
+        <field name="name">price.change.log.list</field>
+        <field name="model">price.change.log</field>
+        <field name="arch" type="xml">
+            <list string="Price Change Logs" create="false" delete="false">
+                <field name="change_date"/>
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <field name="price_type"/>
+                <field name="old_price" widget="monetary"/>
+                <field name="new_price" widget="monetary"/>
+                <field name="customer_id" optional="show"/>
+                <field name="territory" optional="show"/>
+                <field name="channel" optional="show"/>
+                <field name="changed_by"/>
+                <field name="reason" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_price_change_log_form" model="ir.ui.view">
+        <field name="name">price.change.log.form</field>
+        <field name="model">price.change.log</field>
+        <field name="arch" type="xml">
+            <form string="Price Change Log" create="false">
+                <sheet>
+                    <group>
+                        <group string="Product">
+                            <field name="product_id"/>
+                            <field name="default_code" readonly="1"/>
+                            <field name="price_book_id"/>
+                            <field name="price_type"/>
+                        </group>
+                        <group string="Price Change">
+                            <field name="old_price" widget="monetary"/>
+                            <field name="new_price" widget="monetary"/>
+                            <field name="change_date"/>
+                            <field name="changed_by"/>
+                        </group>
+                    </group>
+                    <group string="Dimensions">
+                        <field name="customer_id"/>
+                        <field name="territory"/>
+                        <field name="channel"/>
+                    </group>
+                    <group string="Reason">
+                        <field name="reason" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_price_change_log_search" model="ir.ui.view">
+        <field name="name">price.change.log.search</field>
+        <field name="model">price.change.log</field>
+        <field name="arch" type="xml">
+            <search string="Price Change Logs">
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <field name="changed_by"/>
+                <field name="price_type"/>
+                <group expand="0" string="Group By">
+                    <filter string="Product" name="by_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Price Type" name="by_type" context="{'group_by': 'price_type'}"/>
+                    <filter string="Changed By" name="by_user" context="{'group_by': 'changed_by'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_price_change_log" model="ir.actions.act_window">
+        <field name="name">Price Change Logs</field>
+        <field name="res_model">price.change.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_price_change_log_search"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Employee Category Mapping
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_employee_category_mapping_list" model="ir.ui.view">
+        <field name="name">employee.category.mapping.list</field>
+        <field name="model">employee.category.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Employee Category Mappings">
+                <field name="employee_id"/>
+                <field name="category_id"/>
+                <field name="level" widget="badge"
+                       decoration-info="level == 'primary'"
+                       decoration-warning="level == 'secondary'"/>
+                <field name="responsibility" widget="badge"
+                       decoration-success="responsibility == 'primary'"
+                       decoration-info="responsibility == 'secondary'"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="assigned_by"/>
+                <field name="active" widget="boolean_toggle" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_employee_category_mapping_form" model="ir.ui.view">
+        <field name="name">employee.category.mapping.form</field>
+        <field name="model">employee.category.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Employee Category Mapping">
+                <sheet>
+                    <group>
+                        <group string="Assignment">
+                            <field name="employee_id"/>
+                            <field name="category_id"/>
+                            <field name="level"/>
+                            <field name="responsibility"/>
+                        </group>
+                        <group string="Validity">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="assigned_by"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_employee_category_mapping" model="ir.actions.act_window">
+        <field name="name">Employee Category Mappings</field>
+        <field name="res_model">employee.category.mapping</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Customer Category Mapping
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="view_customer_category_mapping_list" model="ir.ui.view">
+        <field name="name">customer.category.mapping.list</field>
+        <field name="model">customer.category.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Customer Category Mappings">
+                <field name="partner_id"/>
+                <field name="category_id"/>
+                <field name="level" widget="badge"
+                       decoration-info="level == 'primary'"
+                       decoration-warning="level == 'secondary'"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="assigned_by"/>
+                <field name="active" widget="boolean_toggle" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_customer_category_mapping_form" model="ir.ui.view">
+        <field name="name">customer.category.mapping.form</field>
+        <field name="model">customer.category.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Customer Category Mapping">
+                <sheet>
+                    <group>
+                        <group string="Assignment">
+                            <field name="partner_id"/>
+                            <field name="category_id"/>
+                            <field name="level"/>
+                        </group>
+                        <group string="Validity">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="assigned_by"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_customer_category_mapping" model="ir.actions.act_window">
+        <field name="name">Customer Category Mappings</field>
+        <field name="res_model">customer.category.mapping</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

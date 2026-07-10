@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sfa_target_criteria_user,sfa.target.criteria.user,model_sfa_target_criteria,base.group_user,1,0,0,0
+access_sfa_target_criteria_manager,sfa.target.criteria.manager,model_sfa_target_criteria,base.group_system,1,1,1,1
+access_sfa_target_criteria_filter_user,sfa.target.criteria.filter.user,model_sfa_target_criteria_filter,base.group_user,1,0,0,0
+access_sfa_target_criteria_filter_manager,sfa.target.criteria.filter.manager,model_sfa_target_criteria_filter,base.group_system,1,1,1,1
+access_sfa_target_allocation_user,sfa.target.allocation.user,model_sfa_target_allocation,base.group_user,1,1,1,1
+access_sfa_target_allocation_manager,sfa.target.allocation.manager,model_sfa_target_allocation,base.group_system,1,1,1,1
+access_sfa_kpi_dashboard_user,sfa.kpi.dashboard.user,model_sfa_kpi_dashboard,base.group_user,1,0,0,0
+access_sfa_kpi_dashboard_manager,sfa.kpi.dashboard.manager,model_sfa_kpi_dashboard,base.group_system,1,1,1,1
+access_sfa_incentive_profile_user,sfa.incentive.profile.user,model_sfa_incentive_profile,base.group_user,1,0,0,0
+access_sfa_incentive_profile_manager,sfa.incentive.profile.manager,model_sfa_incentive_profile,base.group_system,1,1,1,1
+access_sfa_incentive_slab_user,sfa.incentive.slab.user,model_sfa_incentive_slab,base.group_user,1,0,0,0
+access_sfa_incentive_slab_manager,sfa.incentive.slab.manager,model_sfa_incentive_slab,base.group_system,1,1,1,1
+access_sfa_incentive_record_user,sfa.incentive.record.user,model_sfa_incentive_record,base.group_user,1,1,1,0
+access_sfa_incentive_record_manager,sfa.incentive.record.manager,model_sfa_incentive_record,base.group_system,1,1,1,1
+access_sfa_incentive_dashboard_user,sfa.incentive.dashboard.user,model_sfa_incentive_dashboard,base.group_user,1,0,0,0
+access_sfa_incentive_dashboard_manager,sfa.incentive.dashboard.manager,model_sfa_incentive_dashboard,base.group_system,1,1,1,1

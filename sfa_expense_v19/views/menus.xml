@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root menu -->
+    <menuitem id="menu_sfa_expense_root"
+              name="Expense Manager"
+              sequence="85"
+              web_icon="sfa_expense_v19,static/description/icon.png"/>
+
+    <!-- Configuration > Masters -->
+    <menuitem id="menu_sfa_expense_config"
+              name="Configuration"
+              parent="menu_sfa_expense_root"
+              sequence="90"/>
+
+    <menuitem id="menu_sfa_expense_masters"
+              name="Masters"
+              parent="menu_sfa_expense_config"
+              sequence="10"/>
+
+    <menuitem id="menu_sfa_expense_band"
+              name="Band Master"
+              parent="menu_sfa_expense_masters"
+              action="action_sfa_expense_band"
+              sequence="10"/>
+
+    <menuitem id="menu_sfa_travel_mode"
+              name="Travel Modes"
+              parent="menu_sfa_expense_masters"
+              action="action_sfa_travel_mode"
+              sequence="30"/>
+
+    <menuitem id="menu_sfa_duty_type"
+              name="Duty Types"
+              parent="menu_sfa_expense_masters"
+              action="action_sfa_duty_type"
+              sequence="40"/>
+
+    <menuitem id="menu_sfa_city_tier"
+              name="City Tiers"
+              parent="menu_sfa_expense_masters"
+              action="action_sfa_city_tier"
+              sequence="50"/>
+
+    <menuitem id="menu_sfa_city_tier_config"
+              name="Tier Labels"
+              parent="menu_sfa_expense_masters"
+              action="action_sfa_city_tier_config"
+              sequence="60"/>
+
+    <menuitem id="menu_sfa_expense_manager"
+              name="Expenses"
+              parent="menu_sfa_expense_root"
+              action="action_sfa_expense_manager_client"
+              sequence="10"/>
+
+    <menuitem id="menu_sfa_expense_policy"
+              name="Policy Manager"
+              parent="menu_sfa_expense_root"
+              sequence="20"/>
+
+    <menuitem id="menu_sfa_expense_eligibility_rules"
+              name="Eligibility Rules"
+              parent="menu_sfa_expense_policy"
+              action="action_sfa_expense_policy_rule"
+              sequence="10"/>
+
+
+</odoo>

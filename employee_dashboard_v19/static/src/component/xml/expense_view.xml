@@ -1,0 +1,83 @@
+<templates xml:space="preserve">
+    <t t-name="employee_dashboard_v19.ExpenseList">
+        <div style="flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
+
+            <div class="emp360-page-header" style="flex-shrink:0;">
+                <div class="emp360-ph-top">
+                    <div>
+                        <h3 class="emp360-ph-name"><i class="fa fa-money me-2"></i> Expenses</h3>
+                        <p class="emp360-ph-role">Employee expense claims and reimbursements</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3" style="flex-shrink: 0; padding: 12px 24px 0; background:#fff; border-bottom:1px solid #f0f0f0;">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">From Date</label>
+                    <input type="date" class="form-control"
+                           t-model="state.expenseFromDate"
+                           t-on-change="onExpenseDateChange"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">To Date</label>
+                    <input type="date" class="form-control"
+                           t-model="state.expenseToDate"
+                           t-on-change="onExpenseDateChange"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Select Status</label>
+                    <select class="form-select" t-on-change="onExpenseStatusChange" t-model="state.expenseStatus">
+                        <option value="all">All</option>
+                        <option value="draft">Draft</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Refused</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto;">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-primary sticky-top" style="top: 0; z-index: 10;">
+                        <tr>
+                            <th>Month</th>
+                            <th>Status</th>
+                            <th class="text-end">Eligible</th>
+                            <th class="text-end">Claimed</th>
+                            <th class="text-end">Approved</th>
+                            <th class="text-end">Total Amt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="state.loading">
+                            <tr><td colspan="6" class="text-center py-4"><i class="fa fa-spinner fa-spin"/> Loading...</td></tr>
+                        </t>
+                        <t t-elif="state.expenseRecords.length === 0">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No expense records found
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="state.expenseRecords" t-as="expense" t-key="expense.monthKey">
+                                <tr>
+                                    <td><t t-esc="expense.month"/></td>
+                                    <td>
+                                        <span t-attf-class="badge #{expense.state === 'approved' ? 'bg-success' : expense.state === 'submitted' ? 'bg-warning text-dark' : expense.state === 'rejected' ? 'bg-danger' : 'bg-secondary'}">
+                                            <t t-esc="expense.status"/>
+                                        </span>
+                                    </td>
+                                    <td class="text-end"><t t-esc="expense.eligible"/></td>
+                                    <td class="text-end"><t t-esc="expense.claimed"/></td>
+                                    <td class="text-end"><t t-esc="expense.approved"/></td>
+                                    <td class="text-end fw-bold"><t t-esc="expense.totalAmt"/></td>
+                                </tr>
+                            </t>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t>
+</templates>

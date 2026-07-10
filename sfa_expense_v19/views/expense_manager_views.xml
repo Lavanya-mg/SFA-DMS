@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_sfa_expense_manager_client" model="ir.actions.client">
+            <field name="name">Expense Manager</field>
+            <field name="tag">sfa_expense_v19.expense_manager_action</field>
+        </record>
+    </data>
+</odoo>

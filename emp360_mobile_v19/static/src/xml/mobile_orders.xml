@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<!-- ============================================================
+     EMPLOYEE 360 — MOBILE ORDERS SCREEN
+     ============================================================ -->
+
+<t t-name="employee_mobile_v19.MobileOrders">
+
+    <t t-if="state.loading">
+        <div class="mobile360-loading"><div class="mobile360-spinner"/><span class="mobile360-loading-text">Loading orders...</span></div>
+    </t>
+
+    <t t-else="">
+        <!-- Stats Bar -->
+        <div style="background:linear-gradient(135deg,#f72585,#b5179e);padding:20px 16px 32px;position:relative;overflow:hidden;">
+            <div class="mobile360-hero-decor"/>
+            <div style="font-size:13px;color:rgba(255,255,255,0.8);font-weight:600;"><i class="fa fa-shopping-cart me-1"/> Sales Orders</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;">
+                <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size:22px;font-weight:800;color:#fff;"><t t-esc="state.stats.total"/></div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;">Total</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size:22px;font-weight:800;color:#fff;"><t t-esc="state.stats.confirmed"/></div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;">Confirmed</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size:16px;font-weight:800;color:#fff;"><t t-esc="fmtMoney(state.stats.amount)"/></div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;">Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding:0 16px;margin-top:-14px;">
+            <!-- Search -->
+            <div class="mobile360-search-bar">
+                <i class="fa fa-search mobile360-search-icon"/>
+                <input class="mobile360-search-input" type="text" placeholder="Search order, customer..."
+                    t-on-input="onSearchInput"/>
+            </div>
+
+            <!-- Period Chips -->
+            <div class="mobile360-chips">
+                <t t-foreach="[['today','Today'],['week','Week'],['month','Month'],['all','All']]" t-as="f" t-key="f[0]">
+                    <button t-attf-class="mobile360-chip {{state.filter === f[0] ? 'active' : ''}}"
+                        t-on-click="() => this.setFilter(f[0])"><t t-esc="f[1]"/></button>
+                </t>
+            </div>
+
+            <!-- Status chips -->
+            <div class="mobile360-chips" style="margin-bottom:14px;">
+                <t t-foreach="[['all','All'],['sale','Confirmed'],['draft','Draft'],['done','Done'],['cancel','Cancelled']]" t-as="s" t-key="s[0]">
+                    <button t-attf-class="mobile360-chip {{state.statusFilter === s[0] ? 'active' : ''}}"
+                        t-on-click="() => this.setStatusFilter(s[0])"><t t-esc="s[1]"/></button>
+                </t>
+            </div>
+
+            <!-- Order cards -->
+            <t t-if="!state.filtered.length">
+                <div class="mobile360-empty" style="padding:48px 16px;">
+                    <div class="mobile360-empty-icon"><i class="fa fa-shopping-cart"/></div>
+                    <div class="mobile360-empty-title">No Orders Found</div>
+                    <div class="mobile360-empty-sub">Try changing the date or status filter</div>
+                </div>
+            </t>
+
+            <t t-foreach="state.filtered" t-as="order" t-key="order.id">
+                <div class="mobile360-order-card" t-on-click="() => this.openOrderDetail(order)">
+                    <div class="mobile360-order-header">
+                        <div>
+                            <div class="mobile360-order-number"><t t-esc="order.name"/></div>
+                            <div class="mobile360-order-partner"><t t-esc="order.partner_id?.[1] || '—'"/></div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="mobile360-order-amount"><t t-esc="fmtMoney(order.amount_total)"/></div>
+                            <span t-attf-class="mobile360-badge {{statusClass(order.state)}}" style="margin-top:4px;">
+                                <t t-esc="statusLabel(order.state)"/>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mobile360-order-footer">
+                        <span style="font-size:12px;color:#94a3b8;">
+                            <i class="fa fa-calendar-o"/> <t t-esc="fmtDateTime(order.date_order)"/>
+                        </span>
+                        <span style="font-size:12px;color:#94a3b8;">
+                            <i class="fa fa-file-text-o"/> <t t-esc="(order.order_line or []).length"/> items
+                        </span>
+                    </div>
+                </div>
+            </t>
+        </div>
+
+        <!-- ── Order Detail Sheet ──────────────────────────── -->
+        <t t-if="state.showOrderDetail">
+            <div class="mobile360-overlay" t-on-click.self="closeOrderDetail">
+                <div class="mobile360-sheet" style="max-height:90vh;">
+                    <div class="mobile360-sheet-handle"/>
+                    <div class="mobile360-sheet-header">
+                        <span class="mobile360-sheet-title">
+                            <t t-esc="state.selectedOrder?.name"/>
+                        </span>
+                        <button class="mobile360-sheet-close" t-on-click="closeOrderDetail"><i class="fa fa-times"/></button>
+                    </div>
+
+                    <div class="mobile360-sheet-body" style="padding:0;">
+                        <!-- Order info header -->
+                        <div style="background:linear-gradient(135deg,#f72585,#b5179e);padding:16px 20px;color:#fff;">
+                            <div style="font-size:18px;font-weight:800;"><t t-esc="state.selectedOrder?.partner_id?.[1]"/></div>
+                            <div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px;">
+                                <t t-esc="fmtDateTime(state.selectedOrder?.date_order)"/>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+                                <span style="font-size:24px;font-weight:800;">
+                                    <t t-esc="fmtMoney(state.selectedOrder?.amount_total)"/>
+                                </span>
+                                <span t-attf-class="mobile360-badge {{statusClass(state.selectedOrder?.state)}}"
+                                    style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);">
+                                    <t t-esc="statusLabel(state.selectedOrder?.state)"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Line items -->
+                        <t t-if="state.orderDetailBusy">
+                            <div class="mobile360-loading"><div class="mobile360-spinner"/></div>
+                        </t>
+                        <t t-else="">
+                            <div style="padding:16px;">
+                                <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Order Lines</div>
+                                <t t-if="!state.orderLines.length">
+                                    <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">No line items found</div>
+                                </t>
+                                <t t-foreach="state.orderLines" t-as="line" t-key="line.id">
+                                    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e2e8f0;">
+                                        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#f72585,#b5179e);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;">
+                                            <i class="fa fa-cube"/>
+                                        </div>
+                                        <div style="flex:1;min-width:0;">
+                                            <div style="font-size:13px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                                <t t-esc="line.product_id?.[1]"/>
+                                            </div>
+                                            <div style="font-size:12px;color:#64748b;margin-top:2px;">
+                                                <t t-esc="line.product_uom_qty"/> × ₹<t t-esc="line.price_unit"/>
+                                                <t t-if="line.scheme_discount">
+                                                    <span style="color:#06d6a0;font-weight:700;"> -<t t-esc="line.scheme_discount"/>%</span>
+                                                </t>
+                                            </div>
+                                        </div>
+                                        <div style="font-size:14px;font-weight:700;color:#0f172a;flex-shrink:0;">
+                                            ₹<t t-esc="Math.round(line.price_subtotal or 0).toLocaleString('en-IN')"/>
+                                        </div>
+                                    </div>
+                                </t>
+
+                                <!-- Total -->
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:2px solid #e2e8f0;margin-top:4px;">
+                                    <div style="font-size:14px;font-weight:700;color:#0f172a;">Total</div>
+                                    <div style="font-size:20px;font-weight:800;color:#f72585;">
+                                        <t t-esc="fmtMoney(state.selectedOrder?.amount_total)"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </t>
+</t>
+
+</templates>

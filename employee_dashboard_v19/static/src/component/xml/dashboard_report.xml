@@ -1,0 +1,910 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ALL-IN-ONE DASHBOARD REPORT  –  Odoo 18 OWL Component Template
+     Combines: Executive Beat Report · Beat Switch History ·
+               Beat Coverage Analytics · Switch Analytics ·
+               Visit Analytics · Attendance Analytics · PJP Analytics
+═══════════════════════════════════════════════════════════════════ -->
+<t t-name="employee_dashboard_v19.DashboardReport">
+<div class="dr-root">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         PAGE HEADER
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="dr-header">
+        <div class="dr-header-left">
+            <div class="dr-header-logo">
+                <i class="fa fa-tachometer"/>
+            </div>
+            <div class="dr-header-text">
+                <h1 class="dr-title">Dashboard Report</h1>
+                <p class="dr-subtitle">
+                    <i class="fa fa-map-marker me-1"/>Visits ·
+                    <i class="fa fa-clock-o me-1 ms-1"/>Attendance ·
+                    <i class="fa fa-map me-1 ms-1"/>Beat Analytics ·
+                    <i class="fa fa-exchange me-1 ms-1"/>Switch History ·
+                    <i class="fa fa-road me-1 ms-1"/>PJP
+                </p>
+            </div>
+        </div>
+        <div class="dr-header-right">
+            <div class="dr-header-period">
+                <i class="fa fa-calendar me-1"/>
+                <span><t t-esc="formatDateRange()"/></span>
+            </div>
+            <button class="dr-btn dr-btn-generate"
+                    t-on-click="onGenerateReport"
+                    t-att-disabled="state.generating">
+                <i t-att-class="state.generating ? 'fa fa-spinner fa-spin me-1' : 'fa fa-magic me-1'"/>
+                Generate Beat Report
+            </button>
+            <button class="dr-btn dr-btn-refresh" t-on-click="onRefresh"
+                    t-att-disabled="state.loading">
+                <i t-att-class="state.loading ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         FILTER BAR  –  Quick presets + custom date + employee / dept
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="dr-filter-bar">
+        <!-- Date quick-select chips -->
+        <div class="dr-preset-chips">
+            <span class="dr-preset-label">Quick:</span>
+            <button t-att-class="'dr-chip ' + (state.activePreset === 'today'     ? 'dr-chip-active' : '')"
+                    t-on-click="() => this.setDatePreset('today')">Today</button>
+            <button t-att-class="'dr-chip ' + (state.activePreset === 'week'      ? 'dr-chip-active' : '')"
+                    t-on-click="() => this.setDatePreset('week')">This Week</button>
+            <button t-att-class="'dr-chip ' + (state.activePreset === 'month'     ? 'dr-chip-active' : '')"
+                    t-on-click="() => this.setDatePreset('month')">This Month</button>
+            <button t-att-class="'dr-chip ' + (state.activePreset === 'lastmonth' ? 'dr-chip-active' : '')"
+                    t-on-click="() => this.setDatePreset('lastmonth')">Last Month</button>
+            <button t-att-class="'dr-chip ' + (state.activePreset === 'quarter'   ? 'dr-chip-active' : '')"
+                    t-on-click="() => this.setDatePreset('quarter')">This Quarter</button>
+        </div>
+        <div class="dr-filter-divider"/>
+        <!-- Custom date range -->
+        <div class="dr-filter-group">
+            <label class="dr-filter-label">From</label>
+            <input type="date" class="dr-filter-input"
+                   t-att-value="state.dateFrom"
+                   t-on-change="onDateFromChange"/>
+        </div>
+        <div class="dr-filter-group">
+            <label class="dr-filter-label">To</label>
+            <input type="date" class="dr-filter-input"
+                   t-att-value="state.dateTo"
+                   t-on-change="onDateToChange"/>
+        </div>
+        <!-- Employee filter -->
+        <div class="dr-filter-group">
+            <label class="dr-filter-label">Executive</label>
+            <select class="dr-filter-input" t-on-change="onEmployeeChange">
+                <option value="">All Executives</option>
+                <t t-foreach="state.employees" t-as="emp" t-key="emp.id">
+                    <option t-att-value="emp.id"
+                            t-att-selected="state.employeeId == emp.id">
+                        <t t-esc="emp.name"/>
+                    </option>
+                </t>
+            </select>
+        </div>
+        <!-- Department filter -->
+        <div class="dr-filter-group">
+            <label class="dr-filter-label">Department</label>
+            <select class="dr-filter-input" t-on-change="onDepartmentChange">
+                <option value="">All Departments</option>
+                <t t-foreach="state.departments" t-as="dept" t-key="dept.id">
+                    <option t-att-value="dept.id"
+                            t-att-selected="state.departmentId == dept.id">
+                        <t t-esc="dept.name"/>
+                    </option>
+                </t>
+            </select>
+        </div>
+        <!-- Actions -->
+        <div class="dr-filter-actions">
+            <button class="dr-btn dr-btn-primary" t-on-click="onApplyFilters">
+                <i class="fa fa-search me-1"/> Apply
+            </button>
+            <button class="dr-btn dr-btn-outline" t-on-click="onResetFilters">
+                <i class="fa fa-undo me-1"/> Reset
+            </button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         LOADING STATE
+    ══════════════════════════════════════════════════════════════ -->
+    <t t-if="state.loading">
+        <div class="dr-loading">
+            <div class="dr-spinner-ring">
+                <div/><div/><div/><div/>
+            </div>
+            <p class="dr-loading-text">Loading dashboard data…</p>
+        </div>
+    </t>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         MAIN CONTENT  (only when data is loaded)
+    ══════════════════════════════════════════════════════════════ -->
+    <t t-if="!state.loading and state.data">
+
+        <!-- ─────────────────────────────────────────────────────────
+             SECTION A : VISIT ANALYTICS
+        ───────────────────────────────────────────────────────── -->
+        <div class="dr-section-header">
+            <div class="dr-section-badge dr-badge-blue">
+                <i class="fa fa-map-marker"/>
+            </div>
+            <div>
+                <h2 class="dr-section-title">Visit Analytics</h2>
+                <p class="dr-section-desc">Customer visits performance and trends</p>
+            </div>
+        </div>
+
+        <!-- KPI Row A -->
+        <div class="dr-kpi-row">
+            <div class="dr-kpi-card dr-kpi-blue">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-blue"><i class="fa fa-map-marker"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_visits)"/></div>
+                        <div class="dr-kpi-label">Total Visits</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-progress-wrap">
+                    <div class="dr-kpi-progress-bar">
+                        <div class="dr-kpi-progress-fill dr-pf-blue"
+                             t-att-style="'width:' + completionRate(state.data) + '%'"/>
+                    </div>
+                    <span class="dr-kpi-pct"><t t-esc="completionRate(state.data)"/>% completed</span>
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-green">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-green"><i class="fa fa-check-circle"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.completed_visits)"/></div>
+                        <div class="dr-kpi-label">Completed Visits</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-thumbs-up me-1"/>
+                    <t t-esc="formatNumber(state.data.kpi.productive_visits)"/> productive
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-teal">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-teal"><i class="fa fa-star"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="productivityRate(state.data)"/>%</div>
+                        <div class="dr-kpi-label">Productivity Rate</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-progress-wrap">
+                    <div class="dr-kpi-progress-bar">
+                        <div class="dr-kpi-progress-fill dr-pf-teal"
+                             t-att-style="'width:' + productivityRate(state.data) + '%'"/>
+                    </div>
+                    <span class="dr-kpi-pct"><t t-esc="formatNumber(state.data.kpi.productive_visits)"/> productive</span>
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-purple">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-purple"><i class="fa fa-money"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value dr-kpi-value-sm">
+                            <t t-esc="formatCurrency(state.data.kpi.total_order_amount, state.data.kpi.currency_symbol)"/>
+                        </div>
+                        <div class="dr-kpi-label">Order Revenue</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-shopping-cart me-1"/>from completed visits
+                </div>
+            </div>
+        </div>
+
+        <!-- Visit Charts Row 1 -->
+        <div class="dr-chart-row">
+            <div class="dr-chart-card dr-col-4">
+                <div class="dr-chart-title">
+                    <i class="fa fa-pie-chart me-2" style="color:#4361ee"/>Visit Status Distribution
+                </div>
+                <div class="dr-chart-wrap">
+                    <!-- <t t-if="state.data.visit_status.labels.length">
+                        <canvas t-ref="canvasVisitStatus"/>
+                    </t> -->
+                    <t t-if="!state.loading and state.data">
+                        <t t-if="state.data.visit_status.labels.length > 0">
+                            <canvas t-ref="canvasVisitStatus"/>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="dr-chart-empty"><i class="fa fa-inbox me-2"/>No visit data</div>
+                    </t>
+                </div>
+            </div>
+
+            <div class="dr-chart-card dr-col-4">
+                <div class="dr-chart-title">
+                    <i class="fa fa-pie-chart me-2" style="color:#06d6a0"/>Productivity Rate
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasVisitProductivity"/>
+                </div>
+            </div>
+
+            <div class="dr-chart-card dr-col-4">
+                <div class="dr-chart-title">
+                    <i class="fa fa-bar-chart me-2" style="color:#7209b7"/>Visits by Executive (Top 10)
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasEmployeeVisits"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Visits Stacked Bar -->
+        <div class="dr-chart-row">
+            <div class="dr-chart-card dr-col-12">
+                <div class="dr-chart-title">
+                    <i class="fa fa-line-chart me-2" style="color:#f72585"/>Monthly Visit Trend by Status
+                </div>
+                <div class="dr-chart-wrap dr-chart-tall">
+                    <canvas t-ref="canvasMonthlyVisits"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────────────────────
+             SECTION B : ATTENDANCE ANALYTICS
+        ───────────────────────────────────────────────────────── -->
+        <div class="dr-section-header">
+            <div class="dr-section-badge dr-badge-green">
+                <i class="fa fa-clock-o"/>
+            </div>
+            <div>
+                <h2 class="dr-section-title">Attendance Analytics</h2>
+                <p class="dr-section-desc">Employee check-in/check-out and worked hours analysis</p>
+            </div>
+        </div>
+
+        <!-- KPI Row B -->
+        <div class="dr-kpi-row">
+            <div class="dr-kpi-card dr-kpi-orange">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-orange"><i class="fa fa-calendar-check-o"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_attendance)"/></div>
+                        <div class="dr-kpi-label">Attendance Records</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-users me-1"/>check-ins in period
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-cyan">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-cyan"><i class="fa fa-hourglass-half"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value dr-kpi-value-sm">
+                            <t t-esc="formatHours(state.data.kpi.total_worked_hours)"/>
+                        </div>
+                        <div class="dr-kpi-label">Total Worked Hours</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-bar-chart me-1"/>across all executives
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Charts -->
+        <div class="dr-chart-row">
+            <div class="dr-chart-card dr-col-6">
+                <div class="dr-chart-title">
+                    <i class="fa fa-bar-chart me-2" style="color:#06d6a0"/>Worked Hours by Executive (Top 10)
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasAttendance"/>
+                </div>
+            </div>
+            <div class="dr-chart-card dr-col-6">
+                <div class="dr-chart-title">
+                    <i class="fa fa-area-chart me-2" style="color:#0077b6"/>Monthly Attendance Hours Trend
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasMonthlyAttendance"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────────────────────
+             SECTION C : BEAT ANALYTICS
+             (Executive Beat Report + Beat Coverage + Switch Analytics)
+        ───────────────────────────────────────────────────────── -->
+        <div class="dr-section-header">
+            <div class="dr-section-badge dr-badge-purple">
+                <i class="fa fa-map"/>
+            </div>
+            <div>
+                <h2 class="dr-section-title">Beat Analytics</h2>
+                <p class="dr-section-desc">
+                    Executive beat report · Beat coverage · Switch history · Switch analytics
+                </p>
+            </div>
+        </div>
+
+        <!-- KPI Row C -->
+        <div class="dr-kpi-row">
+            <div class="dr-kpi-card dr-kpi-indigo">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-indigo"><i class="fa fa-th-large"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_beats)"/></div>
+                        <div class="dr-kpi-label">Total Beats</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-map-signs me-1"/>beats in period
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-violet">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-violet"><i class="fa fa-file-text"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_beat_reports)"/></div>
+                        <div class="dr-kpi-label">Beat Reports</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-users me-1"/>executive daily reports
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-pink">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-pink"><i class="fa fa-exchange"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_switches)"/></div>
+                        <div class="dr-kpi-label">Beat Switches</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-progress-wrap">
+                    <div class="dr-kpi-progress-bar">
+                        <div class="dr-kpi-progress-fill dr-pf-pink"
+                             t-att-style="'width:' + switchRate(state.data) + '%'"/>
+                    </div>
+                    <span class="dr-kpi-pct"><t t-esc="switchRate(state.data)"/>% reports with switches</span>
+                </div>
+            </div>
+
+            <div class="dr-kpi-card dr-kpi-red">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-red"><i class="fa fa-history"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_switch_history)"/></div>
+                        <div class="dr-kpi-label">Switch Events</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-clock-o me-1"/>recorded switch events
+                </div>
+            </div>
+        </div>
+
+        <!-- Beat Charts Row -->
+        <div class="dr-chart-row">
+            <div class="dr-chart-card dr-col-3">
+                <div class="dr-chart-title">
+                    <i class="fa fa-pie-chart me-2" style="color:#4cc9f0"/>Beat Coverage Status
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasBeatCoverage"/>
+                </div>
+            </div>
+
+            <div class="dr-chart-card dr-col-3">
+                <div class="dr-chart-title">
+                    <i class="fa fa-pie-chart me-2" style="color:#ffd166"/>Switch Distribution
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasBeatSwitchDist"/>
+                </div>
+            </div>
+
+            <div class="dr-chart-card dr-col-6">
+                <div class="dr-chart-title">
+                    <i class="fa fa-bar-chart me-2" style="color:#f72585"/>Beat Switches by Executive (Top 10)
+                </div>
+                <div class="dr-chart-wrap">
+                    <canvas t-ref="canvasEmployeeSwitches"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────────────────────
+             BEAT REPORT SUMMARY TABLE  (replaces Executive Beat Report page)
+        ───────────────────────────────────────────────────────── -->
+        <t t-if="state.data.recent_beat_reports.length > 0">
+            <div class="dr-sub-section-header">
+                <i class="fa fa-table me-2" style="color:#560bad"/>
+                <span>Recent Beat Reports</span>
+                <span class="dr-sub-count"><t t-esc="state.data.recent_beat_reports.length"/> records</span>
+            </div>
+            <div class="dr-table-card dr-table-compact">
+                <div class="dr-table-wrap">
+                    <table class="dr-table">
+                        <thead>
+                            <tr>
+                                <th>Executive</th>
+                                <th>Department</th>
+                                <th>Date</th>
+                                <th>Assigned Beat</th>
+                                <th>Current Beat</th>
+                                <th class="text-center">Switches</th>
+                                <th class="text-end">Worked Hrs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.data.recent_beat_reports" t-as="br" t-key="br_index">
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <i class="fa fa-user-circle me-1 text-muted"/>
+                                        <t t-esc="br.employee"/>
+                                    </td>
+                                    <td class="text-muted"><t t-esc="br.department"/></td>
+                                    <td>
+                                        <span class="dr-date-chip"><t t-esc="br.date"/></span>
+                                    </td>
+                                    <td>
+                                        <span class="dr-beat-chip dr-beat-assigned">
+                                            <i class="fa fa-map-pin me-1"/>
+                                            <t t-esc="br.assigned_beat"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="dr-beat-chip dr-beat-current">
+                                            <i class="fa fa-location-arrow me-1"/>
+                                            <t t-esc="br.current_beat"/>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-att-class="switchBadgeClass(br.switches)">
+                                            <t t-if="br.switches > 0">
+                                                <i class="fa fa-exchange me-1"/>
+                                            </t>
+                                            <t t-esc="br.switches"/>
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-semibold" style="color:#0077b6">
+                                        <t t-esc="formatHours(br.worked_hours)"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+
+        <!-- ─────────────────────────────────────────────────────────
+             SWITCH HISTORY TIMELINE  (replaces Beat Switch History page)
+        ───────────────────────────────────────────────────────── -->
+        <t t-if="state.data.recent_switch_history.length > 0">
+            <div class="dr-sub-section-header">
+                <i class="fa fa-history me-2" style="color:#f72585"/>
+                <span>Recent Switch History</span>
+                <span class="dr-sub-count"><t t-esc="state.data.recent_switch_history.length"/> events</span>
+            </div>
+            <div class="dr-table-card dr-table-compact">
+                <div class="dr-switch-timeline">
+                    <t t-foreach="state.data.recent_switch_history" t-as="sh" t-key="sh_index">
+                        <div class="dr-timeline-item">
+                            <div class="dr-timeline-dot"/>
+                            <div class="dr-timeline-line"/>
+                            <div class="dr-timeline-content">
+                                <div class="dr-timeline-header">
+                                    <span class="dr-timeline-emp">
+                                        <i class="fa fa-user me-1"/>
+                                        <t t-esc="sh.employee"/>
+                                    </span>
+                                    <span class="dr-timeline-time">
+                                        <i class="fa fa-calendar me-1"/>
+                                        <t t-esc="sh.date"/>
+                                        <span class="dr-timeline-clock ms-2">
+                                            <i class="fa fa-clock-o me-1"/>
+                                            <t t-esc="sh.time"/>
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="dr-timeline-beats">
+                                    <span class="dr-beat-from">
+                                        <i class="fa fa-map-pin me-1"/>
+                                        <t t-esc="sh.from_beat"/>
+                                    </span>
+                                    <span class="dr-beat-arrow">
+                                        <i class="fa fa-long-arrow-right"/>
+                                    </span>
+                                    <span class="dr-beat-to">
+                                        <i class="fa fa-location-arrow me-1"/>
+                                        <t t-esc="sh.to_beat"/>
+                                    </span>
+                                </div>
+                                <div class="dr-timeline-reason" t-if="sh.reason">
+                                    <i class="fa fa-comment-o me-1"/>
+                                    <t t-esc="sh.reason"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+
+        <!-- ─────────────────────────────────────────────────────────
+             SECTION D : PJP ANALYTICS
+        ───────────────────────────────────────────────────────── -->
+        <div class="dr-section-header">
+            <div class="dr-section-badge dr-badge-orange">
+                <i class="fa fa-road"/>
+            </div>
+            <div>
+                <h2 class="dr-section-title">PJP Analytics</h2>
+                <p class="dr-section-desc">Permanent journey plan status and approvals</p>
+            </div>
+        </div>
+
+        <!-- KPI Row D -->
+        <div class="dr-kpi-row">
+            <div class="dr-kpi-card dr-kpi-amber">
+                <div class="dr-kpi-top">
+                    <div class="dr-kpi-icon-wrap dr-ikw-amber"><i class="fa fa-road"/></div>
+                    <div class="dr-kpi-vals">
+                        <div class="dr-kpi-value"><t t-esc="formatNumber(state.data.kpi.total_pjp)"/></div>
+                        <div class="dr-kpi-label">Total PJP Plans</div>
+                    </div>
+                </div>
+                <div class="dr-kpi-sub">
+                    <i class="fa fa-check me-1"/>
+                    <t t-esc="formatNumber(state.data.kpi.approved_pjp)"/> approved ·
+                    <i class="fa fa-play me-1 ms-1"/>
+                    <t t-esc="formatNumber(state.data.kpi.active_pjp)"/> active
+                </div>
+            </div>
+        </div>
+
+        <!-- PJP Charts -->
+        <div class="dr-chart-row">
+            <div class="dr-chart-card dr-col-4">
+                <div class="dr-chart-title">
+                    <i class="fa fa-pie-chart me-2" style="color:#f77f00"/>PJP Status Distribution
+                </div>
+                <div class="dr-chart-wrap">
+                    <t t-if="state.data.pjp_status.labels.length">
+                        <canvas t-ref="canvasPjpStatus"/>
+                    </t>
+                    <t t-else="">
+                        <div class="dr-chart-empty"><i class="fa fa-inbox me-2"/>No PJP data</div>
+                    </t>
+                </div>
+            </div>
+
+            <!-- PJP Summary Stat Grid -->
+            <div class="dr-chart-card dr-col-8">
+                <div class="dr-chart-title">
+                    <i class="fa fa-list-alt me-2" style="color:#4361ee"/>Overall Summary
+                </div>
+                <div class="dr-summary-grid">
+                    <div class="dr-summary-item">
+                        <div class="dr-summary-icon" style="background:linear-gradient(135deg,#4361ee,#3a0ca3)">
+                            <i class="fa fa-map-marker"/>
+                        </div>
+                        <div class="dr-summary-num dr-col-blue">
+                            <t t-esc="formatNumber(state.data.kpi.total_visits)"/>
+                        </div>
+                        <div class="dr-summary-lbl">Total Visits</div>
+                    </div>
+                    <div class="dr-summary-item">
+                        <div class="dr-summary-icon" style="background:linear-gradient(135deg,#06d6a0,#019b72)">
+                            <i class="fa fa-check-circle"/>
+                        </div>
+                        <div class="dr-summary-num" style="color:#019b72">
+                            <t t-esc="formatNumber(state.data.kpi.completed_visits)"/>
+                        </div>
+                        <div class="dr-summary-lbl">Completed Visits</div>
+                    </div>
+                    <div class="dr-summary-item">
+                        <div class="dr-summary-icon" style="background:linear-gradient(135deg,#f77f00,#d62828)">
+                            <i class="fa fa-calendar"/>
+                        </div>
+                        <div class="dr-summary-num" style="color:#d62828">
+                            <t t-esc="formatNumber(state.data.kpi.total_attendance)"/>
+                        </div>
+                        <div class="dr-summary-lbl">Attendance Records</div>
+                    </div>
+                    <div class="dr-summary-item">
+                        <div class="dr-summary-icon" style="background:linear-gradient(135deg,#0077b6,#023e8a)">
+                            <i class="fa fa-hourglass-half"/>
+                        </div>
+                        <div class="dr-summary-num" style="color:#023e8a">
+                            <t t-esc="formatHours(state.data.kpi.total_worked_hours)"/>
+                        </div>
+                        <div class="dr-summary-lbl">Worked Hours</div>
+                    </div>
+                    <div class="dr-summary-item">
+                        <div class="dr-summary-icon" style="background:linear-gradient(135deg,#560bad,#3a0ca3)">
+                            <i class="fa fa-map"/>
+                        </div>
+                        <div class="dr-summary-num" style="color:#560bad">
+                            <t t-esc="formatNumber(state.data.kpi.total_beat_reports)"/>
+                        </div>
+                        <div class="dr-summary-lbl">Beat Reports</div>
+                    </div>
+                    <div class="dr-summary-item">
+                        <div class="dr-summary-icon" style="background:linear-gradient(135deg,#f72585,#b5179e)">
+                            <i class="fa fa-exchange"/>
+                        </div>
+                        <div class="dr-summary-num" style="color:#b5179e">
+                            <t t-esc="formatNumber(state.data.kpi.total_switches)"/>
+                        </div>
+                        <div class="dr-summary-lbl">Beat Switches</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────────────────────
+             SECTION E : RECENT VISITS  (tabbed activity table)
+        ───────────────────────────────────────────────────────── -->
+        <div class="dr-section-header">
+            <div class="dr-section-badge dr-badge-teal">
+                <i class="fa fa-clock-o"/>
+            </div>
+            <div>
+                <h2 class="dr-section-title">Recent Activity</h2>
+                <p class="dr-section-desc">Latest visits, beat reports and switch events</p>
+            </div>
+        </div>
+
+        <div class="dr-table-card">
+            <!-- Tab navigation -->
+            <div class="dr-tab-nav">
+                <button t-att-class="'dr-tab-btn ' + (state.activeTab === 'visits' ? 'dr-tab-active' : '')"
+                        t-on-click="() => this.setActiveTab('visits')">
+                    <i class="fa fa-map-marker me-1"/>
+                    Recent Visits
+                    <span class="dr-tab-badge">
+                        <t t-esc="state.data.recent_visits.length"/>
+                    </span>
+                </button>
+                <button t-att-class="'dr-tab-btn ' + (state.activeTab === 'beats' ? 'dr-tab-active' : '')"
+                        t-on-click="() => this.setActiveTab('beats')">
+                    <i class="fa fa-map me-1"/>
+                    Beat Reports
+                    <span class="dr-tab-badge">
+                        <t t-esc="state.data.recent_beat_reports.length"/>
+                    </span>
+                </button>
+                <button t-att-class="'dr-tab-btn ' + (state.activeTab === 'switches' ? 'dr-tab-active' : '')"
+                        t-on-click="() => this.setActiveTab('switches')">
+                    <i class="fa fa-exchange me-1"/>
+                    Switch History
+                    <span class="dr-tab-badge">
+                        <t t-esc="state.data.recent_switch_history.length"/>
+                    </span>
+                </button>
+            </div>
+
+            <!-- ── Recent Visits tab ───────────────────────────── -->
+            <t t-if="state.activeTab === 'visits'">
+                <div class="dr-table-wrap">
+                    <t t-if="state.data.recent_visits.length === 0">
+                        <div class="dr-empty">
+                            <i class="fa fa-inbox fa-3x mb-3"/>
+                            <h5>No Visit Records</h5>
+                            <p>No visits found for the selected period and filters.</p>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="dr-table">
+                            <thead>
+                                <tr>
+                                    <th>Visit ID</th>
+                                    <th>Executive</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.data.recent_visits" t-as="v" t-key="v_index">
+                                    <tr>
+                                        <td class="fw-semibold" style="color:#4361ee">
+                                            <i class="fa fa-hashtag me-1 text-muted"/>
+                                            <t t-esc="v.name"/>
+                                        </td>
+                                        <td>
+                                            <i class="fa fa-user-circle me-1 text-muted"/>
+                                            <t t-esc="v.employee"/>
+                                        </td>
+                                        <td>
+                                            <i class="fa fa-building-o me-1 text-muted"/>
+                                            <t t-esc="v.customer"/>
+                                        </td>
+                                        <td>
+                                            <span class="dr-date-chip"><t t-esc="v.date"/></span>
+                                        </td>
+                                        <td>
+                                            <span t-att-class="statusBadgeClass(v.status)">
+                                                <t t-esc="v.status"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-end fw-semibold" style="color:#019b72">
+                                            <t t-esc="formatCurrency(v.amount, state.data.kpi.currency_symbol)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+
+            <!-- ── Beat Reports tab ───────────────────────────── -->
+            <t t-if="state.activeTab === 'beats'">
+                <div class="dr-table-wrap">
+                    <t t-if="state.data.recent_beat_reports.length === 0">
+                        <div class="dr-empty">
+                            <i class="fa fa-inbox fa-3x mb-3"/>
+                            <h5>No Beat Reports</h5>
+                            <p>Use "Generate Beat Report" to create reports, or widen the date range.</p>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="dr-table">
+                            <thead>
+                                <tr>
+                                    <th>Executive</th>
+                                    <th>Department</th>
+                                    <th>Date</th>
+                                    <th>Assigned Beat</th>
+                                    <th>Current Beat</th>
+                                    <th class="text-center">Switches</th>
+                                    <th class="text-end">Worked Hrs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.data.recent_beat_reports" t-as="br" t-key="br_index">
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            <i class="fa fa-user-circle me-1 text-muted"/>
+                                            <t t-esc="br.employee"/>
+                                        </td>
+                                        <td class="text-muted"><t t-esc="br.department"/></td>
+                                        <td>
+                                            <span class="dr-date-chip"><t t-esc="br.date"/></span>
+                                        </td>
+                                        <td>
+                                            <span class="dr-beat-chip dr-beat-assigned">
+                                                <i class="fa fa-map-pin me-1"/>
+                                                <t t-esc="br.assigned_beat"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="dr-beat-chip dr-beat-current">
+                                                <i class="fa fa-location-arrow me-1"/>
+                                                <t t-esc="br.current_beat"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-att-class="switchBadgeClass(br.switches)">
+                                                <t t-esc="br.switches"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-end fw-semibold" style="color:#0077b6">
+                                            <t t-esc="formatHours(br.worked_hours)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+
+            <!-- ── Switch History tab ─────────────────────────── -->
+            <t t-if="state.activeTab === 'switches'">
+                <div class="dr-table-wrap">
+                    <t t-if="state.data.recent_switch_history.length === 0">
+                        <div class="dr-empty">
+                            <i class="fa fa-inbox fa-3x mb-3"/>
+                            <h5>No Switch Events</h5>
+                            <p>No beat switch history found for the selected period.</p>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="dr-table">
+                            <thead>
+                                <tr>
+                                    <th>Executive</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>From Beat</th>
+                                    <th>→ To Beat</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.data.recent_switch_history" t-as="sh" t-key="sh_index">
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            <i class="fa fa-user-circle me-1 text-muted"/>
+                                            <t t-esc="sh.employee"/>
+                                        </td>
+                                        <td>
+                                            <span class="dr-date-chip"><t t-esc="sh.date"/></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge-dr badge-dr-info">
+                                                <i class="fa fa-clock-o me-1"/>
+                                                <t t-esc="sh.time"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="dr-beat-chip dr-beat-from-tbl">
+                                                <i class="fa fa-map-pin me-1"/>
+                                                <t t-esc="sh.from_beat"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="dr-beat-chip dr-beat-to-tbl">
+                                                <i class="fa fa-location-arrow me-1"/>
+                                                <t t-esc="sh.to_beat"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small">
+                                            <t t-esc="sh.reason"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+        </div><!-- /dr-table-card -->
+
+    </t><!-- /!loading and data -->
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ERROR STATE
+    ══════════════════════════════════════════════════════════════ -->
+    <t t-if="!state.loading and !state.data">
+        <div class="dr-error-state">
+            <div class="dr-error-icon">
+                <i class="fa fa-exclamation-triangle"/>
+            </div>
+            <h3>Unable to Load Dashboard</h3>
+            <p>Failed to retrieve data. Please check your permissions or contact your administrator.</p>
+            <button class="dr-btn dr-btn-primary mt-3" t-on-click="onApplyFilters">
+                <i class="fa fa-refresh me-1"/> Retry
+            </button>
+        </div>
+    </t>
+
+</div><!-- /dr-root -->
+</t>
+
+</templates>

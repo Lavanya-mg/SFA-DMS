@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="territory_north_bengaluru" model="fmcg.territory">
+        <field name="name">North Bengaluru</field>
+        <field name="code">TER-NBG</field>
+        <field name="region">Karnataka</field>
+        <field name="description">Covers Yeshwantpur, Rajajinagar, Malleshwaram, Hebbal, Yelahanka</field>
+    </record>
+
+    <record id="territory_south_bengaluru" model="fmcg.territory">
+        <field name="name">South Bengaluru</field>
+        <field name="code">TER-SBG</field>
+        <field name="region">Karnataka</field>
+        <field name="description">Covers Jayanagar, BTM Layout, Banashankari, JP Nagar, Kanakapura Road</field>
+    </record>
+
+    <record id="territory_east_bengaluru" model="fmcg.territory">
+        <field name="name">East Bengaluru</field>
+        <field name="code">TER-EBG</field>
+        <field name="region">Karnataka</field>
+        <field name="description">Covers Whitefield, Marathahalli, KR Puram, Indiranagar, CV Raman Nagar</field>
+    </record>
+
+    <record id="territory_west_bengaluru" model="fmcg.territory">
+        <field name="name">West Bengaluru</field>
+        <field name="code">TER-WBG</field>
+        <field name="region">Karnataka</field>
+        <field name="description">Covers Rajajinagar, Nagarbhavi, Vijayanagar, Tumkur Road</field>
+    </record>
+
+    <record id="territory_central_bengaluru" model="fmcg.territory">
+        <field name="name">Central Bengaluru</field>
+        <field name="code">TER-CBG</field>
+        <field name="region">Karnataka</field>
+        <field name="description">Covers MG Road, Brigade Road, Shivajinagar, Frazer Town, Richmond Town</field>
+    </record>
+
+    <record id="territory_electronic_city" model="fmcg.territory">
+        <field name="name">Electronic City &amp; Sarjapur</field>
+        <field name="code">TER-ECS</field>
+        <field name="region">Karnataka</field>
+        <field name="description">Covers Electronic City, Sarjapur Road, Silk Board, Bommanahalli, HSR Layout</field>
+    </record>
+
+    <record id="territory_north_mumbai" model="fmcg.territory">
+        <field name="name">North Mumbai</field>
+        <field name="code">TER-NMB</field>
+        <field name="region">Maharashtra</field>
+        <field name="description">Covers Borivali, Kandivali, Malad, Goregaon, Dahisar</field>
+    </record>
+
+    <record id="territory_south_mumbai" model="fmcg.territory">
+        <field name="name">South Mumbai</field>
+        <field name="code">TER-SMB</field>
+        <field name="region">Maharashtra</field>
+        <field name="description">Covers Fort, Churchgate, Colaba, Worli, Parel, Lower Parel</field>
+    </record>
+
+    <record id="territory_chennai_north" model="fmcg.territory">
+        <field name="name">Chennai North</field>
+        <field name="code">TER-CNN</field>
+        <field name="region">Tamil Nadu</field>
+        <field name="description">Covers Ambattur, Avadi, Padi, Anna Nagar, Arumbakkam</field>
+    </record>
+
+    <record id="territory_chennai_south" model="fmcg.territory">
+        <field name="name">Chennai South</field>
+        <field name="code">TER-CNS</field>
+        <field name="region">Tamil Nadu</field>
+        <field name="description">Covers Velachery, Tambaram, Chromepet, Pallavaram, Perungudi</field>
+    </record>
+
+</odoo>

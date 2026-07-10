@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="employee_dashboard_v19.ProductHubComponent">
+<div style="display:flex;height:100vh;font-family:'Inter',sans-serif;background:#f4f6fb;">
+
+    <!-- ══════════ SIDEBAR ══════════ -->
+    <aside style="width:230px;min-width:230px;background:#1a1f36;color:#fff;display:flex;flex-direction:column;box-shadow:2px 0 12px rgba(0,0,0,0.18);overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:linear-gradient(135deg,#4361ee,#7209b7);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fa fa-th-large" style="color:#fff;font-size:15px;"/>
+                </div>
+                <span style="font-size:15px;font-weight:700;color:#fff;letter-spacing:0.2px;">Product Hub</span>
+            </div>
+        </div>
+        <!-- Back to Dashboard -->
+        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div t-on-click="goBackToDashboard"
+                 style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.75);font-size:12.5px;font-weight:500;">
+                <i class="fa fa-arrow-left" style="width:16px;text-align:center;"/>
+                <span>Back to Dashboard</span>
+            </div>
+        </div>
+        <!-- Nav -->
+        <!-- <nav style="flex:1;padding:6px 0 12px;overflow-y:auto;">
+            <t t-set="NAV" t-value="[
+                {tab:'dashboard',            icon:'fa-home',              label:'Dashboard'},
+                {tab:'categories',           icon:'fa-tags',              label:'Categories'},
+                {tab:'uom',                  icon:'fa-balance-scale',     label:'UOM Master'},
+                {tab:'uom_conversion',       icon:'fa-exchange',          label:'UOM Conversions'},
+                {tab:'products',             icon:'fa-cube',              label:'Products'},
+                {tab:'price_lists',          icon:'fa-list-alt',          label:'Price Lists'},
+                {tab:'pricebook_config',     icon:'fa-cog',               label:'Pricebook Config'},
+                {tab:'batch_master',         icon:'fa-database',          label:'Batch Master'},
+                {tab:'priority_sell',        icon:'fa-sort-amount-desc',  label:'Priority Sell Config'},
+                {tab:'price_change_logs',    icon:'fa-history',           label:'Price Change Logs'},
+                {tab:'customer_categories',  icon:'fa-users',             label:'Customer Categories'},
+                {tab:'employee_categories',  icon:'fa-user-circle',       label:'Employee Categories'},
+                {tab:'customer_cat_mappings',icon:'fa-link',              label:'Customer Category'},
+                {tab:'category_products',    icon:'fa-th-large',          label:'Category Products'}
+            ]"/>
+            <t t-foreach="NAV" t-as="item" t-key="item.tab">
+                <div t-on-click="() => this.changeTab(item.tab)"
+                     style="display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:8px;cursor:pointer;transition:all 0.15s;position:relative;"
+                     t-attf-style="background:{{ state.activeTab===item.tab ? 'rgba(67,97,238,0.25)' : 'transparent' }};border-left:{{ state.activeTab===item.tab ? '3px solid #4361ee' : '3px solid transparent' }};">
+                    <i t-attf-class="fa {{ item.icon }}"
+                       style="width:16px;text-align:center;font-size:13px;flex-shrink:0;"
+                       t-attf-style="color:{{ state.activeTab===item.tab ? '#818cf8' : 'rgba(255,255,255,0.45)' }};"/>
+                    <span t-esc="item.label"
+                          style="font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                          t-attf-style="color:{{ state.activeTab===item.tab ? '#fff' : 'rgba(255,255,255,0.72)' }};"/>
+                </div>
+            </t>
+        </nav> -->
+        <nav style="flex:1;padding:6px 0 12px;overflow-y:auto;">
+            <div t-on-click="() => this.state.parentOpen = !this.state.parentOpen"
+                style="display:flex;align-items:center;gap:14px;padding:12px 14px;margin:2px 8px;cursor:pointer;color:#fff;font-weight:700;font-size:13px;border-radius:8px;background:rgba(255,255,255,0.05);">
+                <i class="fa fa-cube"/>
+                <span style="flex:1;">PRODUCT MANAGEMENT</span>
+                <i t-attf-class="fa fa-chevron-{{ state.parentOpen ? 'down' : 'right' }}" style="font-size:10px;"/>
+            </div>
+
+            <t t-if="state.parentOpen">
+                <t t-foreach="[
+                    {tab:'dashboard',            icon:'fa-home',              label:'Dashboard'},  
+                    {tab:'batch_master', icon:'fa-database', label:'Batch Master'},
+                    {tab:'priority_sell', icon:'fa-sort-amount-desc', label:'Priority Sell Config'},
+                    {tab:'price_change_logs', icon:'fa-history', label:'Price Change Logs'}
+                ]" t-as="item" t-key="item.tab">
+                    <div t-on-click="() => this.changeTab(item.tab)" style="display:flex;align-items:center;gap:14px;padding:9px 14px;margin:2px 8px 2px 30px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,0.72);">
+                        <i t-attf-class="fa {{ item.icon }}" style="width:16px;text-align:center;"/>
+                        <span><t t-esc="item.label"/></span>
+                    </div>
+                </t>
+
+                <div style="padding:16px 14px 6px 36px;font-size:9px;font-weight:800;color:rgba(255,255,255,0.3);letter-spacing:0.8px;text-transform:uppercase;">MASTERS</div>
+                <t t-foreach="[
+                    {tab:'categories', icon:'fa-tag', label:'Product Categories'},
+                    {tab:'uom', icon:'fa-balance-scale', label:'Units of Measure'},
+                    {tab:'uom_conversion', icon:'fa-exchange', label:'UOM Conversions'},
+                    {tab:'price_lists', icon:'fa-list-alt', label:'Price Book'},
+                    {tab:'products', icon:'fa-cube', label:'Products'}
+                ]" t-as="item" t-key="item.tab">
+                    <div t-on-click="() => this.changeTab(item.tab)" style="display:flex;align-items:center;gap:14px;padding:9px 14px;margin:2px 8px 2px 30px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,0.72);">
+                        <i t-attf-class="fa {{ item.icon }}" style="width:16px;text-align:center;"/>
+                        <span><t t-esc="item.label"/></span>
+                    </div>
+                </t>
+
+                <div style="padding:16px 14px 6px 36px;font-size:9px;font-weight:800;color:rgba(255,255,255,0.3);letter-spacing:0.8px;text-transform:uppercase;">CONFIGURATION</div>
+                <t t-foreach="[
+                    {tab:'pricebook_config', icon:'fa-cog', label:'Pricebook Priority'},
+                    {tab:'employee_categories', icon:'fa-user-circle', label:'Employee Categories'},
+                    {tab:'customer_cat_mappings', icon:'fa-link', label:'Customer Categories'}
+                ]" t-as="item" t-key="item.tab">
+                    <div t-on-click="() => this.changeTab(item.tab)" style="display:flex;align-items:center;gap:14px;padding:9px 14px;margin:2px 8px 2px 30px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,0.72);">
+                        <i t-attf-class="fa {{ item.icon }}" style="width:16px;text-align:center;"/>
+                        <span><t t-esc="item.label"/></span>
+                    </div>
+                </t>
+            </t>
+        </nav>
+
+    </aside>
+
+    <!-- ══════════ MAIN ══════════ -->
+    <main style="flex:1;overflow-y:auto;padding:26px 30px;">
+
+        <!-- ─── Shared helpers ─── -->
+        <t t-set="BTN_STYLE" t-value="'background:#4361ee;color:#fff;border:none;padding:8px 16px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;'"/>
+        <t t-set="TH_STYLE"  t-value="'padding:11px 18px;font-size:11px;color:#6b7280;text-transform:uppercase;text-align:left;'"/>
+        <t t-set="TD_STYLE"  t-value="'padding:13px 18px;border-bottom:1px solid #f3f4f6;'"/>
+
+        <!-- ─── DASHBOARD ─── -->
+        <t t-if="state.activeTab === 'dashboard'">
+            <h2 style="margin:0 0 4px;font-size:21px;font-weight:700;color:#1a1f36;">Dashboard</h2>
+            <p style="margin:0 0 24px;color:#6b7280;font-size:13px;">Product Management Overview</p>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-bottom:18px;">
+                <t t-foreach="[
+                    {label:'Total Products',      val:state.stats.totalProducts,      color:'#4361ee', tab:'products'},
+                    {label:'Active Products',     val:state.stats.activeProducts,     color:'#06d6a0', tab:'products'},
+                    {label:'Categories',          val:state.stats.categories,         color:'#7209b7', tab:'categories'},
+                    {label:'Active Price Lists',  val:state.stats.activePriceLists,   color:'#f77f00', tab:'price_lists'},
+                    {label:'Active Batches',      val:state.stats.activeBatches,      color:'#059669', tab:'batch_master'},
+                    {label:'Near Expiry Batches', val:state.stats.nearExpiryBatches,  color:'#f59e0b', tab:'batch_master'},
+                    {label:'Expired Batches',     val:state.stats.expiredBatches,     color:'#dc2626', tab:'batch_master'},
+                    {label:'Priority Sell Configs',val:state.stats.prioritySellConfigs,color:'#8b5cf6', tab:'priority_sell'},
+                    {label:'Active UOMs',         val:state.stats.activeUoms,         color:'#4cc9f0', tab:'uom'},
+                    {label:'Conversion Rules',    val:state.stats.conversionRules,    color:'#f72585', tab:'uom_conversion'}
+                ]" t-as="s" t-key="s.label">
+                    <div t-on-click="() => this.changeTab(s.tab)"
+                         style="background:#fff;border-radius:10px;padding:20px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);"
+                         t-attf-style="border-top:4px solid {{ s.color }};">
+                        <div t-attf-style="font-size:30px;font-weight:800;color:{{ s.color }};"><t t-esc="s.val"/></div>
+                        <div style="font-size:12px;color:#6b7280;margin-top:3px;"><t t-esc="s.label"/></div>
+                    </div>
+                </t>
+            </div>
+        </t>
+
+        <!-- ─── CATEGORIES ─── -->
+        <t t-if="state.activeTab === 'categories'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Product Categories</h2>
+                <button t-on-click="() => this.openForm('product.category',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Category</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;">
+                    <input type="text" placeholder="Search categories..." t-model="state.catSearch" style="width:260px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Category Name</th>
+                        <th t-att-style="TH_STYLE">Parent</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredCategories.length===0"><td colspan="3" style="padding:28px;text-align:center;color:#9ca3af;">No categories found.</td></tr>
+                        <tr t-foreach="filteredCategories" t-as="cat" t-key="cat.id">
+                            <td t-att-style="TD_STYLE" style="font-weight:500;color:#1a1f36;padding:13px 18px;border-bottom:1px solid #f3f4f6;"><t t-esc="cat.complete_name"/></td>
+                            <td t-att-style="TD_STYLE" style="color:#6b7280;padding:13px 18px;border-bottom:1px solid #f3f4f6;"><t t-esc="cat.parent_id ? cat.parent_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('product.category',cat.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── UOM MASTER ─── -->
+        <t t-if="state.activeTab === 'uom'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Unit of Measure (UOM) Master</h2>
+                <button t-on-click="() => this.openForm('uom.uom',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New UOM</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;">
+                    <input type="text" placeholder="Search UOM..." t-model="state.uomSearch" style="width:260px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Name</th>
+                        <th t-att-style="TH_STYLE">Type</th><th t-att-style="TH_STYLE" style="text-align:right;">Ratio</th>
+                        <th t-att-style="TH_STYLE">Active</th><th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-foreach="filteredUoms" t-as="u" t-key="u.id">
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-weight:600;"><t t-esc="u.name"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ u.uom_type==='reference'?'#dcfce7':'#dbeafe' }};color:{{ u.uom_type==='reference'?'#166534':'#1e40af' }};"><t t-esc="u.uom_type"/></span>
+                            </td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:right;"><t t-esc="u.factor"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ u.active?'#dcfce7':'#fee2e2' }};color:{{ u.active?'#166534':'#991b1b' }};"><t t-esc="u.active?'Active':'Inactive'"/></span>
+                            </td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('uom.uom',u.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── UOM CONVERSIONS ─── -->
+        <t t-if="state.activeTab === 'uom_conversion'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">UOM Conversions</h2>
+                <button t-on-click="() => this.openForm('uom.conversion.rule',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Conversion Rule</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;">
+                    <input type="text" placeholder="Search conversions..." t-model="state.convSearch" style="width:260px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">From UOM</th><th t-att-style="TH_STYLE">To UOM</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Factor</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Inverse</th>
+                        <th t-att-style="TH_STYLE">Product</th><th t-att-style="TH_STYLE">Scope</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-foreach="filteredConversions" t-as="c" t-key="c.id">
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-weight:600;"><t t-esc="c.from_uom_id ? c.from_uom_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><t t-esc="c.to_uom_id ? c.to_uom_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:700;color:#059669;"><t t-esc="c.factor"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:right;color:#6b7280;"><t t-esc="c.factor > 0 ? (1/c.factor).toFixed(5) : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;"><t t-esc="c.product_id ? c.product_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ c.is_global?'#dbeafe':'#fef3c7' }};color:{{ c.is_global?'#1e40af':'#92400e' }};"><t t-esc="c.is_global?'Global':'Product'"/></span>
+                            </td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('uom.conversion.rule',c.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── PRODUCTS ─── -->
+        <t t-if="state.activeTab === 'products'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Products</h2>
+                <button t-on-click="() => this.openForm('product.template',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Product</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;">
+                    <input type="text" placeholder="Search by name or SKU..." t-model="state.productSearch" style="width:280px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">SKU</th><th t-att-style="TH_STYLE">Name</th>
+                        <th t-att-style="TH_STYLE">Category</th><th t-att-style="TH_STYLE">UOM</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Unit Price</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-foreach="filteredProducts" t-as="p" t-key="p.id">
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;"><t t-esc="p.default_code || '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-weight:600;"><t t-esc="p.name"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="p.categ_id ? p.categ_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="p.uom_id ? p.uom_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:700;color:#059669;">₹<t t-esc="p.list_price.toFixed(2)"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('product.template',p.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── PRICE LISTS ─── -->
+        <t t-if="state.activeTab === 'price_lists'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Price Lists</h2>
+                <button t-on-click="() => this.openForm('price.book',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Price Entry</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:center;">
+                    <input type="text" placeholder="Search product, SKU, customer..." t-model="state.pbSearch" style="width:240px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                    <select t-model="state.pbTypeFilter" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+                        <option value="all">All Channels</option>
+                        <option value="base">Base Price</option>
+                        <option value="customer">Customer-wise</option>
+                        <option value="category">Category-wise</option>
+                        <option value="territory">Territory-wise</option>
+                        <option value="channel">Channel-wise</option>
+                        <option value="combination">Combination</option>
+                    </select>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Priority</th>
+                        <th t-att-style="TH_STYLE">Product</th><th t-att-style="TH_STYLE">SKU</th>
+                        <th t-att-style="TH_STYLE">Customer</th><th t-att-style="TH_STYLE">Category</th>
+                        <th t-att-style="TH_STYLE">Territory</th><th t-att-style="TH_STYLE">Channel</th>
+                        <th t-att-style="TH_STYLE">Pricebook Name</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Price</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredPriceBook.length===0"><td colspan="10" style="padding:28px;text-align:center;color:#9ca3af;">No price entries found.</td></tr>
+                        <tr t-foreach="filteredPriceBook" t-as="pb" t-key="pb.id">
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;">
+                                <t t-set="prio" t-value="state.pbPriority.find(p => p.price_type === pb.price_type)"/>
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#dbeafe;color:#1e40af;">
+                                    <t t-if="prio"><t t-esc="prio.sequence"/>&#x1D48;&#x1D57; - <t t-esc="pb.price_type"/></t>
+                                    <t t-else=""><t t-esc="pb.price_type"/></t>
+                                </span>
+                            </td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="pb.product_id ? pb.product_id[1] : '—'"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;">—</td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="pb.customer_id ? pb.customer_id[1] : '—'"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="pb.category_id ? pb.category_id[1] : '—'"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="pb.territory || '—'"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="pb.channel || '—'"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;"><t t-esc="pb.name"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:700;color:#059669;">₹<t t-esc="pb.unit_price.toFixed(2)"/></td>
+                            <td style="padding:11px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('price.book',pb.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── PRICEBOOK CONFIG ─── -->
+        <t t-if="state.activeTab === 'pricebook_config'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Pricebook Priority Configuration</h2>
+                <button t-on-click="() => this.openForm('price.book.priority',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> Add Rule</button>
+            </div>
+            <div style="background:#dbeafe;border-radius:8px;padding:12px 18px;margin-bottom:18px;font-size:13px;color:#1e40af;">
+                This table shows configured pricebook priority rules. Lower priority number = higher precedence. Drag to reorder in the Odoo list view.
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Priority Order</th>
+                        <th t-att-style="TH_STYLE">Name</th>
+                        <th t-att-style="TH_STYLE">Dimensions</th>
+                        <th t-att-style="TH_STYLE" style="text-align:center;">Customer</th>
+                        <th t-att-style="TH_STYLE" style="text-align:center;">Category</th>
+                        <th t-att-style="TH_STYLE" style="text-align:center;">Territory</th>
+                        <th t-att-style="TH_STYLE" style="text-align:center;">Channel</th>
+                        <th t-att-style="TH_STYLE" style="text-align:center;">Active</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="state.pbPriority.length===0"><td colspan="9" style="padding:28px;text-align:center;color:#9ca3af;">No priority rules configured.</td></tr>
+                        <tr t-foreach="state.pbPriority" t-as="pp" t-key="pp.id">
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-weight:700;font-size:18px;color:#4361ee;"><t t-esc="pp.sequence"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-weight:600;"><t t-esc="pp.description || pp.price_type"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;">
+                                <t t-if="pp.dimensions_display">
+                                    <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#ede9fe;color:#5b21b6;"><t t-esc="pp.dimensions_display"/></span>
+                                </t>
+                            </td>
+                            <t t-set="YN_YES" t-value="'padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534;'"/>
+                            <t t-set="YN_NO"  t-value="'padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#f3f4f6;color:#6b7280;'"/>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:center;"><span t-att-style="pp.has_customer ? YN_YES : YN_NO"><t t-esc="pp.has_customer ? 'Yes' : 'No'"/></span></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:center;"><span t-att-style="pp.has_category ? YN_YES : YN_NO"><t t-esc="pp.has_category ? 'Yes' : 'No'"/></span></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:center;"><span t-att-style="pp.has_territory ? YN_YES : YN_NO"><t t-esc="pp.has_territory ? 'Yes' : 'No'"/></span></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:center;"><span t-att-style="pp.has_channel ? YN_YES : YN_NO"><t t-esc="pp.has_channel ? 'Yes' : 'No'"/></span></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;text-align:center;"><span t-att-style="pp.active ? YN_YES : YN_NO"><t t-esc="pp.active ? 'Active' : 'Inactive'"/></span></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('price.book.priority',pp.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── BATCH MASTER ─── -->
+        <t t-if="state.activeTab === 'batch_master'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Batch Master</h2>
+                <button t-on-click="() => this.openForm('product.batch',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Batch</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:center;">
+                    <input type="text" placeholder="Search product, SKU, batch #..." t-model="state.batchSearch" style="width:260px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                    <select t-model="state.batchStatus" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+                        <option value="all">All</option>
+                        <option value="active">Active</option>
+                        <option value="near_expiry">Near Expiry</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Batch #</th><th t-att-style="TH_STYLE">Product</th>
+                        <th t-att-style="TH_STYLE">MFG Date</th><th t-att-style="TH_STYLE">Expiry Date</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Qty Manufactured</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Shelf Life (Days)</th>
+                        <th t-att-style="TH_STYLE">Status</th>
+                        <th t-att-style="TH_STYLE" style="text-align:center;">Near Expiry</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredBatches.length===0"><td colspan="9" style="padding:28px;text-align:center;color:#9ca3af;">No batches found.</td></tr>
+                        <tr t-foreach="filteredBatches" t-as="b" t-key="b.id">
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:600;font-size:12px;color:#4361ee;"><t t-esc="b.batch_number"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="b.product_id ? b.product_id[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="b.mfg_date || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="b.expiry_date || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600;"><t t-esc="b.qty_manufactured"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:right;"><t t-esc="b.shelf_life"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ b.status==='active'?'#dcfce7':b.status==='near_expiry'?'#fef3c7':'#fee2e2' }};color:{{ b.status==='active'?'#166534':b.status==='near_expiry'?'#92400e':'#991b1b' }};"><t t-esc="b.status==='near_expiry'?'Near Expiry':b.status==='expired'?'Expired':'Active'"/></span>
+                            </td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:center;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ b.near_expiry?'#fef3c7':'#f3f4f6' }};color:{{ b.near_expiry?'#92400e':'#6b7280' }};"><t t-esc="b.near_expiry ? 'Yes' : 'No'"/></span>
+                            </td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('product.batch',b.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── PRIORITY SELL CONFIG ─── -->
+        <t t-if="state.activeTab === 'priority_sell'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Priority Sell Configuration</h2>
+                <button t-on-click="() => this.openForm('priority.sell.config',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Priority Sell Config</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:center;">
+                    <input type="text" placeholder="Search product, SKU..." t-model="state.psSearch" style="width:240px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                    <select t-model="state.psClass" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+                        <option value="all">All Classifications</option>
+                        <option value="must_sell">Must Sell</option>
+                        <option value="focused_sell">Focused Sell</option>
+                    </select>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Product</th><th t-att-style="TH_STYLE">SKU</th>
+                        <th t-att-style="TH_STYLE">Classification</th>
+                        <th t-att-style="TH_STYLE">Channel</th><th t-att-style="TH_STYLE">Customer Type</th>
+                        <th t-att-style="TH_STYLE">Territory</th>
+                        <th t-att-style="TH_STYLE">Start Date</th><th t-att-style="TH_STYLE">End Date</th>
+                        <th t-att-style="TH_STYLE" style="text-align:right;">Min QTY</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredPrioritySell.length===0"><td colspan="10" style="padding:28px;text-align:center;color:#9ca3af;">No priority sell configs found.</td></tr>
+                        <tr t-foreach="filteredPrioritySell" t-as="ps" t-key="ps.id">
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="ps.product_id ? ps.product_id[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;"><t t-esc="ps.default_code || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ ps.classification==='must_sell'?'#dbeafe':'#ede9fe' }};color:{{ ps.classification==='must_sell'?'#1e40af':'#5b21b6' }};"><t t-esc="ps.classification==='must_sell'?'Must Sell':'Focused Sell'"/></span>
+                            </td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="ps.channel || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="ps.customer_type || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="ps.territory || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="ps.date_from || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="ps.date_to || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600;"><t t-esc="ps.min_qty"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('priority.sell.config',ps.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── PRICE CHANGE LOGS ─── -->
+        <t t-if="state.activeTab === 'price_change_logs'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Price Change Logs</h2>
+                <button t-on-click="() => this.openForm('price.change.log',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> Add Log</button>
+            </div>
+            <t t-if="state.priceChangeLogs.length === 0 and !state.logSearch">
+                <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:60px;text-align:center;">
+                    <div style="width:64px;height:64px;background:#f3f4f6;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                        <i class="fa fa-history" style="font-size:28px;color:#9ca3af;"/>
+                    </div>
+                    <div style="font-size:15px;font-weight:600;color:#374151;margin-bottom:6px;">No price change logs found.</div>
+                    <div style="font-size:13px;color:#9ca3af;">Price changes will appear here when logged.</div>
+                </div>
+            </t>
+            <t t-else="">
+                <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                    <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;">
+                        <input type="text" placeholder="Search product, SKU..." t-model="state.logSearch" style="width:260px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                    </div>
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead style="background:#f8fafc;"><tr>
+                            <th t-att-style="TH_STYLE">Product</th><th t-att-style="TH_STYLE">SKU</th>
+                            <th t-att-style="TH_STYLE">Type</th>
+                            <th t-att-style="TH_STYLE" style="text-align:right;">Old Price</th>
+                            <th t-att-style="TH_STYLE" style="text-align:right;">New Price</th>
+                            <th t-att-style="TH_STYLE">Changed By</th>
+                            <th t-att-style="TH_STYLE">Changed On</th>
+                            <th t-att-style="TH_STYLE">Reason</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr t-foreach="filteredPriceChangeLogs" t-as="log" t-key="log.id">
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="log.product_id ? log.product_id[1] : '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;"><t t-esc="log.default_code || '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;"><t t-esc="log.price_type || '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:right;color:#dc2626;font-weight:600;">₹<t t-esc="log.old_price.toFixed(2)"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:right;color:#059669;font-weight:600;">₹<t t-esc="log.new_price.toFixed(2)"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="log.changed_by ? log.changed_by[1] : '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="log.change_date || '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="log.reason || '—'"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+
+        <!-- ─── CUSTOMER CATEGORIES ─── -->
+        <t t-if="state.activeTab === 'customer_categories'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Customer Categories</h2>
+                <button t-on-click="() => this.openForm('res.partner.category',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Tag</button>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;">
+                    <input type="text" placeholder="Search categories..." t-model="state.custCatSearch" style="width:260px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Name</th><th t-att-style="TH_STYLE">Parent</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredCustomerCategories.length===0"><td colspan="3" style="padding:28px;text-align:center;color:#9ca3af;">No customer categories found.</td></tr>
+                        <tr t-foreach="filteredCustomerCategories" t-as="cc" t-key="cc.id">
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="cc.name"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="cc.parent_id ? cc.parent_id[1] : '—'"/></td>
+                            <td style="padding:13px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('res.partner.category',cc.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── EMPLOYEE CATEGORIES ─── -->
+        <t t-if="state.activeTab === 'employee_categories'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Employee Categories</h2>
+                <button t-on-click="() => this.openForm('employee.category.mapping',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Mapping</button>
+            </div>
+            <div style="background:#dbeafe;border-radius:8px;padding:12px 18px;margin-bottom:18px;font-size:13px;color:#1e40af;">
+                Users with <strong>no category mappings</strong> can sell <strong>all products</strong>. Only assign categories if you want to restrict a user to specific product categories.
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:center;">
+                    <input type="text" placeholder="Search by employee or category..." t-model="state.empCatSearch" style="width:280px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                    <select t-model="state.empCatFilter" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+                        <option value="all">All Categories</option>
+                        <option value="primary">Primary</option>
+                        <option value="secondary">Secondary</option>
+                        <option value="tertiary">Tertiary</option>
+                    </select>
+                    <div style="margin-left:auto;display:flex;gap:8px;">
+                        <button t-on-click="() => this.openForm('employee.category.mapping',false)" style="background:#4361ee;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;"><i class="fa fa-plus me-1"/> New Mapping</button>
+                    </div>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Employee Name</th>
+                        <th t-att-style="TH_STYLE">Category</th>
+                        <th t-att-style="TH_STYLE">Level</th>
+                        <th t-att-style="TH_STYLE">Responsibility</th>
+                        <th t-att-style="TH_STYLE">Active</th>
+                        <th t-att-style="TH_STYLE">From</th>
+                        <th t-att-style="TH_STYLE">To</th>
+                        <th t-att-style="TH_STYLE">Assigned By</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredEmployeeCategoryMappings.length===0"><td colspan="9" style="padding:28px;text-align:center;color:#9ca3af;">No employee category mappings found.</td></tr>
+                        <tr t-foreach="filteredEmployeeCategoryMappings" t-as="em" t-key="em.id">
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="em.employee_id ? em.employee_id[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><t t-esc="em.category_id ? em.category_id[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ em.level==='primary'?'#ede9fe':em.level==='secondary'?'#dbeafe':'#f3f4f6' }};color:{{ em.level==='primary'?'#5b21b6':em.level==='secondary'?'#1e40af':'#6b7280' }};"><t t-esc="em.level || '—'"/></span>
+                            </td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ em.responsibility==='primary'?'#dcfce7':'#dbeafe' }};color:{{ em.responsibility==='primary'?'#166534':'#1e40af' }};"><t t-esc="em.responsibility || '—'"/></span>
+                            </td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534;">Active</span></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="em.date_from || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="em.date_to || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="em.assigned_by ? em.assigned_by[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <button t-on-click="() => this.openForm('employee.category.mapping',em.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;margin-right:4px;">Edit</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── CUSTOMER CATEGORY MAPPINGS ─── -->
+        <t t-if="state.activeTab === 'customer_cat_mappings'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Customer Categories</h2>
+                <button t-on-click="() => this.openForm('customer.category.mapping',false)" t-att-style="BTN_STYLE"><i class="fa fa-plus me-1"/> New Mapping</button>
+            </div>
+            <div style="background:#dbeafe;border-radius:8px;padding:12px 18px;margin-bottom:18px;font-size:13px;color:#1e40af;">
+                Customers with <strong>no category mappings</strong> can see and order <strong>all products</strong>. Only assign categories if you want to restrict a customer to specific product categories.
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:center;">
+                    <input type="text" placeholder="Search by customer or category..." t-model="state.custCatMapSearch" style="width:280px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                    <select t-model="state.custCatMapFilter" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+                        <option value="all">All Categories</option>
+                        <option value="primary">Primary</option>
+                        <option value="secondary">Secondary</option>
+                        <option value="tertiary">Tertiary</option>
+                    </select>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#f8fafc;"><tr>
+                        <th t-att-style="TH_STYLE">Account Name</th>
+                        <th t-att-style="TH_STYLE">Category</th>
+                        <th t-att-style="TH_STYLE">Level</th>
+                        <th t-att-style="TH_STYLE">Active</th>
+                        <th t-att-style="TH_STYLE">From</th>
+                        <th t-att-style="TH_STYLE">To</th>
+                        <th t-att-style="TH_STYLE">Assigned By</th>
+                        <th t-att-style="TH_STYLE">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="filteredCustomerCategoryMappings.length===0"><td colspan="8" style="padding:28px;text-align:center;color:#9ca3af;">No customer category mappings found.</td></tr>
+                        <tr t-foreach="filteredCustomerCategoryMappings" t-as="cm" t-key="cm.id">
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:500;"><t t-esc="cm.partner_id ? cm.partner_id[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><t t-esc="cm.category_id ? cm.category_id[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <span t-attf-style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:{{ cm.level==='primary'?'#ede9fe':cm.level==='secondary'?'#dbeafe':'#f3f4f6' }};color:{{ cm.level==='primary'?'#5b21b6':cm.level==='secondary'?'#1e40af':'#6b7280' }};"><t t-esc="cm.level || '—'"/></span>
+                            </td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534;">Active</span></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="cm.date_from || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="cm.date_to || '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;"><t t-esc="cm.assigned_by ? cm.assigned_by[1] : '—'"/></td>
+                            <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;">
+                                <button t-on-click="() => this.openForm('customer.category.mapping',cm.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- ─── CATEGORY PRODUCTS ─── -->
+        <t t-if="state.activeTab === 'category_products'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:#1a1f36;">Category Products</h2>
+            </div>
+            <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:16px;">
+                <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <select t-model.number="state.catProdCategoryId" t-on-change="() => this.selectCategoryForProducts(state.catProdCategoryId || false)" style="width:280px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+                        <option value="">-- Select Category --</option>
+                        <option t-foreach="state.categories" t-as="cat" t-key="cat.id" t-att-value="cat.id"><t t-esc="cat.complete_name"/></option>
+                    </select>
+                    <input type="text" placeholder="Search products..." t-model="state.catProdSearch" style="width:220px;padding:7px 11px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"/>
+                </div>
+            </div>
+            <t t-if="!state.catProdCategoryId">
+                <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:60px;text-align:center;">
+                    <div style="width:64px;height:64px;background:#f3f4f6;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                        <i class="fa fa-th-large" style="font-size:28px;color:#9ca3af;"/>
+                    </div>
+                    <div style="font-size:15px;font-weight:600;color:#374151;margin-bottom:6px;">Select a category above to view its products.</div>
+                </div>
+            </t>
+            <t t-else="">
+                <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead style="background:#f8fafc;"><tr>
+                            <th t-att-style="TH_STYLE">SKU</th>
+                            <th t-att-style="TH_STYLE">Product Name</th>
+                            <th t-att-style="TH_STYLE">Category</th>
+                            <th t-att-style="TH_STYLE">UOM</th>
+                            <th t-att-style="TH_STYLE" style="text-align:right;">Unit Price</th>
+                            <th t-att-style="TH_STYLE">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr t-if="filteredCategoryProducts.length===0"><td colspan="6" style="padding:28px;text-align:center;color:#9ca3af;">No products found in this category.</td></tr>
+                            <tr t-foreach="filteredCategoryProducts" t-as="cp" t-key="cp.id">
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;"><t t-esc="cp.default_code || '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;font-weight:600;"><t t-esc="cp.name"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="cp.categ_id ? cp.categ_id[1] : '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;color:#6b7280;"><t t-esc="cp.uom_id ? cp.uom_id[1] : '—'"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:700;color:#059669;">₹<t t-esc="cp.list_price.toFixed(2)"/></td>
+                                <td style="padding:12px 18px;border-bottom:1px solid #f3f4f6;"><button t-on-click="() => this.openForm('product.template',cp.id)" style="border:1px solid #4361ee;color:#4361ee;background:none;padding:3px 11px;border-radius:5px;font-size:12px;cursor:pointer;">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+
+    </main>
+</div>
+</t>
+</templates>

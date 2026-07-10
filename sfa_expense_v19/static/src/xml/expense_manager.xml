@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="sfa_expense_v19.ExpenseManager">
+<div class="sfa-expense-manager">
+
+    <!-- TOP BAR -->
+    <div class="em-topbar d-flex align-items-center px-3 py-2">
+        <button class="btn btn-sm btn-light me-3" t-on-click="onBackClick" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;">
+            <i class="fa fa-arrow-left me-1"/>Back
+        </button>
+        <i class="fa fa-file-text me-2"/>
+        <span style="font-weight:700;font-size:16px;">Expense Manager</span>
+        <span t-if="state.data" class="ms-3" style="font-size:13px;opacity:.8;">
+            <t t-esc="state.data.header.name"/>
+        </span>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <span t-if="state.data" t-attf-class="em-status-badge em-status-#{state.data.header.state}">
+                <t t-esc="(state.data.header.state || 'draft').toUpperCase()"/>
+            </span>
+        </div>
+    </div>
+
+    <!-- FILTERS ROW -->
+    <div class="em-filters d-flex align-items-center gap-3 px-3 py-2">
+        <div class="d-flex align-items-center gap-2">
+            <label class="em-filter-label">Month</label>
+            <select class="form-select form-select-sm" style="width:130px;" t-on-change="onMonthChange">
+                <t t-foreach="months" t-as="m" t-key="m.value">
+                    <option t-att-value="m.value" t-att-selected="m.value === state.month"><t t-esc="m.label"/></option>
+                </t>
+            </select>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label class="em-filter-label">Year</label>
+            <select class="form-select form-select-sm" style="width:90px;" t-on-change="onYearChange">
+                <t t-foreach="years" t-as="y" t-key="y.value">
+                    <option t-att-value="y.value" t-att-selected="y.value === state.year"><t t-esc="y.label"/></option>
+                </t>
+            </select>
+        </div>
+        <div t-if="state.data" class="d-flex align-items-center gap-3 ms-2">
+            <div>
+                <span class="em-filter-label d-block">EXECUTIVE</span>
+                <span style="font-size:13px;font-weight:700;color:#1a1a3e;"><t t-esc="state.data.header.employee_name"/></span>
+            </div>
+            <div>
+                <span class="em-filter-label d-block">BAND</span>
+                <span style="font-size:13px;font-weight:700;color:#1a1a3e;"><t t-esc="state.data.header.band_code || '—'"/></span>
+            </div>
+        </div>
+        <div class="ms-auto">
+            <button class="btn btn-sm btn-outline-primary" t-on-click="onHistoryClick">
+                <i class="fa fa-history me-1"/>History
+            </button>
+        </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div t-if="state.data" class="em-stats d-flex">
+        <div class="em-stat-tile" style="border-top:4px solid #2196f3;">
+            <div class="em-stat-value"><t t-esc="(state.data.stats.eligible || 0).toFixed(0)"/></div>
+            <div class="em-stat-label">ELIGIBLE</div>
+        </div>
+        <div class="em-stat-tile" style="border-top:4px solid #ff9800;">
+            <div class="em-stat-value"><t t-esc="(state.data.stats.claimed || 0).toFixed(0)"/></div>
+            <div class="em-stat-label">CLAIMED</div>
+        </div>
+        <div class="em-stat-tile" style="border-top:4px solid #4caf50;">
+            <div class="em-stat-value"><t t-esc="(state.data.stats.approved || 0).toFixed(0)"/></div>
+            <div class="em-stat-label">APPROVED</div>
+        </div>
+        <div class="em-stat-tile" style="border-top:4px solid #9c27b0;">
+            <div class="em-stat-value"><t t-esc="state.data.stats.days || 0"/></div>
+            <div class="em-stat-label">DAYS</div>
+        </div>
+        <div class="em-stat-tile" style="border-top:4px solid #00bcd4;">
+            <div class="em-stat-value">
+                <t t-esc="(state.data.stats.distance || 0).toFixed(2)"/>
+                <span style="font-size:11px;font-weight:500;color:#6b7280;"> km</span>
+            </div>
+            <div class="em-stat-label">DISTANCE</div>
+        </div>
+    </div>
+
+    <!-- TABS — use tabDefs getter, not inline array literal -->
+    <div class="em-tabs d-flex">
+        <t t-foreach="tabDefs" t-as="tab" t-key="tab.key">
+            <button t-attf-class="em-tab #{state.activeTab === tab.key ? 'em-tab-active' : ''}"
+                    t-att-data-tab="tab.key"
+                    t-on-click="onTabClick">
+                <i t-attf-class="fa #{tab.icon} me-1"/>
+                <t t-esc="tab.label"/>
+            </button>
+        </t>
+    </div>
+
+    <!-- LOADING -->
+    <div t-if="state.loading" class="text-center py-5">
+        <i class="fa fa-spinner fa-spin fa-2x text-primary"/>
+        <div class="mt-2 text-muted">Loading...</div>
+    </div>
+
+    <div t-elif="state.data" class="em-content">
+
+        <!-- EXPENSES TAB -->
+        <t t-if="state.activeTab === 'expenses'">
+            <div class="em-period-info px-3 py-1">
+                Period: <t t-esc="state.data.period_label || ''"/>
+            </div>
+            <div class="em-date-list">
+                <t t-foreach="sortedDates" t-as="dayData" t-key="dayData.date">
+                    <!-- Day header row -->
+                    <div class="em-date-row d-flex align-items-center px-3 py-2"
+                         t-att-data-date="dayData.date"
+                         t-on-click="onDateRowClick">
+                        <i t-attf-class="fa #{state.expandedDates[dayData.date] ? 'fa-chevron-down' : 'fa-chevron-right'} me-2 em-chevron"/>
+                        <span class="em-date-label"><t t-esc="dayData.date_display"/></span>
+                        <span t-if="dayData.duty_type_code" class="em-duty-badge me-2">
+                            <t t-esc="dayData.duty_type_code"/>
+                        </span>
+                        <span class="em-location-text"><t t-esc="dayData.location || ''"/></span>
+                        <div class="ms-auto d-flex align-items-center gap-3">
+                            <span class="em-hours-text"><t t-esc="(dayData.hours || 0).toFixed(1)"/>h</span>
+                            <span class="em-day-total">Total: <t t-esc="(dayData.total || 0).toFixed(0)"/></span>
+                        </div>
+                    </div>
+
+                    <!-- Expanded lines -->
+                    <div t-if="state.expandedDates[dayData.date]" class="em-lines-container">
+                        <t t-foreach="dayData.lines" t-as="line" t-key="line.id">
+                            <div class="em-expense-line px-4 py-2 d-flex align-items-start gap-3">
+                                <div style="min-width:200px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="em-type-name"><t t-esc="line.expense_type_name"/></span>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-1 flex-wrap">
+                                        <span t-if="line.receipt_required" class="em-req-badge em-receipt-req">
+                                            <i class="fa fa-paperclip me-1"/>Receipt
+                                        </span>
+                                        <span t-if="line.remarks_required" class="em-req-badge em-remarks-req">
+                                            <i class="fa fa-comment me-1"/>Remarks
+                                        </span>
+                                        <span class="em-elig-badge">
+                                            Eligible: <t t-esc="(line.eligible_amount || 0).toFixed(0)"/>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="em-field-label">Amount</label>
+                                    <t t-if="line.editable">
+                                        <input type="number" class="form-control form-control-sm em-amount-input"
+                                               t-att-value="line.amount"
+                                               t-att-data-line-id="line.id"
+                                               t-att-data-field="'amount'"
+                                               t-on-change="onLineFieldChange"/>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="em-amount-input form-control form-control-sm bg-light" style="cursor:not-allowed;">
+                                            <t t-esc="(line.amount || 0).toFixed(2)"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div style="flex:1;">
+                                    <label class="em-field-label">Remarks</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           t-att-value="line.remarks || ''"
+                                           t-att-readonly="!line.editable"
+                                           t-att-data-line-id="line.id"
+                                           t-att-data-field="'remarks'"
+                                           t-on-change="onLineFieldChangeText"/>
+                                </div>
+                                <t t-if="line.rate_type === 'per_km'">
+                                    <div>
+                                        <label class="em-field-label">Daily KM</label>
+                                        <input type="number" class="form-control form-control-sm em-km-input"
+                                               t-att-value="line.daily_km"
+                                               t-att-data-line-id="line.id"
+                                               t-att-data-field="'daily_km'"
+                                               t-on-change="onLineFieldChange"/>
+                                    </div>
+                                    <div>
+                                        <label class="em-field-label">SYSTEM KM</label>
+                                        <div class="em-system-km"><t t-esc="(line.system_km || 0).toFixed(2)"/></div>
+                                    </div>
+                                </t>
+                                <t t-if="line.rate_type === 'per_hour'">
+                                    <div>
+                                        <label class="em-field-label">Hours</label>
+                                        <input type="number" class="form-control form-control-sm em-hours-input"
+                                               t-att-value="line.hours"
+                                               t-att-data-line-id="line.id"
+                                               t-att-data-field="'hours'"
+                                               t-on-change="onLineFieldChange"/>
+                                    </div>
+                                </t>
+                                <button class="btn btn-sm btn-link text-danger mt-3"
+                                        t-att-data-line-id="line.id"
+                                        t-on-click="onDeleteLineClick">
+                                    <i class="fa fa-trash"/>
+                                </button>
+                            </div>
+                        </t>
+
+                        <!-- Add expense for this day -->
+                        <div class="px-4 py-2" style="margin-left:20px;">
+                            <t t-if="!state.showAddExpense[dayData.date]">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        t-att-data-date="dayData.date"
+                                        t-on-click="onShowAddExpenseClick">
+                                    <i class="fa fa-plus me-1"/>Add Expense
+                                </button>
+                            </t>
+                            <t t-else="">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <select class="form-select form-select-sm" style="width:220px;"
+                                            t-att-data-date="dayData.date"
+                                            t-on-change="onExpenseTypeSelect">
+                                        <option value="">Select expense type...</option>
+                                        <t t-foreach="state.data.expense_types" t-as="et" t-key="et.id">
+                                            <option t-att-value="et.id"><t t-esc="et.name"/></option>
+                                        </t>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary"
+                                            t-att-data-date="dayData.date"
+                                            t-on-click="onAddExpenseClick">
+                                        <i class="fa fa-check me-1"/>Add
+                                    </button>
+                                    <button class="btn btn-sm btn-link text-muted"
+                                            t-att-data-date="dayData.date"
+                                            t-on-click="onCancelAddExpenseClick">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <div class="px-3 py-2 em-add-day-row">
+                    <t t-if="!state.showAddDay">
+                        <button class="btn btn-sm btn-outline-primary" t-on-click="onShowAddDayClick">
+                            <i class="fa fa-plus me-1"/>Add Day
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="date" class="form-control form-control-sm" style="width:180px;"
+                                   t-att-value="state.addDayDateVal"
+                                   t-on-change="onAddDayDateChange"/>
+                            <button class="btn btn-sm btn-primary" t-on-click="onConfirmAddDay">
+                                <i class="fa fa-check me-1"/>Add
+                            </button>
+                            <button class="btn btn-sm btn-link text-muted" t-on-click="onCancelAddDay">Cancel</button>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <div t-if="state.data.header.state === 'draft'" class="em-footer px-3 py-2 d-flex justify-content-end gap-2">
+                <button class="btn btn-primary" t-on-click="submitExpense">
+                    <i class="fa fa-paper-plane me-1"/>Submit Expense
+                </button>
+            </div>
+        </t>
+
+        <!-- SUMMARY TAB -->
+        <t t-elif="state.activeTab === 'summary'">
+            <div class="p-3">
+                <h6 class="em-section-title">Type-wise Breakdown</h6>
+                <table class="table table-sm table-bordered em-table">
+                    <thead>
+                        <tr>
+                            <th>TYPE</th><th>ITEMS</th>
+                            <th class="text-end">ELIGIBLE</th>
+                            <th class="text-end">CLAIMED</th>
+                            <th class="text-end">APPROVED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.data.summary_by_type || []" t-as="row" t-key="row.type">
+                            <tr>
+                                <td><t t-esc="row.type_name"/></td>
+                                <td><t t-esc="row.count"/></td>
+                                <td class="text-end"><t t-esc="(row.eligible || 0).toFixed(2)"/></td>
+                                <td class="text-end"><t t-esc="(row.claimed || 0).toFixed(2)"/></td>
+                                <td class="text-end"><t t-esc="(row.approved || 0).toFixed(2)"/></td>
+                            </tr>
+                        </t>
+                        <t t-if="!(state.data.summary_by_type || []).length">
+                            <tr><td colspan="5" class="text-center text-muted py-3">No expenses recorded</td></tr>
+                        </t>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3 em-section-title">Day-wise Breakdown</h6>
+                <table class="table table-sm table-bordered em-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th><th>ITEMS</th>
+                            <th class="text-end">ELIGIBLE</th>
+                            <th class="text-end">CLAIMED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="sortedDates" t-as="day" t-key="day.date">
+                            <tr>
+                                <td><t t-esc="day.date_display"/></td>
+                                <td><t t-esc="(day.lines || []).length"/></td>
+                                <td class="text-end"><t t-esc="(day.eligible || 0).toFixed(2)"/></td>
+                                <td class="text-end"><t t-esc="(day.total || 0).toFixed(2)"/></td>
+                            </tr>
+                        </t>
+                        <t t-if="!sortedDates.length">
+                            <tr><td colspan="4" class="text-center text-muted py-3">No expenses recorded</td></tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+        <!-- OVERVIEW TAB -->
+        <t t-elif="state.activeTab === 'overview'">
+            <div class="p-3">
+                <h6 class="em-section-title"><t t-esc="state.year"/> — Monthly Overview</h6>
+                <div class="em-overview-grid">
+                    <t t-foreach="state.data.overview || []" t-as="mo" t-key="mo.month_num">
+                        <div class="em-overview-card">
+                            <div class="em-overview-month"><t t-esc="mo.month_name"/></div>
+                            <t t-if="mo.state">
+                                <span t-attf-class="em-status-badge em-status-#{mo.state}" style="font-size:10px;">
+                                    <t t-esc="mo.state.charAt(0).toUpperCase() + mo.state.slice(1)"/>
+                                </span>
+                                <div class="em-overview-stat">Claimed: <t t-esc="(mo.claimed || 0).toFixed(0)"/></div>
+                                <div class="em-overview-stat">Approved: <t t-esc="(mo.approved || 0).toFixed(0)"/></div>
+                            </t>
+                            <t t-else="">
+                                <div class="em-overview-empty">No expense</div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+
+        <!-- TEAM TAB -->
+        <t t-elif="state.activeTab === 'team'">
+            <div class="p-3">
+                <h6 class="em-section-title">Team Expenses — <t t-esc="state.year"/></h6>
+                <table class="table table-sm table-bordered em-table">
+                    <thead>
+                        <tr>
+                            <th>EMPLOYEE</th><th>BAND</th><th>STATUS</th>
+                            <th class="text-end">CLAIMED</th><th class="text-end">APPROVED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.data.team || []" t-as="tm" t-key="tm.employee_id">
+                            <tr>
+                                <td><t t-esc="tm.employee_name"/></td>
+                                <td><t t-esc="tm.band_code || '—'"/></td>
+                                <td>
+                                    <span t-attf-class="em-status-badge em-status-#{tm.state || 'draft'}" style="font-size:10px;">
+                                        <t t-esc="(tm.state || 'draft').charAt(0).toUpperCase() + (tm.state || 'draft').slice(1)"/>
+                                    </span>
+                                </td>
+                                <td class="text-end"><t t-esc="(tm.claimed || 0).toFixed(0)"/></td>
+                                <td class="text-end"><t t-esc="(tm.approved || 0).toFixed(0)"/></td>
+                            </tr>
+                        </t>
+                        <t t-if="!(state.data.team || []).length">
+                            <tr><td colspan="5" class="text-center text-muted py-3">No team data available</td></tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+
+    </div>
+</div>
+</t>
+</templates>

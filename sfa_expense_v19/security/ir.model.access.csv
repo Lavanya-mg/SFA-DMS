@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sfa_expense_band_user,sfa.expense.band.user,model_sfa_expense_band,base.group_user,1,0,0,0
+access_sfa_expense_band_manager,sfa.expense.band.manager,model_sfa_expense_band,base.group_system,1,1,1,1
+access_sfa_expense_type_user,sfa.expense.type.user,model_sfa_expense_type,base.group_user,1,0,0,0
+access_sfa_expense_type_manager,sfa.expense.type.manager,model_sfa_expense_type,base.group_system,1,1,1,1
+access_sfa_city_tier_config_user,sfa.city.tier.config.user,model_sfa_city_tier_config,base.group_user,1,0,0,0
+access_sfa_city_tier_config_manager,sfa.city.tier.config.manager,model_sfa_city_tier_config,base.group_system,1,1,1,1
+access_sfa_city_tier_user,sfa.city.tier.user,model_sfa_city_tier,base.group_user,1,0,0,0
+access_sfa_city_tier_manager,sfa.city.tier.manager,model_sfa_city_tier,base.group_system,1,1,1,1
+access_sfa_travel_mode_user,sfa.travel.mode.user,model_sfa_travel_mode,base.group_user,1,0,0,0
+access_sfa_travel_mode_manager,sfa.travel.mode.manager,model_sfa_travel_mode,base.group_system,1,1,1,1
+access_sfa_duty_type_user,sfa.duty.type.user,model_sfa_duty_type,base.group_user,1,0,0,0
+access_sfa_duty_type_manager,sfa.duty.type.manager,model_sfa_duty_type,base.group_system,1,1,1,1
+access_sfa_expense_manager_user,sfa.expense.manager.user,model_sfa_expense_manager,base.group_user,1,1,1,0
+access_sfa_expense_manager_manager,sfa.expense.manager.manager,model_sfa_expense_manager,base.group_system,1,1,1,1
+access_sfa_expense_policy_rule_user,sfa.expense.policy.rule.user,model_sfa_expense_policy_rule,base.group_user,1,0,0,0
+access_sfa_expense_policy_rule_manager,sfa.expense.policy.rule.manager,model_sfa_expense_policy_rule,base.group_system,1,1,1,1

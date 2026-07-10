@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         CLIENT ACTION  –  All-in-One Dashboard Report
+         Loads the OWL component registered under the tag
+         'employee_dashboard.dashboard_report_action'.
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <record id="action_dashboard_report" model="ir.actions.client">
+        <field name="name">Dashboard Report</field>
+        <field name="tag">employee_dashboard.dashboard_report_action</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- The Dashboard Report is now accessible via the "Analytics Dashboard"
+         menu item in the Employee 360 top bar (see views/main_menu.xml). -->
+
+</odoo>

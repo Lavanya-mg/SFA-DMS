@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<!-- ============================================================
+     SCHEME MANAGER — OWL Dashboard
+     ============================================================ -->
+<t t-name="schemes_promotions_v19.SchemeManager">
+<div class="sch-mgr-root o_action">
+
+    <!-- ── Page header ──────────────────────────────────────── -->
+    <div class="sch-mgr-header">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-light sch-back-btn" t-on-click="goBack" title="Go Back">
+                <i class="fa fa-arrow-left"/>
+            </button>
+            <h4 class="sch-mgr-title mb-0">
+                Scheme Management
+                <span class="sch-mgr-count"><t t-esc="state.totalCount"/> schemes</span>
+            </h4>
+        </div>
+        <button class="sch-mgr-new-btn btn" t-on-click="newScheme">
+            <i class="fa fa-plus me-1"/> New Scheme
+        </button>
+    </div>
+
+    <!-- ── Stat tiles ───────────────────────────────────────── -->
+    <div class="sch-mgr-stats">
+        <div class="sch-stat sch-stat-active" t-on-click="() => this.setStatus('active')">
+            <div class="sch-stat-num"><t t-esc="state.stats.active || 0"/></div>
+            <div class="sch-stat-label">ACTIVE</div>
+        </div>
+        <div class="sch-stat sch-stat-draft" t-on-click="() => this.setStatus('draft')">
+            <div class="sch-stat-num"><t t-esc="state.stats.draft || 0"/></div>
+            <div class="sch-stat-label">DRAFT</div>
+        </div>
+        <div class="sch-stat sch-stat-pending">
+            <div class="sch-stat-num">0</div>
+            <div class="sch-stat-label">PENDING APPROVAL</div>
+        </div>
+        <div class="sch-stat sch-stat-expired" t-on-click="() => this.setStatus('expired')">
+            <div class="sch-stat-num"><t t-esc="state.stats.expired || 0"/></div>
+            <div class="sch-stat-label">EXPIRED</div>
+        </div>
+        <div class="sch-stat sch-stat-total" t-on-click="() => this.setStatus('all')">
+            <div class="sch-stat-num"><t t-esc="state.stats.total || 0"/></div>
+            <div class="sch-stat-label">TOTAL SCHEMES</div>
+        </div>
+        <div class="sch-stat sch-stat-budget">
+            <div class="sch-stat-num sch-stat-budget-num"><t t-esc="fmtMoney(state.stats.budget)"/></div>
+            <div class="sch-stat-label">ACTIVE BUDGET</div>
+            <div class="sch-stat-sub">0% utilized</div>
+        </div>
+    </div>
+
+    <!-- ── Filter bar ───────────────────────────────────────── -->
+    <div class="sch-mgr-filters">
+
+        <!-- Search -->
+        <div class="sch-search-wrap">
+            <i class="fa fa-search sch-search-icon"/>
+            <input class="sch-search-input" type="text" placeholder="Search schemes..."
+                t-att-value="state.search" t-on-input="onSearch"/>
+        </div>
+
+        <!-- All Statuses -->
+        <div class="sch-dropdown-wrap">
+            <button class="sch-filter-btn" t-on-click="() => this.toggleDropdown('status')">
+                <t t-esc="statusLabel"/> <i class="fa fa-chevron-down ms-1"/>
+            </button>
+            <div class="sch-dropdown-menu" t-if="state.openDropdown === 'status'">
+                <div t-attf-class="sch-dropdown-item {{state.statusFilter === 'all' ? 'active' : ''}}"
+                    t-on-click="() => this.setStatus('all')">
+                    <i class="fa fa-check me-2" t-if="state.statusFilter === 'all'"/>All Statuses
+                </div>
+                <t t-foreach="[['draft','Draft'],['active','Active'],['expired','Expired'],['cancelled','Cancelled']]" t-as="sv" t-key="sv[0]">
+                    <div t-attf-class="sch-dropdown-item {{state.statusFilter === sv[0] ? 'active' : ''}}"
+                        t-on-click="() => this.setStatus(sv[0])">
+                        <i class="fa fa-check me-2" t-if="state.statusFilter === sv[0]"/><t t-esc="sv[1]"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+        <!-- All Categories -->
+        <div class="sch-dropdown-wrap">
+            <button class="sch-filter-btn" t-on-click="() => this.toggleDropdown('benefit')">
+                <t t-esc="benefitLabel"/> <i class="fa fa-chevron-down ms-1"/>
+            </button>
+            <div class="sch-dropdown-menu" t-if="state.openDropdown === 'benefit'">
+                <div t-attf-class="sch-dropdown-item {{state.benefitFilter === 'all' ? 'active' : ''}}"
+                    t-on-click="() => this.setBenefit('all')">
+                    <i class="fa fa-check me-2" t-if="state.benefitFilter === 'all'"/>All Categories
+                </div>
+                <t t-foreach="[['free_product','Free Products'],['percent_discount','Discount in %'],['price_discount','Discount in Value'],['points','Reward Points']]" t-as="bv" t-key="bv[0]">
+                    <div t-attf-class="sch-dropdown-item {{state.benefitFilter === bv[0] ? 'active' : ''}}"
+                        t-on-click="() => this.setBenefit(bv[0])">
+                        <i class="fa fa-check me-2" t-if="state.benefitFilter === bv[0]"/><t t-esc="bv[1]"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+        <!-- All Types -->
+        <div class="sch-dropdown-wrap">
+            <button class="sch-filter-btn" t-on-click="() => this.toggleDropdown('type')">
+                <t t-esc="typeLabel"/> <i class="fa fa-chevron-down ms-1"/>
+            </button>
+            <div class="sch-dropdown-menu" t-if="state.openDropdown === 'type'">
+                <div t-attf-class="sch-dropdown-item {{state.typeFilter === 'all' ? 'active' : ''}}"
+                    t-on-click="() => this.setType('all')">
+                    <i class="fa fa-check me-2" t-if="state.typeFilter === 'all'"/>All Types
+                </div>
+                <t t-foreach="[['each_product_qty','Same Product (QTY)'],['each_product_value','Same Product (VAL)'],['assorted_product_qty','Assorted Product (QTY)'],['assorted_product_value','Assorted Product (VAL)'],['invoice_value','Invoice Qty Based'],['slab_invoice_value','Invoice Val Based']]" t-as="tv" t-key="tv[0]">
+                    <div t-attf-class="sch-dropdown-item {{state.typeFilter === tv[0] ? 'active' : ''}}"
+                        t-on-click="() => this.setType(tv[0])">
+                        <i class="fa fa-check me-2" t-if="state.typeFilter === tv[0]"/><t t-esc="tv[1]"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+        <!-- All Channels -->
+        <div class="sch-dropdown-wrap">
+            <button class="sch-filter-btn" t-on-click="() => this.toggleDropdown('channel')">
+                <t t-esc="channelLabel"/> <i class="fa fa-chevron-down ms-1"/>
+            </button>
+            <div class="sch-dropdown-menu" t-if="state.openDropdown === 'channel'">
+                <div t-attf-class="sch-dropdown-item {{!state.channelFilter ? 'active' : ''}}"
+                    t-on-click="() => this.setChannel(0)">
+                    <i class="fa fa-check me-2" t-if="!state.channelFilter"/>All Channels
+                </div>
+                <t t-foreach="state.channels" t-as="ch" t-key="ch.id">
+                    <div t-attf-class="sch-dropdown-item {{state.channelFilter === ch.id ? 'active' : ''}}"
+                        t-on-click="() => this.setChannel(ch.id)">
+                        <i class="fa fa-check me-2" t-if="state.channelFilter === ch.id"/><t t-esc="ch.name"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+        <!-- Reset -->
+        <button class="sch-reset-btn" t-on-click="resetFilters" title="Reset filters">
+            <i class="fa fa-times-circle"/>
+        </button>
+
+        <div style="flex:1;"/>
+
+        <!-- Sort field -->
+        <div class="sch-dropdown-wrap">
+            <button class="sch-filter-btn" t-on-click="() => this.toggleDropdown('sort')">
+                Created Date <i class="fa fa-chevron-down ms-1"/>
+            </button>
+            <div class="sch-dropdown-menu" style="right:0;left:auto;" t-if="state.openDropdown === 'sort'">
+                <t t-foreach="[['create_date','Created Date'],['date_from','Valid From'],['name','Name'],['state','Status']]" t-as="sf" t-key="sf[0]">
+                    <div t-attf-class="sch-dropdown-item {{state.sortField === sf[0] ? 'active' : ''}}"
+                        t-on-click="() => this.setSortField(sf[0])">
+                        <i class="fa fa-check me-2" t-if="state.sortField === sf[0]"/><t t-esc="sf[1]"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+        <!-- Sort direction -->
+        <button class="sch-sort-dir-btn" t-on-click="toggleSort">
+            <i t-attf-class="fa fa-arrow-{{state.sortAsc ? 'up' : 'down'}}"/>
+        </button>
+    </div>
+
+    <!-- ── Loading ───────────────────────────────────────────── -->
+    <t t-if="state.loading">
+        <div class="sch-loading">
+            <i class="fa fa-spinner fa-spin fa-2x" style="color:#4361ee;"/>
+            <div class="mt-2 text-muted">Loading schemes...</div>
+        </div>
+    </t>
+
+    <!-- ── Empty ─────────────────────────────────────────────── -->
+    <t t-elif="!state.schemes.length">
+        <div class="sch-empty">
+            <i class="fa fa-tags fa-3x text-muted mb-3"/>
+            <h5>No Schemes Found</h5>
+            <p class="text-muted">Try adjusting your filters or create a new scheme.</p>
+            <button class="btn btn-primary mt-2" t-on-click="newScheme">
+                <i class="fa fa-plus me-1"/> New Scheme
+            </button>
+        </div>
+    </t>
+
+    <!-- ── Scheme list ────────────────────────────────────────── -->
+    <t t-else="">
+        <div class="sch-mgr-list">
+            <t t-foreach="state.schemes" t-as="sc" t-key="sc.id">
+                <div class="sch-card" t-on-click="() => this.openScheme(sc.id)">
+
+                    <!-- Avatar -->
+                    <div class="sch-avatar" t-attf-style="background:{{avatarColor(sc.benefit_type)}};">
+                        <t t-esc="sc.avatar"/>
+                    </div>
+
+                    <!-- Card body -->
+                    <div class="sch-card-body">
+                        <div class="sch-card-row1">
+                            <span class="sch-card-name"><t t-esc="sc.name"/></span>
+                            <span t-attf-class="sch-badge {{stateClass(sc.state)}}">
+                                <t t-esc="sc.state.toUpperCase()"/>
+                            </span>
+                        </div>
+                        <div class="sch-card-row2">
+                            <span class="sch-card-code">
+                                <i class="fa fa-barcode me-1"/><t t-esc="sc.scheme_code"/>
+                            </span>
+                            <span class="sch-card-dates ms-3">
+                                <i class="fa fa-calendar-o me-1"/>
+                                <t t-esc="fmtDate(sc.date_from)"/> – <t t-esc="fmtDate(sc.date_to)"/>
+                            </span>
+                        </div>
+                        <div class="sch-card-row3">
+                            <t t-if="sc.benefit_summary">
+                                <span class="sch-benefit-tag">
+                                    <i class="fa fa-gift me-1"/><t t-esc="sc.benefit_summary"/>
+                                </span>
+                            </t>
+                            <t t-if="sc.trigger_summary">
+                                <span class="sch-trigger-tag">
+                                    <t t-esc="sc.trigger_summary"/>
+                                </span>
+                            </t>
+                        </div>
+                        <t t-if="sc.channels.length">
+                            <div class="sch-card-row4">
+                                <t t-foreach="sc.channels" t-as="ch" t-key="ch">
+                                    <span class="sch-channel-tag"><t t-esc="ch"/></span>
+                                </t>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="sch-card-actions" t-on-click.stop="">
+                        <button class="sch-action-btn" title="Edit"
+                            t-on-click="() => this.openScheme(sc.id)">
+                            <i class="fa fa-pencil"/>
+                        </button>
+                        <button class="sch-action-btn" title="Clone"
+                            t-on-click="(ev) => this.cloneScheme(ev, sc.id)">
+                            <i class="fa fa-clone"/>
+                        </button>
+                        <button class="sch-action-btn sch-action-cancel" title="Cancel"
+                            t-if="sc.can_cancel"
+                            t-on-click="(ev) => this.cancelScheme(ev, sc.id)">
+                            <i class="fa fa-ban"/>
+                        </button>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</div>
+</t>
+
+</templates>

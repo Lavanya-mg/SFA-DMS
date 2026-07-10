@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="criteria_collection" model="sfa.target.criteria">
+        <field name="name">Collection</field>
+        <field name="code">collection</field>
+        <field name="target_field">target_payment_collected</field>
+        <field name="actual_field">actual_payment_collected</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="criteria_new_outlets" model="sfa.target.criteria">
+        <field name="name">New Outlets</field>
+        <field name="code">new_outlets</field>
+        <field name="target_field">target_new_dealers</field>
+        <field name="actual_field">actual_new_dealers</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="criteria_productive_calls" model="sfa.target.criteria">
+        <field name="name">Productive Calls</field>
+        <field name="code">productive_calls</field>
+        <field name="target_field">target_visits</field>
+        <field name="actual_field">actual_visits</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="criteria_revenue" model="sfa.target.criteria">
+        <field name="name">Revenue</field>
+        <field name="code">revenue</field>
+        <field name="target_field">target_orders</field>
+        <field name="actual_field">actual_order_amount</field>
+        <field name="sequence">40</field>
+    </record>
+</odoo>

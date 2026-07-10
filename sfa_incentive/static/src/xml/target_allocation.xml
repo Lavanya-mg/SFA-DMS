@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="sfa_incentive.TargetAllocation">
+    <div class="tal-wrap">
+
+        <!-- Header -->
+        <div class="tal-header">
+            <div class="tal-title"><i class="fa fa-tasks me-2"/>Target Allocation</div>
+            <button class="tal-refresh" title="Refresh" t-on-click="() => this.loadData()">
+                <i class="fa fa-refresh"/>
+            </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="tal-toolbar">
+            <div class="tal-filter">
+                <label>Period</label>
+                <select class="tal-input" t-att-value="state.periodId || ''" t-on-change="onPeriodChange">
+                    <option value="">Select…</option>
+                    <t t-foreach="state.periods" t-as="p" t-key="p.id">
+                        <option t-att-value="p.id"><t t-esc="p.name"/></option>
+                    </t>
+                </select>
+            </div>
+            <div class="tal-filter">
+                <label>User</label>
+                <select class="tal-input" t-att-value="state.employeeId || ''" t-on-change="onEmployeeChange">
+                    <option value="">Select…</option>
+                    <t t-foreach="state.employees" t-as="e" t-key="e.id">
+                        <option t-att-value="e.id"><t t-esc="e.name"/></option>
+                    </t>
+                </select>
+            </div>
+            <div class="tal-actions">
+                <button class="tal-btn tal-btn-outline" t-att-disabled="state.syncing" t-on-click="() => this.syncAchievements()">
+                    <i class="fa fa-refresh me-1"/><t t-esc="state.syncing ? 'Syncing…' : 'Sync Achievements'"/>
+                </button>
+                <button class="tal-btn tal-btn-primary" t-on-click="() => this.openDistribute()">
+                    <i class="fa fa-sitemap me-1"/>Distribute
+                </button>
+                <button class="tal-btn tal-btn-outline" t-on-click="() => this.openAddTarget()">
+                    <i class="fa fa-plus me-1"/>Add Target
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="tal-card">
+            <table class="tal-table">
+                <thead>
+                    <tr class="tal-th-group">
+                        <th rowspan="2" class="tal-th-crit">CRITERIA</th>
+                        <th colspan="3" class="tal-th-sec">TARGET</th>
+                        <th colspan="3" class="tal-th-sec">ACHIEVEMENT</th>
+                        <th rowspan="2">ACHIEVEMENT %</th>
+                    </tr>
+                    <tr class="tal-th-sub">
+                        <th>INDIVIDUAL</th><th>TEAM</th><th>TOTAL</th>
+                        <th>INDIVIDUAL</th><th>TEAM</th><th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="state.loading">
+                        <tr><td colspan="8" class="tal-empty">Loading…</td></tr>
+                    </t>
+                    <t t-elif="!state.rows.length">
+                        <tr><td colspan="8" class="tal-empty">No active criteria for this period/user.</td></tr>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="state.rows" t-as="r" t-key="r.criteria_id">
+                            <tr>
+                                <td class="tal-crit"><t t-esc="r.criteria"/></td>
+                                <td><t t-esc="fmt(r.target_individual)"/></td>
+                                <td><t t-esc="fmt(r.target_team)"/></td>
+                                <td class="tal-bold"><t t-esc="fmt(r.target_total)"/></td>
+                                <td><t t-esc="fmt(r.achievement_individual)"/></td>
+                                <td><t t-esc="fmt(r.achievement_team)"/></td>
+                                <td class="tal-bold"><t t-esc="fmt(r.achievement_total)"/></td>
+                                <td class="tal-pct-cell">
+                                    <div class="tal-pct-val" t-att-class="barTextClass(r.achievement_pct)">
+                                        <t t-esc="Math.round(r.achievement_pct)"/>%
+                                    </div>
+                                    <div class="tal-bar-track">
+                                        <div class="tal-bar" t-att-class="barClass(r.achievement_pct)"
+                                             t-attf-style="width:{{ barWidth(r.achievement_pct) }}%;"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══════════ Add / Edit Targets modal ══════════ -->
+        <t t-if="state.modal === 'addTarget'">
+            <div class="tal-overlay" t-on-click="() => this.closeModal()"/>
+            <div class="tal-modal">
+                <div class="tal-modal-title">Add / Edit Targets</div>
+                <div class="tal-modal-body">
+                    <table class="tal-modal-table">
+                        <thead><tr><th>CRITERIA</th><th>TARGET VALUE</th></tr></thead>
+                        <tbody>
+                            <t t-foreach="state.rows" t-as="r" t-key="r.criteria_id">
+                                <tr>
+                                    <td class="tal-bold"><t t-esc="r.criteria"/></td>
+                                    <td>
+                                        <input type="number" step="0.01" class="tal-input"
+                                               t-att-value="state.addTargets[r.criteria_id]"
+                                               t-on-change="(ev) => this.setAddTarget(r.criteria_id, ev)"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tal-modal-footer">
+                    <button class="tal-btn tal-btn-outline" t-on-click="() => this.closeModal()">Cancel</button>
+                    <button class="tal-btn tal-btn-primary" t-on-click="() => this.saveTargets()">
+                        <i class="fa fa-save me-1"/>Save
+                    </button>
+                </div>
+            </div>
+        </t>
+
+        <!-- ══════════ Distribute Targets modal ══════════ -->
+        <t t-if="state.modal === 'distribute'">
+            <div class="tal-overlay" t-on-click="() => this.closeModal()"/>
+            <div class="tal-modal tal-modal-wide">
+                <div class="tal-modal-title">Distribute Targets</div>
+                <div class="tal-modal-body">
+                    <t t-if="!state.distribute.executives.length">
+                        <div class="tal-empty">This user has no subordinates to distribute to.</div>
+                    </t>
+                    <t t-else="">
+                        <table class="tal-modal-table">
+                            <thead>
+                                <tr>
+                                    <th>EXECUTIVE</th>
+                                    <t t-foreach="state.distribute.criteria" t-as="c" t-key="c.id">
+                                        <th><t t-esc="c.name.toUpperCase()"/></th>
+                                    </t>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.distribute.executives" t-as="ex" t-key="ex.id">
+                                    <tr>
+                                        <td class="tal-bold"><t t-esc="ex.name"/></td>
+                                        <t t-foreach="state.distribute.criteria" t-as="c" t-key="c.id">
+                                            <td>
+                                                <input type="number" step="0.01" class="tal-input"
+                                                       t-att-value="ex.values[c.id]"
+                                                       t-on-change="(ev) => this.setDistribute(ex_index, c.id, ev)"/>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <div class="tal-hint">Distributed totals per criterion must not exceed your own target.</div>
+                    </t>
+                </div>
+                <div class="tal-modal-footer">
+                    <button class="tal-btn tal-btn-outline" t-on-click="() => this.closeModal()">Cancel</button>
+                    <button class="tal-btn tal-btn-primary" t-att-disabled="!state.distribute.executives.length"
+                            t-on-click="() => this.saveDistribution()">
+                        <i class="fa fa-save me-1"/>Save
+                    </button>
+                </div>
+            </div>
+        </t>
+    </div>
+</t>
+</templates>

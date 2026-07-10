@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add territory_id to Beat form view -->
+    <record id="view_beat_module_form_territory" model="ir.ui.view">
+        <field name="name">beat.module.form.territory</field>
+        <field name="model">beat.module</field>
+        <field name="inherit_id" ref="beat_module_v19.view_beat_module_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="territory_id" options="{'no_create': False}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add territory_id to Beat list view -->
+    <record id="view_beat_module_list_territory" model="ir.ui.view">
+        <field name="name">beat.module.list.territory</field>
+        <field name="model">beat.module</field>
+        <field name="inherit_id" ref="beat_module_v19.view_beat_module_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="territory_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         HR ATTENDANCE – extend form to show captured location data
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <record id="view_hr_attendance_form_location" model="ir.ui.view">
+        <field name="name">hr.attendance.form.location</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Check-in Location" name="checkin_location">
+                        <group>
+                            <group string="Address">
+                                <field name="checkin_full_address" string="Full Address" readonly="1"/>
+                                <field name="checkin_city" string="City" readonly="1"/>
+                                <field name="checkin_state" string="State" readonly="1"/>
+                                <field name="checkin_country" string="Country" readonly="1"/>
+                            </group>
+                            <group string="Coordinates">
+                                <field name="checkin_latitude" string="Latitude" readonly="1"/>
+                                <field name="checkin_longitude" string="Longitude" readonly="1"/>
+                                <field name="checkin_accuracy" string="Accuracy (m)" readonly="1"/>
+                            </group>
+                        </group>
+                        <div class="oe_button_box" name="button_box_checkin"
+                             invisible="checkin_latitude == 0">
+                            <button name="action_view_checkin_location"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-map-marker">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">View on Map</span>
+                                </div>
+                            </button>
+                        </div>
+                    </page>
+                    <page string="Check-out Location" name="checkout_location">
+                        <group>
+                            <group string="Address">
+                                <field name="checkout_full_address" string="Full Address" readonly="1"/>
+                                <field name="checkout_city" string="City" readonly="1"/>
+                                <field name="checkout_state" string="State" readonly="1"/>
+                                <field name="checkout_country" string="Country" readonly="1"/>
+                            </group>
+                            <group string="Coordinates">
+                                <field name="checkout_latitude" string="Latitude" readonly="1"/>
+                                <field name="checkout_longitude" string="Longitude" readonly="1"/>
+                                <field name="checkout_accuracy" string="Accuracy (m)" readonly="1"/>
+                            </group>
+                        </group>
+                        <div class="oe_button_box" name="button_box_checkout"
+                             invisible="checkout_latitude == 0">
+                            <button name="action_view_checkout_location"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-map-marker">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">View on Map</span>
+                                </div>
+                            </button>
+                        </div>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Extend list view to show check-in city -->
+    <record id="view_hr_attendance_list_location" model="ir.ui.view">
+        <field name="name">hr.attendance.list.location</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='worked_hours']" position="after">
+                <field name="checkin_city" string="Check-in City" optional="show"/>
+                <field name="checkout_city" string="Check-out City" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

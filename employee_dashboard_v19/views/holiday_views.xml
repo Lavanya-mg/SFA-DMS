@@ -1,0 +1,59 @@
+<odoo>
+    <record id="view_fmcg_holiday_form" model="ir.ui.view">
+        <field name="name">fmcg.holiday.form</field>
+        <field name="model">fmcg.holiday</field>
+        <field name="arch" type="xml">
+            <form string="Add Holiday">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="holiday_type" widget="selection"/>
+                            <field name="territory_id" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Add holiday description..."/>
+                    <field name="active" widget="boolean_toggle"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+     <record id="view_fmcg_holiday_calendar" model="ir.ui.view">
+        <field name="name">fmcg.holiday.calendar</field>
+        <field name="model">fmcg.holiday</field>
+        <field name="arch" type="xml">
+            <calendar string="Holiday Calendar" 
+                      date_start="date" 
+                      color="holiday_type" 
+                      mode="year">
+                <field name="name"/>
+                <field name="holiday_type" filters="1"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_fmcg_holiday_list" model="ir.ui.view">
+        <field name="name">fmcg.holiday.list</field>
+        <field name="model">fmcg.holiday</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="holiday_type"/>
+                <field name="territory_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_fmcg_holiday" model="ir.actions.act_window">
+        <field name="name">Holiday Calendar</field>
+        <field name="res_model">fmcg.holiday</field>
+        <field name="view_mode">calendar,list,form</field>
+    </record>
+
+   
+</odoo>

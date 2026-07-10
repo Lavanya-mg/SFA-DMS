@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="employee_dashboard_v19.AttendanceList">
+        <div style="flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
+
+            <!-- Redesigned header -->
+            <div class="emp360-page-header" style="flex-shrink:0;">
+                <div class="emp360-ph-top">
+                    <div>
+                        <h3 class="emp360-ph-name">
+                            <i class="fa fa-clock-o me-2"></i> Attendance Records
+                        </h3>
+                        <p class="emp360-ph-role">Daily check-in / check-out with location</p>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                        <div class="emp360-filter-group">
+                            <label class="emp360-filter-label" style="color:rgba(255,255,255,.6);">From</label>
+                            <input type="date"
+                                   class="emp360-filter-input"
+                                   style="height:32px;font-size:12px;"
+                                   t-model="state.attendanceFromDate"
+                                   t-on-change="() => this.onAttendanceDateChange()"/>
+                        </div>
+                        <div class="emp360-filter-group">
+                            <label class="emp360-filter-label" style="color:rgba(255,255,255,.6);">To</label>
+                            <input type="date"
+                                   class="emp360-filter-input"
+                                   style="height:32px;font-size:12px;"
+                                   t-model="state.attendanceToDate"
+                                   t-on-change="() => this.onAttendanceDateChange()"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div t-if="state.loading" class="text-center py-5">
+                <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
+                <p class="mt-3 text-muted">Loading attendance records...</p>
+            </div>
+
+            <div t-else="" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto;">
+                <table class="table table-bordered table-hover" style="min-width: 1400px;">
+                    <thead class="table-primary sticky-top" style="top: 0; z-index: 10;">
+                        <tr>
+                            <th style="width: 50px;" class="text-center">#</th>
+                            <th style="width: 120px;">Date</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 120px;">Check-in Time</th>
+                            <th style="width: 300px;">Check-in Location</th>
+                            <th style="width: 120px;">Check-out Time</th>
+                            <th style="width: 300px;">Check-out Location</th>
+                            <th style="width: 120px;">Total Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="state.attendanceRecords.length === 0">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-5">
+                                    <i class="fa fa-inbox fa-3x mb-3 d-block"></i>
+                                    <h5 class="mb-2">No attendance records found</h5>
+                                    <p class="mb-0">Try adjusting the date range</p>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-foreach="state.attendanceRecords" t-as="attendance" t-key="attendance.id">
+                            <tr>
+                                <td class="text-center align-middle">
+                                    <strong><t t-esc="attendance_index + 1"/></strong>
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <i class="fa fa-calendar me-1 text-primary"></i>
+                                    <strong><t t-esc="attendance.date"/></strong>
+                                </td>
+                                <td class="align-middle">
+                                    <t t-if="attendance.status === 'Present'">
+                                        <span class="badge bg-primary w-100 py-2">
+                                            <i class="fa fa-check me-1"></i>Present
+                                        </span>
+                                    </t>
+                                    <t t-elif="attendance.status === 'In Progress'">
+                                        <span class="badge bg-primary w-100 py-2">
+                                            <i class="fa fa-clock-o me-1"></i>In Progress
+                                        </span>
+                                    </t>
+                                    <t t-elif="attendance.status === 'Holiday'">
+                                        <span class="badge bg-primary w-100 py-2">
+                                            <i class="fa fa-calendar-times-o me-1"></i>Holiday
+                                        </span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="badge bg-primary w-100 py-2">
+                                            <t t-esc="attendance.status"/>
+                                        </span>
+                                    </t>
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <i class="fa fa-sign-in me-1 text-primary"></i>
+                                    <strong><t t-esc="attendance.startTime"/></strong>
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <t t-if="attendance.checkinAddress or attendance.checkinLatitude">
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="d-flex align-items-start">
+                                                <i class="fa fa-map-marker text-danger me-2 mt-1" style="font-size: 16px;"></i>
+                                                <small class="text-muted" style="line-height: 1.4;">
+                                                    <t t-if="attendance.checkinAddress"><t t-esc="attendance.checkinAddress"/></t>
+                                                    <t t-elif="attendance.checkinLatitude">
+                                                        <t t-esc="attendance.checkinLatitude.toFixed(5)"/>, <t t-esc="attendance.checkinLongitude.toFixed(5)"/>
+                                                    </t>
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="d-flex align-items-center gap-2">
+                                                <t t-if="attendance.checkinAccuracy">
+                                                    <t t-if="attendance.checkinAccuracy &lt; 50">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                            <i class="fa fa-check-circle"></i> ±<t t-esc="Math.round(attendance.checkinAccuracy)"/>m
+                                                        </span>
+                                                    </t>
+                                                    <t t-elif="attendance.checkinAccuracy &lt; 100">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                            <i class="fa fa-exclamation-circle"></i> ±<t t-esc="Math.round(attendance.checkinAccuracy)"/>m
+                                                        </span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                            <i class="fa fa-times-circle"></i> ±<t t-esc="Math.round(attendance.checkinAccuracy)"/>m
+                                                        </span>
+                                                    </t>
+                                                </t>
+                                                
+                                                <t t-if="attendance.checkinLatitude and attendance.checkinLongitude">
+                                                    <a t-attf-href="https://www.google.com/maps?q={{attendance.checkinLatitude}},{{attendance.checkinLongitude}}&amp;z=18" 
+                                                       target="_blank" 
+                                                       class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                       style="font-size: 0.7rem;">
+                                                        <i class="fa fa-map"></i> Map
+                                                    </a>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="text-muted">
+                                            <i class="fa fa-minus-circle me-1"></i>No location captured
+                                        </span>
+                                    </t>
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <t t-if="attendance.endTime !== 'Not checked out yet'">
+                                        <i class="fa fa-sign-out me-1 text-danger"></i>
+                                        <strong><t t-esc="attendance.endTime"/></strong>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="badge bg-primary py-2">
+                                            <i class="fa fa-clock-o me-1"></i>Active
+                                        </span>
+                                    </t>
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <t t-if="attendance.checkoutAddress or attendance.checkoutLatitude">
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="d-flex align-items-start">
+                                                <i class="fa fa-map-marker text-danger me-2 mt-1" style="font-size: 16px;"></i>
+                                                <small class="text-muted" style="line-height: 1.4;">
+                                                    <t t-if="attendance.checkoutAddress"><t t-esc="attendance.checkoutAddress"/></t>
+                                                    <t t-elif="attendance.checkoutLatitude"><t t-esc="attendance.checkoutLatitude.toFixed(5)"/>, <t t-esc="attendance.checkoutLongitude.toFixed(5)"/></t>
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="d-flex align-items-center gap-2">
+                                                <t t-if="attendance.checkoutAccuracy">
+                                                    <t t-if="attendance.checkoutAccuracy &lt; 50">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                            <i class="fa fa-check-circle"></i> ±<t t-esc="Math.round(attendance.checkoutAccuracy)"/>m
+                                                        </span>
+                                                    </t>
+                                                    <t t-elif="attendance.checkoutAccuracy &lt; 100">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                            <i class="fa fa-exclamation-circle"></i> ±<t t-esc="Math.round(attendance.checkoutAccuracy)"/>m
+                                                        </span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                                                            <i class="fa fa-times-circle"></i> ±<t t-esc="Math.round(attendance.checkoutAccuracy)"/>m
+                                                        </span>
+                                                    </t>
+                                                </t>
+                                                
+                                                <t t-if="attendance.checkoutLatitude and attendance.checkoutLongitude">
+                                                    <a t-attf-href="https://www.google.com/maps?q={{attendance.checkoutLatitude}},{{attendance.checkoutLongitude}}&amp;z=18" 
+                                                       target="_blank" 
+                                                       class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                       style="font-size: 0.7rem;">
+                                                        <i class="fa fa-map"></i> Map
+                                                    </a>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="text-muted">
+                                            <i class="fa fa-minus-circle me-1"></i>
+                                            <t t-if="attendance.status === 'In Progress'">Not checked out</t>
+                                            <t t-else="">No location captured</t>
+                                        </span>
+                                    </t>
+                                </td>
+                                <td class="align-middle text-center">
+                                    <span class="badge bg-info py-2" style="font-size: 0.85rem;">
+                                        <i class="fa fa-clock-o me-1"></i>
+                                        <t t-esc="attendance.totalWorkingHrs"/>
+                                    </span>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <t t-if="state.attendanceRecords.length > 0">
+                <div class="mt-3 p-3 bg-light border-top" style="flex-shrink: 0;">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-list-ol fa-2x text-primary me-3"></i>
+                                <div>
+                                    <small class="text-muted d-block">Total Records</small>
+                                    <h5 class="mb-0"><t t-esc="state.attendanceRecords.length"/></h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-check-circle fa-2x text-primary me-3"></i>
+                                <div>
+                                    <small class="text-muted d-block">Present Days</small>
+                                    <h5 class="mb-0 text-primary">
+                                        <t t-esc="state.attendanceRecords.filter(a => a.status === 'Present').length"/>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-clock-o fa-2x text-warning me-3"></i>
+                                <div>
+                                    <small class="text-muted d-block">In Progress</small>
+                                    <h5 class="mb-0 text-warning">
+                                        <t t-esc="state.attendanceRecords.filter(a => a.status === 'In Progress').length"/>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-calendar-times-o fa-2x text-info me-3"></i>
+                                <div>
+                                    <small class="text-muted d-block">Holidays</small>
+                                    <h5 class="mb-0 text-info">
+                                        <t t-esc="state.attendanceRecords.filter(a => a.status === 'Holiday').length"/>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

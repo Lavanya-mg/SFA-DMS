@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_uom_conversion_rule_list" model="ir.ui.view">
+        <field name="name">uom.conversion.rule.list</field>
+        <field name="model">uom.conversion.rule</field>
+        <field name="arch" type="xml">
+            <list string="UoM Conversion Rules" editable="top">
+                <field name="from_uom_id" options="{'no_create': True}"/>
+                <field name="to_uom_id" options="{'no_create': True}"/>
+                <field name="factor"/>
+                <field name="is_global" widget="boolean_toggle"/>
+                <field name="product_id" options="{'no_create': True}" invisible="is_global"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_uom_conversion_rule_form" model="ir.ui.view">
+        <field name="name">uom.conversion.rule.form</field>
+        <field name="model">uom.conversion.rule</field>
+        <field name="arch" type="xml">
+            <form string="UoM Conversion Rule">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group name="uom_config" string="UoM Context Mapping">
+                            <field name="from_uom_id" options="{'no_create': True, 'no_open': False}"/>
+                            <field name="to_uom_id" options="{'no_create': True, 'no_open': False}"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group name="factor_config" string="Conversion Settings">
+                            <field name="factor"/>
+                            <field name="is_global"/>
+                            <field name="product_id" invisible="is_global"
+                                   options="{'no_create': True}"
+                                   placeholder="Required for product-specific conversion"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_uom_conversion_rule" model="ir.actions.act_window">
+        <field name="name">UoM Conversions</field>
+        <field name="res_model">uom.conversion.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Setup your custom corporate packaging conversion metrics.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_uom_conversion_rules"
+              name="UoM Conversions"
+              parent="stock.menu_product_in_config_stock"
+              action="action_uom_conversion_rule"
+              sequence="25"
+              groups="uom.group_uom"/>
+
+    <menuitem id="menu_uom_conversion_rules_sale"
+              name="UoM Conversions"
+              parent="sale.prod_config_main"  action="action_uom_conversion_rule"
+              sequence="30"/>
+            
+</odoo>

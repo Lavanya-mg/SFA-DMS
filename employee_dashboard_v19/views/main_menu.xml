@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ROOT A — "Employee 360" (Managers only) -->
+    <menuitem id="menu_emp360_root"
+              name="Employee 360"
+              sequence="5"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_holiday_calendar"
+          name="Holiday Manager"
+          parent="employee_dashboard_v19.menu_emp360_root" 
+          action="action_fmcg_holiday"
+          sequence="45"/>
+
+    <!-- ROOT B — "My Workday" (Field Users) -->
+    <menuitem id="menu_emp360_user_root"
+              name="My Workday"
+              sequence="6"
+              groups="employee_dashboard_v19.group_employee_dashboard_user"/>
+
+    <!-- ROOT D — "Product Management" disabled -->
+    <menuitem id="menu_product_hub_root"
+              name="Product Management"
+              sequence="7"
+              active="False"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+   <menuitem id="menu_emp360_accounts"
+          name="Accounts"
+          parent="menu_emp360_root"
+          action="action_accounts_emp360"
+          sequence="15"
+          groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <!-- ── Employee 360 sub-containers ──────────────────────────────── -->
+    <menuitem id="menu_emp360_beat_root"
+              name="Beat Management"
+              parent="menu_emp360_root"
+              sequence="20"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_pjp_root"
+              name="PJP"
+              parent="menu_emp360_root"
+              sequence="30"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_masters_root"
+              name="Masters"
+              parent="menu_emp360_root"
+              sequence="35"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_emp360_schemes_root"
+              name="Schemes"
+              parent="menu_emp360_root"
+              sequence="38"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_employee_dashboard_reports"
+              name="Reports"
+              parent="menu_emp360_root"
+              sequence="40"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_employee_dashboard_config"
+              name="Configuration"
+              parent="menu_emp360_root"
+              sequence="50"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <!-- ── Product Management sub-containers ───────────────────────── -->
+    <!-- <menuitem id="menu_product_mgmt_masters_root"
+              name="Masters"
+              parent="menu_product_hub_root"
+              sequence="30"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/>
+
+    <menuitem id="menu_product_mgmt_config_root"
+              name="Configuration"
+              parent="menu_product_hub_root"
+              sequence="40"
+              groups="employee_dashboard_v19.group_employee_dashboard_manager"/> -->
+
+</odoo>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- City Tier Config (tier labels) -->
+    <record id="view_sfa_city_tier_config_list" model="ir.ui.view">
+        <field name="name">sfa.city.tier.config.list</field>
+        <field name="model">sfa.city.tier.config</field>
+        <field name="arch" type="xml">
+            <list string="Tier Labels" editable="top">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sfa_city_tier_config_form" model="ir.ui.view">
+        <field name="name">sfa.city.tier.config.form</field>
+        <field name="model">sfa.city.tier.config</field>
+        <field name="arch" type="xml">
+            <form string="Tier Label">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sfa_city_tier_config" model="ir.actions.act_window">
+        <field name="name">Tier Labels</field>
+        <field name="res_model">sfa.city.tier.config</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- City Tier Master -->
+    <record id="view_sfa_city_tier_list" model="ir.ui.view">
+        <field name="name">sfa.city.tier.list</field>
+        <field name="model">sfa.city.tier</field>
+        <field name="arch" type="xml">
+            <list string="City Tier Master" editable="top">
+                <field name="city_name"/>
+                <field name="state_id"/>
+                <field name="tier_id"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sfa_city_tier_form" model="ir.ui.view">
+        <field name="name">sfa.city.tier.form</field>
+        <field name="model">sfa.city.tier</field>
+        <field name="arch" type="xml">
+            <form string="City Tier">
+                <sheet>
+                    <group>
+                        <field name="city_name"/>
+                        <field name="state_id"/>
+                        <field name="tier_id"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sfa_city_tier" model="ir.actions.act_window">
+        <field name="name">City Tiers</field>
+        <field name="res_model">sfa.city.tier</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
