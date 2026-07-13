@@ -309,6 +309,185 @@
     padding-top: 6px;
 }
 
+/* ── Expense card (Salesforce-style) ─────────────────────────────────────── */
+.em-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin: 10px 16px 10px 32px;
+    padding: 12px 16px 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.em-card:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    border-color: #d1d5db;
+}
+
+.em-card-locked {
+    background: #fbfbfc;
+}
+
+.em-card-head {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+.em-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Header pills */
+.em-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 12px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.em-pill-receipt {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+}
+
+.em-pill-remarks {
+    background: #fce4ec;
+    color: #ad1457;
+    border: 1px solid #f8bbd0;
+}
+
+.em-pill-elig {
+    background: #eef2ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+}
+
+.em-trash-btn {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    color: #ef4444;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.em-trash-btn:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+/* Card body fields */
+.em-card-body {
+    gap: 14px;
+    row-gap: 10px;
+}
+
+.em-fld {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+    flex: 0 0 auto;
+}
+
+.em-fld-sm {
+    min-width: 90px;
+    max-width: 120px;
+}
+
+.em-fld-grow {
+    flex: 1 1 180px;
+    min-width: 160px;
+}
+
+.em-req {
+    color: #ef4444;
+    margin-right: 2px;
+    font-weight: 700;
+}
+
+.em-readonly-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    padding: 6px 2px;
+    min-height: 31px;
+}
+
+/* Receipt zone */
+.em-receipt-zone {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #fafafa;
+    border: 1px dashed #e5e7eb;
+    border-radius: 6px;
+}
+
+.em-receipt-warn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #b45309;
+    background: #fef3c7;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid #fcd34d;
+}
+
+.em-receipt-ok {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #065f46;
+    background: #d1fae5;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid #6ee7b7;
+}
+
+.em-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1565c0;
+    background: #fff;
+    border: 1px solid #90caf9;
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.em-upload-btn:hover {
+    background: #e3f2fd;
+}
+
+.em-upload-hint {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
 /* Add day row */
 .em-add-day-row {
     border-top: 1px solid #f0f0f0;

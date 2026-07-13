@@ -22,4 +22,8 @@ from . import pjp_generate_wizard
 from . import beat_extension
 # from . import hr_extension
 from . import fmcg_holiday
-from . import sfa_expense_band
+# sfa_expense_band removed: these models (sfa.expense.band/type, sfa.city.tier,
+# sfa.travel.mode, sfa.expense.policy.rule) are owned by the sfa_expense_v19 module.
+# Defining them here too produced a conflicting merged schema (required policy_id,
+# band_code vs code, duplicate duty fields) that broke the upgrade.
+# from . import sfa_expense_band

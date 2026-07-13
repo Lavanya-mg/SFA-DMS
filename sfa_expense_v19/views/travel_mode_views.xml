@@ -9,6 +9,7 @@
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="code"/>
+                <field name="mode_group"/>
                 <field name="active" optional="show"/>
             </list>
         </field>
@@ -23,6 +24,7 @@
                     <group>
                         <field name="name"/>
                         <field name="code"/>
+                        <field name="mode_group"/>
                         <field name="sequence"/>
                         <field name="active"/>
                     </group>

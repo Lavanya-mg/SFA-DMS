@@ -9,6 +9,7 @@
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="code"/>
+                <field name="nature" optional="show"/>
                 <field name="product_id" optional="show"/>
                 <field name="rate_type"/>
                 <field name="receipt_required"/>
@@ -30,6 +31,7 @@
                         <group string="Basic Info">
                             <field name="name"/>
                             <field name="code"/>
+                            <field name="nature"/>
                             <field name="product_id"/>
                             <field name="rate_type"/>
                             <field name="sequence"/>

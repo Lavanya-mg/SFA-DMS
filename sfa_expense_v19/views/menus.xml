@@ -54,9 +54,16 @@
               action="action_sfa_expense_manager_client"
               sequence="10"/>
 
-    <menuitem id="menu_sfa_expense_policy"
+    <!-- Salesforce-style OWL Policy Manager (Rules + City Tiers) -->
+    <menuitem id="menu_sfa_expense_policy_manager"
               name="Policy Manager"
               parent="menu_sfa_expense_root"
+              action="action_sfa_expense_policy_manager"
+              sequence="15"/>
+
+    <menuitem id="menu_sfa_expense_policy"
+              name="Policy (Tables)"
+              parent="menu_sfa_expense_config"
               sequence="20"/>
 
     <menuitem id="menu_sfa_expense_eligibility_rules"

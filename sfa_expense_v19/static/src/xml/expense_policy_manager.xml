@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="sfa_expense_v19.ExpensePolicyManager">
+    <div class="epm-wrap">
+
+        <!-- Header + tabs -->
+        <div class="epm-header">
+            <div class="epm-title"><i class="fa fa-money me-2"/>Expense Policy Manager</div>
+            <div class="epm-tabs">
+                <button class="epm-tab" t-att-class="state.activeTab === 'rules' ? 'epm-tab-active' : ''"
+                        t-on-click="() => this.switchTab('rules')">Eligibility Rules</button>
+                <button class="epm-tab" t-att-class="state.activeTab === 'cityTiers' ? 'epm-tab-active' : ''"
+                        t-on-click="() => this.switchTab('cityTiers')">City Tiers</button>
+            </div>
+        </div>
+
+        <!-- ═══════════════ ELIGIBILITY RULES ═══════════════ -->
+        <t t-if="state.activeTab === 'rules'">
+            <div class="epm-2col">
+
+                <!-- LEFT: Rules list -->
+                <div class="epm-list-panel">
+                    <div class="epm-panel-hd">
+                        <span>Rules</span>
+                        <button class="epm-btn epm-btn-primary epm-sm" t-on-click="() => this.newRule()">
+                            <i class="fa fa-plus me-1"/>New Rule
+                        </button>
+                    </div>
+                    <div class="epm-filters">
+                        <select class="epm-input epm-sm" t-att-value="state.filters.band_id" t-on-change="(ev) => this.setFilter('band_id', ev)">
+                            <option value="">All Bands</option>
+                            <t t-foreach="state.listOptions.bands" t-as="b" t-key="b.id"><option t-att-value="b.id"><t t-esc="b.name"/></option></t>
+                        </select>
+                        <select class="epm-input epm-sm" t-att-value="state.filters.type_id" t-on-change="(ev) => this.setFilter('type_id', ev)">
+                            <option value="">All Types</option>
+                            <t t-foreach="state.listOptions.types" t-as="t" t-key="t.id"><option t-att-value="t.id"><t t-esc="t.name"/></option></t>
+                        </select>
+                        <select class="epm-input epm-sm" t-att-value="state.filters.duty_id" t-on-change="(ev) => this.setFilter('duty_id', ev)">
+                            <option value="">All Duty Types</option>
+                            <t t-foreach="state.listOptions.duty_types" t-as="d" t-key="d.id"><option t-att-value="d.id"><t t-esc="d.name"/></option></t>
+                        </select>
+                    </div>
+                    <div class="epm-list-scroll">
+                        <table class="epm-table">
+                            <thead>
+                                <tr><th>BAND</th><th>TYPE</th><th>DUTY</th><th>RATE TYPE</th><th class="epm-r">RATE</th><th class="epm-r">MODES</th><th>STATUS</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="!state.rows.length"><tr><td colspan="8" class="epm-empty">No rules.</td></tr></t>
+                                <t t-foreach="state.rows" t-as="r" t-key="r.id">
+                                    <tr t-att-class="state.form.id === r.id ? 'epm-row-active' : ''">
+                                        <td><t t-esc="r.band"/></td>
+                                        <td><a class="epm-link" t-on-click="() => this.editRule(r.id)"><t t-esc="r.type"/></a></td>
+                                        <td><span class="epm-duty"><t t-esc="r.duty"/></span></td>
+                                        <td><t t-esc="r.rate_type_label"/></td>
+                                        <td class="epm-r"><t t-esc="r.rate"/></td>
+                                        <td class="epm-r"><t t-esc="r.modes"/></td>
+                                        <td>
+                                            <span class="epm-status" t-att-class="r.active ? 'epm-on' : 'epm-off'"
+                                                  t-on-click="() => this.toggleActive(r.id)">
+                                                <t t-esc="r.active ? 'Active' : 'Inactive'"/>
+                                            </span>
+                                        </td>
+                                        <td><button class="epm-icon epm-danger" title="Delete" t-on-click="() => this.deleteRule(r.id)"><i class="fa fa-trash"/></button></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RIGHT: New / Edit Rule form -->
+                <div class="epm-form-panel">
+                    <div class="epm-panel-hd">
+                        <span><t t-esc="state.form.id ? 'Edit Rule' : 'New Rule'"/></span>
+                        <div class="epm-actions">
+                            <button class="epm-btn epm-btn-outline epm-sm" t-on-click="() => this.cancelForm()">Cancel</button>
+                            <button class="epm-btn epm-btn-primary epm-sm" t-att-disabled="state.saving" t-on-click="() => this.saveRule()">
+                                <i class="fa fa-save me-1"/>Save
+                            </button>
+                        </div>
+                    </div>
+                    <div class="epm-form-scroll">
+                        <div class="epm-section">RULE DETAILS</div>
+                        <div class="epm-grid">
+                            <div class="epm-field">
+                                <label>Band <span class="epm-req">*</span></label>
+                                <select class="epm-input" t-att-value="state.form.band_id || ''" t-on-change="(ev) => this.setField('band_id', ev.target.value)">
+                                    <option value="">Select an Option</option>
+                                    <t t-foreach="state.formOptions.bands" t-as="b" t-key="b.id"><option t-att-value="b.id"><t t-esc="b.name"/></option></t>
+                                </select>
+                            </div>
+                            <div class="epm-field">
+                                <label>Expense Type <span class="epm-req">*</span></label>
+                                <select class="epm-input" t-att-value="state.form.expense_type_id || ''" t-on-change="onTypeChange">
+                                    <option value="">Select an Option</option>
+                                    <t t-foreach="state.formOptions.types" t-as="t" t-key="t.id"><option t-att-value="t.id"><t t-esc="t.name"/></option></t>
+                                </select>
+                            </div>
+                            <div class="epm-field">
+                                <label>Duty Type</label>
+                                <select class="epm-input" t-att-value="state.form.duty_type_id || ''" t-on-change="(ev) => this.setField('duty_type_id', ev.target.value)">
+                                    <option value="">All</option>
+                                    <t t-foreach="state.formOptions.duty_types" t-as="d" t-key="d.id"><option t-att-value="d.id"><t t-esc="d.name"/></option></t>
+                                </select>
+                            </div>
+                            <div class="epm-field">
+                                <label>Category</label>
+                                <select class="epm-input" t-att-value="state.form.category" t-on-change="(ev) => this.setField('category', ev.target.value)">
+                                    <option value="">—</option>
+                                    <option value="Travel">Travel</option>
+                                    <option value="Misc">Misc</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Accommodation">Accommodation</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Allowed Travel Modes (grouped) -->
+                        <t t-if="showTravel">
+                            <div class="epm-section">ALLOWED TRAVEL MODES</div>
+                            <div class="epm-modegroups">
+                                <t t-foreach="state.formOptions.mode_groups" t-as="g" t-key="g.key">
+                                    <div class="epm-modegroup">
+                                        <div class="epm-modegroup-hd"><t t-esc="g.label.toUpperCase()"/></div>
+                                        <t t-foreach="g.modes" t-as="m" t-key="m.id">
+                                            <label class="epm-check">
+                                                <input type="checkbox" t-att-checked="isModeSelected(m.id)" t-on-change="(ev) => this.toggleMode(m.id, ev)"/>
+                                                <span><t t-esc="m.name"/></span>
+                                            </label>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                            <div class="epm-section">DISTANCE SETTINGS</div>
+                            <div class="epm-grid">
+                                <div class="epm-field"><label>Min Distance (KM)</label>
+                                    <input type="number" class="epm-input" t-model="state.form.min_distance"/></div>
+                                <div class="epm-field"><label>Daily KM Limit</label>
+                                    <input type="number" class="epm-input" t-model="state.form.max_distance"/></div>
+                            </div>
+
+                            <!-- Per-mode rate table: one row per selected travel mode -->
+                            <t t-if="selectedModeRates.length">
+                                <div class="epm-section">MODE RATE CONFIGURATION</div>
+                                <table class="epm-table epm-mode-table">
+                                    <thead>
+                                        <tr><th>MODE</th><th>RATE TYPE</th><th class="epm-r">RATE/KM</th><th class="epm-r">MAX AMOUNT</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="selectedModeRates" t-as="mr" t-key="mr.id">
+                                            <tr>
+                                                <td class="epm-mode-name"><t t-esc="mr.name"/></td>
+                                                <td>
+                                                    <select class="epm-input epm-sm" t-att-value="mr.rate_type"
+                                                            t-on-change="(ev) => this.setModeRate(mr.id, 'rate_type', ev)">
+                                                        <option value="per_km">Per KM</option>
+                                                        <option value="actual">Actual</option>
+                                                    </select>
+                                                </td>
+                                                <td class="epm-r">
+                                                    <t t-if="mr.rate_type === 'per_km'">
+                                                        <input type="number" class="epm-input epm-sm epm-r" t-att-value="mr.rate"
+                                                               t-on-change="(ev) => this.setModeRate(mr.id, 'rate', ev)"/>
+                                                    </t>
+                                                    <t t-else=""><span class="epm-dash">—</span></t>
+                                                </td>
+                                                <td class="epm-r">
+                                                    <input type="number" class="epm-input epm-sm epm-r" t-att-value="mr.max_amount"
+                                                           t-on-change="(ev) => this.setModeRate(mr.id, 'max_amount', ev)"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </t>
+                        </t>
+
+                        <!-- City Tier Limits -->
+                        <t t-if="showTiers">
+                            <div class="epm-section">CITY TIER LIMITS</div>
+                            <div class="epm-grid">
+                                <div class="epm-field"><label>Tier 1 Limit</label><input type="number" class="epm-input" t-model="state.form.tier1_limit"/></div>
+                                <div class="epm-field"><label>Tier 2 Limit</label><input type="number" class="epm-input" t-model="state.form.tier2_limit"/></div>
+                                <div class="epm-field"><label>Tier 3 Limit</label><input type="number" class="epm-input" t-model="state.form.tier3_limit"/></div>
+                            </div>
+                        </t>
+
+                        <div class="epm-section">RATE CONFIGURATION</div>
+                        <div class="epm-grid">
+                            <div class="epm-field">
+                                <label>Rate Type</label>
+                                <select class="epm-input" t-att-value="state.form.rate_type" t-on-change="(ev) => this.setField('rate_type', ev.target.value)">
+                                    <t t-foreach="state.formOptions.rate_types" t-as="rt" t-key="rt.value"><option t-att-value="rt.value"><t t-esc="rt.label"/></option></t>
+                                </select>
+                            </div>
+                            <div class="epm-field"><label>Rate Amount</label><input type="number" class="epm-input" t-model="state.form.rate"/></div>
+                        </div>
+
+                        <div class="epm-section">RECEIPT SETTINGS</div>
+                        <div class="epm-grid">
+                            <div class="epm-field">
+                                <label class="epm-check"><input type="checkbox" t-att-checked="state.form.receipt_required" t-on-change="(ev) => this.setCheck('receipt_required', ev)"/><span>Receipt Required</span></label>
+                            </div>
+                            <div class="epm-field" t-if="state.form.receipt_required"><label>Receipt Threshold</label><input type="number" class="epm-input" t-model="state.form.receipt_threshold"/></div>
+                        </div>
+
+                        <div class="epm-section">POLICY DATES</div>
+                        <div class="epm-grid">
+                            <div class="epm-field"><label>Effective From</label><input type="date" class="epm-input" t-att-value="state.form.date_from" t-on-change="(ev) => this.setField('date_from', ev.target.value)"/></div>
+                            <div class="epm-field"><label>Effective To</label><input type="date" class="epm-input" t-att-value="state.form.date_to" t-on-change="(ev) => this.setField('date_to', ev.target.value)"/></div>
+                        </div>
+
+                        <div class="epm-section">OPTIONS</div>
+                        <div class="epm-grid">
+                            <div class="epm-field"><label class="epm-check"><input type="checkbox" t-att-checked="state.form.auto_create" t-on-change="(ev) => this.setCheck('auto_create', ev)"/><span>Auto Create</span></label></div>
+                            <div class="epm-field"><label class="epm-check"><input type="checkbox" t-att-checked="state.form.active" t-on-change="(ev) => this.setCheck('active', ev)"/><span>Active</span></label></div>
+                            <div class="epm-field"><label class="epm-check"><input type="checkbox" t-att-checked="state.form.remarks_required" t-on-change="(ev) => this.setCheck('remarks_required', ev)"/><span>Mandatory Remarks</span></label></div>
+                            <div class="epm-field"><label>Sort Order</label><input type="number" class="epm-input" t-model="state.form.sequence"/></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- ═══════════════ CITY TIERS ═══════════════ -->
+        <t t-else="">
+            <div class="epm-2col">
+                <div class="epm-list-panel">
+                    <div class="epm-panel-hd">
+                        <span>City Tiers</span>
+                        <button class="epm-btn epm-btn-primary epm-sm" t-on-click="() => this.newCity()"><i class="fa fa-plus me-1"/>New City</button>
+                    </div>
+                    <div class="epm-list-scroll">
+                        <table class="epm-table">
+                            <thead><tr><th>CITY</th><th>TIER</th><th>STATUS</th><th></th></tr></thead>
+                            <tbody>
+                                <t t-if="!state.cityRows.length"><tr><td colspan="4" class="epm-empty">No city tiers.</td></tr></t>
+                                <t t-foreach="state.cityRows" t-as="c" t-key="c.id">
+                                    <tr>
+                                        <td><a class="epm-link" t-on-click="() => this.editCity(c)"><t t-esc="c.city"/></a></td>
+                                        <td><t t-esc="c.tier"/></td>
+                                        <td><span class="epm-status" t-att-class="c.active ? 'epm-on' : 'epm-off'"><t t-esc="c.active ? 'Active' : 'Inactive'"/></span></td>
+                                        <td><button class="epm-icon epm-danger" t-on-click="() => this.deleteCity(c.id)"><i class="fa fa-trash"/></button></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="epm-form-panel">
+                    <div class="epm-panel-hd"><span><t t-esc="state.cityForm.id ? 'Edit City' : 'New City'"/></span>
+                        <button class="epm-btn epm-btn-primary epm-sm" t-on-click="() => this.saveCity()"><i class="fa fa-save me-1"/>Save</button>
+                    </div>
+                    <div class="epm-form-scroll">
+                        <div class="epm-grid">
+                            <div class="epm-field"><label>City Name <span class="epm-req">*</span></label>
+                                <input type="text" class="epm-input" t-att-value="state.cityForm.city" t-on-input="(ev) => this.setCityField('city', ev)"/></div>
+                            <div class="epm-field"><label>Tier <span class="epm-req">*</span></label>
+                                <select class="epm-input" t-att-value="state.cityForm.tier_id || ''" t-on-change="(ev) => this.setCityField('tier_id', ev)">
+                                    <option value="">Select an Option</option>
+                                    <t t-foreach="state.cityConfigs" t-as="cf" t-key="cf.id"><option t-att-value="cf.id"><t t-esc="cf.name"/></option></t>
+                                </select></div>
+                            <div class="epm-field"><label class="epm-check"><input type="checkbox" t-att-checked="state.cityForm.active" t-on-change="(ev) => this.setCityField('active', ev)"/><span>Active</span></label></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </div>
+</t>
+</templates>

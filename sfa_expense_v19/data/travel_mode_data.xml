@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- ── Distance-based ─────────────────────────────────────────────── -->
+    <record id="tm_bike" model="sfa.travel.mode">
+        <field name="name">Bike</field><field name="code">BIKE</field>
+        <field name="mode_group">distance</field><field name="sequence">10</field>
+    </record>
+    <record id="tm_car" model="sfa.travel.mode">
+        <field name="name">Car</field><field name="code">CAR</field>
+        <field name="mode_group">distance</field><field name="sequence">20</field>
+    </record>
+    <record id="tm_auto" model="sfa.travel.mode">
+        <field name="name">Auto</field><field name="code">AUTO</field>
+        <field name="mode_group">distance</field><field name="sequence">30</field>
+    </record>
+    <record id="tm_own_bike" model="sfa.travel.mode">
+        <field name="name">Own Bike</field><field name="code">OWN_BIKE</field>
+        <field name="mode_group">distance</field><field name="sequence">40</field>
+    </record>
+    <record id="tm_own_car" model="sfa.travel.mode">
+        <field name="name">Own Car</field><field name="code">OWN_CAR</field>
+        <field name="mode_group">distance</field><field name="sequence">50</field>
+    </record>
+    <record id="tm_public_transport" model="sfa.travel.mode">
+        <field name="name">Public Transport</field><field name="code">PUB_TRANS</field>
+        <field name="mode_group">distance</field><field name="sequence">60</field>
+    </record>
+
+    <!-- ── Bus ────────────────────────────────────────────────────────── -->
+    <record id="tm_bus_ac" model="sfa.travel.mode">
+        <field name="name">Bus: AC</field><field name="code">BUS_AC</field>
+        <field name="mode_group">bus</field><field name="sequence">70</field>
+    </record>
+    <record id="tm_bus_nonac" model="sfa.travel.mode">
+        <field name="name">Bus: Non-AC</field><field name="code">BUS_NONAC</field>
+        <field name="mode_group">bus</field><field name="sequence">80</field>
+    </record>
+
+    <!-- ── Train ──────────────────────────────────────────────────────── -->
+    <record id="tm_train_1ac" model="sfa.travel.mode">
+        <field name="name">Train: 1AC</field><field name="code">TRAIN_1AC</field>
+        <field name="mode_group">train</field><field name="sequence">90</field>
+    </record>
+    <record id="tm_train_2ac" model="sfa.travel.mode">
+        <field name="name">Train: 2AC</field><field name="code">TRAIN_2AC</field>
+        <field name="mode_group">train</field><field name="sequence">100</field>
+    </record>
+    <record id="tm_train_3ac" model="sfa.travel.mode">
+        <field name="name">Train: 3AC</field><field name="code">TRAIN_3AC</field>
+        <field name="mode_group">train</field><field name="sequence">110</field>
+    </record>
+    <record id="tm_train_sleeper" model="sfa.travel.mode">
+        <field name="name">Train: Sleeper</field><field name="code">TRAIN_SL</field>
+        <field name="mode_group">train</field><field name="sequence">120</field>
+    </record>
+    <record id="tm_train_general" model="sfa.travel.mode">
+        <field name="name">Train: General</field><field name="code">TRAIN_GEN</field>
+        <field name="mode_group">train</field><field name="sequence">130</field>
+    </record>
+
+    <!-- ── Flight ─────────────────────────────────────────────────────── -->
+    <record id="tm_flight_business" model="sfa.travel.mode">
+        <field name="name">Flight: Business</field><field name="code">FLIGHT_BUS</field>
+        <field name="mode_group">flight</field><field name="sequence">140</field>
+    </record>
+    <record id="tm_flight_economy" model="sfa.travel.mode">
+        <field name="name">Flight: Economy</field><field name="code">FLIGHT_ECO</field>
+        <field name="mode_group">flight</field><field name="sequence">150</field>
+    </record>
+    <record id="tm_flight_premium" model="sfa.travel.mode">
+        <field name="name">Flight: Premium Economy</field><field name="code">FLIGHT_PREM</field>
+        <field name="mode_group">flight</field><field name="sequence">160</field>
+    </record>
+
+</odoo>

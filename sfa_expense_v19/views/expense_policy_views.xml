@@ -8,10 +8,13 @@
         <field name="arch" type="xml">
             <list string="Eligibility Rules">
                 <field name="band_id"/>
-                <field name="expense_type_id"/>
+                <field name="expense_type_id" string="Type"/>
+                <field name="duty_type_id" string="Duty"/>
                 <field name="rate_type" string="Rate Type"/>
                 <field name="rate" string="Rate"/>
+                <field name="travel_mode_count" string="Modes"/>
                 <field name="receipt_required" string="Receipt Req."/>
+                <field name="active" widget="boolean_toggle"/>
             </list>
         </field>
     </record>
@@ -23,30 +26,60 @@
         <field name="arch" type="xml">
             <form string="Expense Policy Rule">
                 <sheet>
+                    <field name="type_nature" invisible="1"/>
                     <group string="Rule Details">
                         <group>
                             <field name="band_id" options="{'no_create': True}"/>
                             <field name="expense_type_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
                             <field name="duty_type_id" options="{'no_create': True}"/>
-                        </group>
-                        <group>
                             <field name="category"/>
-                            <field name="rate_type"/>
-                            <field name="rate" string="Rate Amount"/>
                         </group>
                     </group>
 
-                    <group string="Travel Modes">
-                        <field name="travel_mode_ids" widget="many2many_tags"
-                               options="{'no_create': True}" nolabel="1" colspan="2"/>
-                    </group>
-
-                    <group string="City Tier Limits">
+                    <group string="Rate Configuration">
                         <group>
-                            <field name="tier1_limit" string="Tier 1 Limit"/>
-                            <field name="tier2_limit" string="Tier 2 Limit"/>
-                            <field name="tier3_limit" string="Tier 3 Limit"/>
+                            <field name="rate_type"/>
+                            <field name="rate" string="Rate Amount"
+                                   invisible="rate_type == 'actual'"/>
                         </group>
+                    </group>
+
+                    <!-- Travelling Allowance: modes, distance, per-mode rates.
+                         Shows when the type's nature is 'travelling' (falls back to Per-KM). -->
+                    <group string="Allowed Travel Modes"
+                           invisible="type_nature != 'travelling' and rate_type != 'per_km'">
+                        <field name="travel_mode_ids" widget="many2many_tags"
+                               options="{'no_create': True}" colspan="2"/>
+                    </group>
+                    <group string="Distance Settings"
+                           invisible="type_nature != 'travelling' and rate_type != 'per_km'">
+                        <group>
+                            <field name="min_distance"/>
+                            <field name="max_distance" string="Daily KM Limit"/>
+                        </group>
+                        <field name="mode_rate_ids" colspan="2"
+                               context="{'default_rule_id': id}">
+                            <list editable="bottom">
+                                <field name="travel_mode_id" options="{'no_create': True}"/>
+                                <field name="rate"/>
+                            </list>
+                        </field>
+                    </group>
+
+                    <!-- Lodging: city-tier limits. Shows when nature is 'lodging'
+                         (falls back to Per-Day). -->
+                    <group string="City Tier Limits"
+                           invisible="type_nature != 'lodging' and rate_type != 'per_day'">
+                        <group>
+                            <field name="tier1_limit"/>
+                            <field name="tier2_limit"/>
+                            <field name="tier3_limit"/>
+                        </group>
+                    </group>
+
+                    <group string="Receipt Settings">
                         <group>
                             <field name="receipt_required"/>
                             <field name="receipt_threshold" invisible="not receipt_required"/>
@@ -62,6 +95,16 @@
                             <field name="date_to"/>
                         </group>
                     </group>
+
+                    <group string="Options">
+                        <group>
+                            <field name="auto_create"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
                 </sheet>
             </form>
         </field>
@@ -72,6 +115,12 @@
         <field name="name">Eligibility Rules</field>
         <field name="res_model">sfa.expense.policy.rule</field>
         <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Expense Policy Manager (OWL client action, Salesforce-style) -->
+    <record id="action_sfa_expense_policy_manager" model="ir.actions.client">
+        <field name="name">Expense Policy Manager</field>
+        <field name="tag">sfa_expense_policy_manager</field>
     </record>
 
 </odoo>

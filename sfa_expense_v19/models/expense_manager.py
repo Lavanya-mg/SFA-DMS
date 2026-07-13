@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import calendar as cal
 import logging
+import math
 from datetime import date as date_cls
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -88,6 +89,237 @@ class SfaExpenseManager(models.Model):
             ('date', '<=', dt),
         ], order='date, id')
 
+    # ── Phase 2 helpers: eligibility engine, system-KM, duty days ───────────────
+    def _employee_band(self, employee):
+        """Resolve the employee's expense band (if the field is present)."""
+        if employee and 'band_id' in employee._fields and employee.band_id:
+            return employee.band_id
+        return self.env['sfa.expense.band']
+
+    @staticmethod
+    def _haversine_km(lat1, lon1, lat2, lon2):
+        R = 6371.0  # km
+        p1, p2 = math.radians(lat1), math.radians(lat2)
+        dphi = math.radians(lat2 - lat1)
+        dl = math.radians(lon2 - lon1)
+        a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+        return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    def _day_bounds(self, day):
+        ds = fields.Date.to_string(day)
+        return ds + ' 00:00:00', ds + ' 23:59:59'
+
+    def _compute_system_km(self, employee, day):
+        """Sum of distances between the day's visit GPS points (Task 16)."""
+        if not employee or not day or 'visit.model' not in self.env:
+            return 0.0
+        lo, hi = self._day_bounds(day)
+        visits = self.env['visit.model'].search([
+            ('employee_id', '=', employee.id),
+            ('actual_start_time', '>=', lo), ('actual_start_time', '<=', hi),
+        ], order='actual_start_time')
+        pts = []
+        for v in visits:
+            if v.checkin_latitude and v.checkin_longitude:
+                pts.append((v.checkin_latitude, v.checkin_longitude))
+            if v.checkout_latitude and v.checkout_longitude:
+                pts.append((v.checkout_latitude, v.checkout_longitude))
+        total = sum(self._haversine_km(*pts[i - 1], *pts[i]) for i in range(1, len(pts)))
+        return round(total, 2)
+
+    @staticmethod
+    def _map_travel_type(travel_type):
+        """Map a visit's travel type to a duty tag (HQ / OS / EX-HQ)."""
+        return {
+            'Headquarters': ('HQ', 'Headquarters'),
+            'Up country': ('OS', 'Outstation'),
+            'Other': ('EX-HQ', 'Ex-HQ'),
+        }.get(travel_type, ('', ''))
+
+    @api.model
+    def get_eligible_days(self, month, year, employee_id=False):
+        """Days in the month that have a visit or attendance, with the duty tag
+        from that day's visit (Task 21). The expense-line date picker uses this."""
+        employee = self._get_employee(employee_id)
+        if not employee:
+            return []
+        df, dt = self._month_range(int(month), year)
+        lo = fields.Date.to_string(df) + ' 00:00:00'
+        hi = fields.Date.to_string(dt) + ' 23:59:59'
+        days = {}
+        if 'visit.model' in self.env:
+            for v in self.env['visit.model'].search([
+                ('employee_id', '=', employee.id),
+                ('actual_start_time', '>=', lo), ('actual_start_time', '<=', hi),
+            ], order='actual_start_time'):
+                if not v.actual_start_time:
+                    continue
+                d = fields.Datetime.context_timestamp(v, v.actual_start_time).date()
+                ds = fields.Date.to_string(d)
+                code, name = self._map_travel_type(v.travel_type)
+                days.setdefault(ds, {'date': ds, 'duty_code': code, 'duty_name': name})
+        for a in self.env['hr.attendance'].search([
+            ('employee_id', '=', employee.id),
+            ('check_in', '>=', lo), ('check_in', '<=', hi),
+        ]):
+            if not a.check_in:
+                continue
+            d = fields.Datetime.context_timestamp(a, a.check_in).date()
+            ds = fields.Date.to_string(d)
+            days.setdefault(ds, {'date': ds, 'duty_code': '', 'duty_name': ''})
+        return sorted(days.values(), key=lambda x: x['date'])
+
+    def _worked_hours_by_day(self, employee, month, year):
+        """Sum of attendance worked-hours per day for the month (drives the day
+        header hours and the Daily Allowance line's Hours field)."""
+        if not employee:
+            return {}
+        df, dt = self._month_range(int(month), year)
+        lo = fields.Date.to_string(df) + ' 00:00:00'
+        hi = fields.Date.to_string(dt) + ' 23:59:59'
+        res = {}
+        for a in self.env['hr.attendance'].search([
+                ('employee_id', '=', employee.id),
+                ('check_in', '>=', lo), ('check_in', '<=', hi)]):
+            if not a.check_in:
+                continue
+            d = fields.Datetime.context_timestamp(a, a.check_in).date()
+            ds = fields.Date.to_string(d)
+            res[ds] = res.get(ds, 0.0) + (a.worked_hours or 0.0)
+        return res
+
+    def _apply_policy(self, exp, vals):
+        """Set system-KM + KM-deviation guard, then recompute the eligible amount
+        from the matching policy rule so it is server-authoritative (Tasks 16 & 22)."""
+        etype = self.env['sfa.expense.type'].search(
+            [('product_id', '=', exp.product_id.id)], limit=1) if exp.product_id else False
+        if not etype:
+            return
+
+        if 'km_deviation_reason' in vals:
+            exp.km_deviation_reason = vals.get('km_deviation_reason') or False
+
+        # System KM + deviation guard for distance-based expenses (Task 16).
+        # System KM is stored for any Per-KM line; the reason is only *enforced*
+        # for types with system_km_enabled (Mileage), so other lines aren't blocked
+        # before the entry UI exposes a deviation-reason input.
+        if etype.rate_type == 'per_km':
+            sys_km = self._compute_system_km(exp.employee_id, exp.date)
+            if sys_km:
+                exp.system_km = sys_km
+                if (etype.system_km_enabled
+                        and abs((exp.daily_km or 0.0) - sys_km) > 0.01
+                        and not exp.km_deviation_reason):
+                    raise UserError(_(
+                        "Daily KM (%(d).2f) differs from the system KM (%(s).2f). "
+                        "Please enter a KM deviation reason.",
+                        d=exp.daily_km or 0.0, s=sys_km))
+
+        # Eligible amount from the policy rule (Task 22); override only when a rule matches
+        band = self._employee_band(exp.employee_id)
+        if not band:
+            return
+        rt = etype.rate_type
+        qty = (exp.daily_km if rt == 'per_km'
+               else exp.hours if rt == 'per_hour'
+               else 1.0 if rt == 'per_day' else 0.0) or 0.0
+        actual_amt = (exp.price_unit or 0.0) * (exp.quantity or 1)
+        try:
+            res = self.env['sfa.expense.policy.rule'].get_eligible_amount(
+                band_id=band.id, expense_type_id=etype.id,
+                duty_type_id=exp.duty_type_id.id or False,
+                qty=qty, actual_amount=actual_amt,
+                travel_mode_id=exp.travel_mode_id.id or False,
+                date=exp.date)
+            if res.get('rule_id'):
+                exp.eligible_amount = res['eligible']
+        except UserError:
+            raise
+        except Exception as e:
+            _logger.warning('Eligibility recompute skipped for expense %s: %s', exp.id, e)
+
+    # ── Auto-create expense lines from policy rules ─────────────────────────────
+    def _ensure_type_product(self, etype):
+        """Every expense line is an hr.expense, which needs a product. Link (or
+        create) an expense product for each sfa.expense.type so the type/rule
+        engine and the product-based hr.expense stay bridged."""
+        if etype.product_id:
+            return etype.product_id
+        Product = self.env['product.product'].sudo()
+        # Reuse an existing expense product with the same code/name (links the
+        # Expense Manager to the Policy Manager type and avoids duplicates).
+        product = Product.search([
+            ('can_be_expensed', '=', True),
+            '|', ('default_code', '=', etype.code), ('name', '=', etype.name),
+        ], limit=1)
+        if not product:
+            try:
+                product = Product.create({
+                    'name': etype.name,
+                    'default_code': etype.code,
+                    'can_be_expensed': True,
+                    'type': 'service',
+                    'list_price': 0.0,
+                })
+            except Exception as e:
+                _logger.warning('Could not create expense product for type %s: %s', etype.name, e)
+                return self.env['product.product']
+        etype.sudo().product_id = product.id
+        return product
+
+    def _autocreate_lines(self, employee, month, year):
+        """For each eligible day, create the expense lines defined by the band's
+        auto_create policy rules (idempotent — one line per day+type), with the
+        eligible amount + receipt/remarks flags mapped from the rule."""
+        band = self._employee_band(employee)
+        if not band:
+            return
+        Rule = self.env['sfa.expense.policy.rule']
+        auto_rules = Rule.search([
+            ('active', '=', True), ('auto_create', '=', True), ('band_id', '=', band.id)])
+        if not auto_rules:
+            return
+        Duty = self.env['sfa.duty.type']
+        HrExpense = self.env['hr.expense']
+        # product id -> expense-type id, to detect an existing line *by type*
+        product_to_type = {
+            t.product_id.id: t.id
+            for t in self.env['sfa.expense.type'].with_context(active_test=False).search(
+                [('product_id', '!=', False)])
+        }
+        for ed in self.get_eligible_days(month, year, employee.id):
+            day = fields.Date.to_date(ed['date'])
+            duty = Duty.search([('code', '=', ed['duty_code'])], limit=1) if ed.get('duty_code') else Duty
+            # types that already have a line on this day (mapped via product or name)
+            day_exps = HrExpense.search([('employee_id', '=', employee.id), ('date', '=', day)])
+            existing_type_ids = {product_to_type.get(e.product_id.id) for e in day_exps if e.product_id}
+            existing_names = {(e.product_id.name or e.name) for e in day_exps}
+            for rule in auto_rules:
+                if rule.duty_type_id and duty and rule.duty_type_id.id != duty.id:
+                    continue
+                etype = rule.expense_type_id
+                if etype.id in existing_type_ids or etype.name in existing_names:
+                    continue  # a line of this type already exists for the day
+                product = self._ensure_type_product(etype)
+                if not product:
+                    continue
+                system_km = self._compute_system_km(employee, day) if etype.system_km_enabled else 0.0
+                qty = (1.0 if rule.rate_type == 'per_day'
+                       else system_km if rule.rate_type == 'per_km' else 0.0)
+                eligible = rule.compute_eligible_amount(qty=qty)
+                HrExpense.create({
+                    'name': etype.name,
+                    'product_id': product.id,
+                    'date': day,
+                    'employee_id': employee.id,
+                    'price_unit': 0.0, 'quantity': 1,
+                    'eligible_amount': eligible,
+                    'system_km': system_km,
+                    'duty_type_id': duty.id if duty else False,
+                })
+                existing_type_ids.add(etype.id)
+                existing_names.add(etype.name)
+
     # ── main UI method ─────────────────────────────────────────────────────────
 
     @api.model
@@ -109,8 +341,26 @@ class SfaExpenseManager(models.Model):
                 'band_id': band.id if band else False,
             })
 
+        # Auto-create lines from auto_create policy rules for each eligible day
+        # (draft sheets only; idempotent).
+        if header_rec.state == 'draft':
+            try:
+                self._autocreate_lines(employee, month, year)
+            except Exception as e:
+                _logger.warning('Auto-create expense lines skipped: %s', e)
+
         # Read hr.expense records for this employee + month
         expenses = self._get_expenses(employee.id, month, year)
+
+        # Map each expense product back to its sfa.expense.type + policy rule so
+        # rate_type / receipt / remarks / eligible reflect the configured policy.
+        band = self._employee_band(employee)
+        type_by_product = {
+            t.product_id.id: t
+            for t in self.env['sfa.expense.type'].with_context(active_test=False).search(
+                [('product_id', '!=', False)])
+        }
+        Rule = self.env['sfa.expense.policy.rule']
 
         # Sync state from hr.expense if all submitted/approved
         if expenses and header_rec.state == 'draft':
@@ -130,6 +380,16 @@ class SfaExpenseManager(models.Model):
             'year': year,
         }
 
+        # Batch receipt-attachment counts (one query for the whole month)
+        att_by_expense = {}
+        if expenses:
+            for a in self.env['ir.attachment'].search([
+                ('res_model', '=', 'hr.expense'), ('res_id', 'in', expenses.ids)]):
+                att_by_expense[a.res_id] = att_by_expense.get(a.res_id, 0) + 1
+
+        # Attendance worked-hours per day (for the day header + Daily Allowance)
+        hours_by_day = self._worked_hours_by_day(employee, month, year)
+
         # Group expenses by date
         lines_by_date = {}
         for exp in expenses:
@@ -142,7 +402,7 @@ class SfaExpenseManager(models.Model):
                     'date_display': exp.date.strftime('%a, %d/%m/%Y'),
                     'duty_type_code': exp.duty_type_id.code if exp.duty_type_id else '',
                     'location': '',
-                    'hours': 0.0,
+                    'hours': hours_by_day.get(date_str, 0.0),
                     'total': 0.0,
                     'eligible': 0.0,
                     'lines': [],
@@ -155,20 +415,38 @@ class SfaExpenseManager(models.Model):
             entry['eligible'] += exp.eligible_amount or 0
             entry['hours'] = max(entry['hours'], exp.hours or 0)
             editable = exp.state == 'draft'
+            etype = type_by_product.get(exp.product_id.id) if exp.product_id else False
+            rule = Rule._resolve_rule(band.id, etype.id, exp.duty_type_id.id or False, exp.date) \
+                if (band and etype) else False
+            # nature drives the card layout (basic / daily / travelling / lodging)
+            if etype:
+                nature = etype._effective_nature() if hasattr(etype, '_effective_nature') else (etype.nature or 'misc')
+            else:
+                nature = 'misc'
+            city = exp.city_tier_id if 'city_tier_id' in exp._fields else self.env['sfa.city.tier']
             entry['lines'].append({
                 'id': exp.id,
                 'expense_type_id': exp.product_id.id if exp.product_id else False,
-                'expense_type_name': exp.product_id.name if exp.product_id else (exp.name or ''),
-                'rate_type': 'actual',
-                'receipt_required': False,
-                'remarks_required': False,
+                'expense_type_name': (etype.name if etype else (exp.product_id.name if exp.product_id else exp.name)) or '',
+                'rate_type': etype.rate_type if etype else 'actual',
+                'nature': nature,
+                'receipt_required': rule.receipt_required if rule else (etype.receipt_required if etype else False),
+                'remarks_required': rule.remarks_required if rule else (etype.remarks_required if etype else False),
+                'has_receipt': att_by_expense.get(exp.id, 0) > 0,
                 'amount': amount,
                 'eligible_amount': exp.eligible_amount or 0,
                 'approved_amount': 0,
                 'remarks': exp.name or '',
                 'daily_km': exp.daily_km or 0,
                 'system_km': exp.system_km or 0,
-                'hours': exp.hours or 0,
+                'from_location': exp.from_location or '',
+                'to_location': exp.to_location or '',
+                'travel_mode_id': exp.travel_mode_id.id or False,
+                'allowed_modes': [{'id': m.id, 'name': m.name} for m in rule.travel_mode_ids] if rule else [],
+                'city_tier_id': city.id or False,
+                'city_name': city.city_name or '' if city else '',
+                'city_tier_label': (city.tier_id.name or '') if city and city.tier_id else '',
+                'hours': exp.hours or hours_by_day.get(date_str, 0.0),
                 'hr_state': exp.state,
                 'editable': editable,
             })
@@ -185,21 +463,36 @@ class SfaExpenseManager(models.Model):
             'distance': sum(exp.daily_km or 0 for exp in expenses),
         }
 
-        # Expense types — standard Odoo Expense Categories
-        expense_types = [{
-            'id': p.id,
-            'name': p.name,
-            'code': p.default_code or '',
-            'rate_type': 'actual',
-            'receipt_required': False,
-            'remarks_required': False,
-            'system_km_enabled': False,
-        } for p in self.env['product.product'].search([
-            ('can_be_expensed', '=', True), ('active', '=', True)
-        ])]
+        # Expense types — ONLY the types that have an active policy rule. Restrict
+        # to the employee's band when set; otherwise show every rule-defined type
+        # (so the dropdown isn't empty before a band is assigned).
+        rule_domain = [('active', '=', True)]
+        if band:
+            rule_domain.append(('band_id', '=', band.id))
+        allowed_type_ids = set(Rule.search(rule_domain).mapped('expense_type_id').ids)
+        expense_types = []
+        for t in self.env['sfa.expense.type'].search(
+                [('active', '=', True), ('id', 'in', list(allowed_type_ids) or [0])],
+                order='sequence, name'):
+            product = self._ensure_type_product(t)
+            if not product:
+                continue
+            expense_types.append({
+                'id': product.id,
+                'name': t.name,
+                'code': t.code or '',
+                'rate_type': t.rate_type,
+                'receipt_required': t.receipt_required,
+                'remarks_required': t.remarks_required,
+                'system_km_enabled': t.system_km_enabled,
+            })
 
         duty_types = [{'id': d.id, 'name': d.name, 'code': d.code or ''} for d in self.env['sfa.duty.type'].search([])]
         travel_modes = [{'id': t.id, 'name': t.name, 'code': t.code or ''} for t in self.env['sfa.travel.mode'].search([])]
+        cities = [{
+            'id': c.id, 'name': c.city_name,
+            'tier': c.tier_id.name or '',
+        } for c in self.env['sfa.city.tier'].search([], order='city_name')]
 
         # Overview — 12 months
         all_headers = self.search([('employee_id', '=', employee.id), ('year', '=', year)])
@@ -257,6 +550,7 @@ class SfaExpenseManager(models.Model):
             'expense_types': expense_types,
             'duty_types': duty_types,
             'travel_modes': travel_modes,
+            'cities': cities,
             'lines_by_date': lines_by_date,
             'overview': overview,
             'team': team,
@@ -300,6 +594,14 @@ class SfaExpenseManager(models.Model):
                 update['daily_km'] = vals['daily_km']
             if 'hours' in vals:
                 update['hours'] = vals['hours']
+            if 'from_location' in vals:
+                update['from_location'] = vals['from_location'] or False
+            if 'to_location' in vals:
+                update['to_location'] = vals['to_location'] or False
+            if 'travel_mode_id' in vals:
+                update['travel_mode_id'] = vals['travel_mode_id'] or False
+            if 'city_tier_id' in vals:
+                update['city_tier_id'] = vals['city_tier_id'] or False
             if expense_type_id:
                 update['product_id'] = expense_type_id
             if update:
@@ -315,6 +617,19 @@ class SfaExpenseManager(models.Model):
             amount = vals.get('amount', 0)
             remarks = vals.get('remarks', '')
             product = self.env['product.product'].browse(expense_type_id) if expense_type_id else False
+
+            # Policy guard: only expense types with a rule for the band are allowed.
+            emp = self.env.user.employee_id
+            band = self._employee_band(emp)
+            etype = self.env['sfa.expense.type'].search(
+                [('product_id', '=', product.id)], limit=1) if product else False
+            if band and etype and not self.env['sfa.expense.policy.rule'].search([
+                    ('active', '=', True), ('band_id', '=', band.id),
+                    ('expense_type_id', '=', etype.id)], limit=1):
+                raise UserError(_(
+                    "'%(t)s' is not allowed by the expense policy for band %(b)s.",
+                    t=etype.name, b=band.code or band.name))
+
             exp_name = remarks or (product.name if product else 'Expense')
             exp = HrExpense.create({
                 'name': exp_name,
@@ -327,6 +642,9 @@ class SfaExpenseManager(models.Model):
                 'daily_km': vals.get('daily_km', 0),
                 'hours': vals.get('hours', 0),
             })
+
+        # Server-side eligibility + system-KM (Tasks 16 & 22)
+        self._apply_policy(exp, vals)
 
         # Read back the authoritative amount — prefer total_amount if available and non-zero
         exp.invalidate_recordset(['price_unit', 'total_amount', 'quantity'])
@@ -342,8 +660,25 @@ class SfaExpenseManager(models.Model):
             'remarks': exp.name or '',
             'daily_km': exp.daily_km or 0,
             'system_km': exp.system_km or 0,
+            'km_deviation_reason': exp.km_deviation_reason or '',
             'hours': exp.hours or 0,
         }
+
+    @api.model
+    def upload_receipt(self, line_id, filename, datas):
+        """Attach a receipt file (base64) to an expense line."""
+        exp = self.env['hr.expense'].browse(line_id)
+        if not exp.exists():
+            raise UserError(_('Expense record not found.'))
+        if exp.state not in ('draft',):
+            raise UserError(_('Cannot attach a receipt to a submitted expense.'))
+        self.env['ir.attachment'].create({
+            'name': filename or 'receipt',
+            'datas': datas,
+            'res_model': 'hr.expense',
+            'res_id': exp.id,
+        })
+        return True
 
     @api.model
     def delete_expense_line(self, line_id):

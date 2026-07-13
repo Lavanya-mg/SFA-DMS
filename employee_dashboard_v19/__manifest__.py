@@ -45,7 +45,6 @@
         'views/beat_extension_views.xml',
         'views/hr_employee.xml',
         'views/hr_attendance.xml',
-        'views/sfa_expense_band_views.xml',
         'views/sale_order.xml',
         'views/visit_stock_views.xml',
         'views/visit_collection_views.xml',

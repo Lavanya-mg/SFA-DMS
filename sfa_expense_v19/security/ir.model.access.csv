@@ -15,3 +15,5 @@ access_sfa_expense_manager_user,sfa.expense.manager.user,model_sfa_expense_manag
 access_sfa_expense_manager_manager,sfa.expense.manager.manager,model_sfa_expense_manager,base.group_system,1,1,1,1
 access_sfa_expense_policy_rule_user,sfa.expense.policy.rule.user,model_sfa_expense_policy_rule,base.group_user,1,0,0,0
 access_sfa_expense_policy_rule_manager,sfa.expense.policy.rule.manager,model_sfa_expense_policy_rule,base.group_system,1,1,1,1
+access_sfa_expense_policy_mode_rate_user,sfa.expense.policy.mode.rate.user,model_sfa_expense_policy_mode_rate,base.group_user,1,0,0,0
+access_sfa_expense_policy_mode_rate_manager,sfa.expense.policy.mode.rate.manager,model_sfa_expense_policy_mode_rate,base.group_system,1,1,1,1

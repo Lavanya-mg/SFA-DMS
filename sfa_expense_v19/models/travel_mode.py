@@ -10,5 +10,13 @@ class SfaTravelMode(models.Model):
 
     name = fields.Char(required=True, help='e.g. Own Car, Bike, Bus, Train-AC1, Air-Economy')
     code = fields.Char(required=True)
+    mode_group = fields.Selection([
+        ('distance', 'Distance-Based'),
+        ('bus', 'Bus'),
+        ('train', 'Train'),
+        ('flight', 'Flight'),
+        ('other', 'Other'),
+    ], string='Group', default='distance',
+       help='Used to group modes into columns on the eligibility rule form.')
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)

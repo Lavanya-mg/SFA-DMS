@@ -117,22 +117,24 @@ class ExpenseManager extends Component {
     }
 
     async updateLineField(lineId, field, value) {
+        // Route every editable field through save_expense_line so the server
+        // recomputes the eligible amount from the policy rule (Task 22).
         try {
-            if (field === 'amount') {
-                await this.orm.call('sfa.expense.manager', 'save_expense_line', [{
-                    line_id: lineId,
-                    amount: value,
-                }]);
-            } else {
-                const fieldMap = { remarks: 'name', daily_km: 'daily_km', hours: 'hours' };
-                const hrField = fieldMap[field] || field;
-                await this.orm.write('hr.expense', [lineId], { [hrField]: value });
-            }
+            await this.orm.call('sfa.expense.manager', 'save_expense_line', [{
+                line_id: lineId,
+                [field]: value,
+            }]);
             await this.loadData();
         } catch (e) {
             const msg = (e.data && e.data.message) || e.message || String(e);
             this.notification.add(msg, { type: 'danger', title: 'Update Failed' });
         }
+    }
+
+    /** Trim trailing decimals: 500 -> "500", 22.73 -> "22.73". */
+    fmt(v) {
+        v = Number(v) || 0;
+        return Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100);
     }
 
     async deleteLine(lineId) {
@@ -242,6 +244,40 @@ class ExpenseManager extends Component {
     onLineFieldChangeText(ev) {
         const { lineId, field } = ev.target.dataset;
         this.updateLineField(parseInt(lineId), field, ev.target.value);
+    }
+
+    onLineTravelModeChange(ev) {
+        const { lineId } = ev.target.dataset;
+        this.updateLineField(parseInt(lineId), 'travel_mode_id',
+            ev.target.value ? parseInt(ev.target.value) : false);
+    }
+
+    onLineCityChange(ev) {
+        const { lineId } = ev.target.dataset;
+        this.updateLineField(parseInt(lineId), 'city_tier_id',
+            ev.target.value ? parseInt(ev.target.value) : false);
+    }
+
+    async onReceiptUpload(ev) {
+        const lineId = parseInt(ev.target.dataset.lineId);
+        const file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+        try {
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            const base64 = String(dataUrl).split(',')[1] || '';
+            await this.orm.call('sfa.expense.manager', 'upload_receipt', [lineId, file.name, base64]);
+            this.notification.add('Receipt uploaded', { type: 'success' });
+            ev.target.value = '';
+            await this.loadData();
+        } catch (e) {
+            const msg = (e.data && e.data.message) || e.message || String(e);
+            this.notification.add(msg, { type: 'danger', title: 'Upload Failed' });
+        }
     }
 
     onShowAddExpenseClick(ev) {

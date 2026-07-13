@@ -522,6 +522,14 @@ export class TodayVisit extends Component {
     }
 
     async captureLocationWithAddress() {
+        // ── Location capturing DISABLED (commented out per request) ──────────
+        // Resolve a neutral location so check-in / end-day proceed without GPS,
+        // no geolocation permission prompt, and no reverse-geocode network call.
+        // Numeric 0 coords keep the template's .toFixed() calls working and the
+        // location-required submit button enabled.
+        return Promise.resolve({ latitude: 0, longitude: 0, accuracy: 0, full_address: "Location capturing disabled" });
+
+        /* Original GPS/location capture — kept commented for easy re-enable:
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
                 reject(new Error("Geolocation is not supported by your browser"));
@@ -634,6 +642,7 @@ export class TodayVisit extends Component {
                 options
             );
         });
+        */
     }
 
     async reverseGeocode(latitude, longitude) {

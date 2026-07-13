@@ -45,7 +45,7 @@
             </div>
             <div>
                 <span class="em-filter-label d-block">BAND</span>
-                <span style="font-size:13px;font-weight:700;color:#1a1a3e;"><t t-esc="state.data.header.band_code || '—'"/></span>
+                <span style="font-size:13px;font-weight:700;color:#1a1a3e;"><t t-esc="state.data.header.code || '—'"/></span>
             </div>
         </div>
         <div class="ms-auto">
@@ -128,76 +128,175 @@
                     <!-- Expanded lines -->
                     <div t-if="state.expandedDates[dayData.date]" class="em-lines-container">
                         <t t-foreach="dayData.lines" t-as="line" t-key="line.id">
-                            <div class="em-expense-line px-4 py-2 d-flex align-items-start gap-3">
-                                <div style="min-width:200px;">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="em-type-name"><t t-esc="line.expense_type_name"/></span>
-                                    </div>
-                                    <div class="d-flex gap-2 mt-1 flex-wrap">
-                                        <span t-if="line.receipt_required" class="em-req-badge em-receipt-req">
-                                            <i class="fa fa-paperclip me-1"/>Receipt
-                                        </span>
-                                        <span t-if="line.remarks_required" class="em-req-badge em-remarks-req">
-                                            <i class="fa fa-comment me-1"/>Remarks
-                                        </span>
-                                        <span class="em-elig-badge">
-                                            Eligible: <t t-esc="(line.eligible_amount || 0).toFixed(0)"/>
-                                        </span>
+                            <div t-attf-class="em-card #{line.editable ? '' : 'em-card-locked'}">
+
+                                <!-- Header: NEW + type name | Receipt/Remarks/Eligible + delete -->
+                                <div class="em-card-head d-flex align-items-center">
+                                    <span t-if="line.hr_state === 'draft'" class="em-new-badge me-2">NEW</span>
+                                    <span class="em-card-title"><t t-esc="line.expense_type_name"/></span>
+                                    <div class="ms-auto d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                                        <span t-if="line.receipt_required" class="em-pill em-pill-receipt">Receipt Required</span>
+                                        <span t-if="line.remarks_required" class="em-pill em-pill-remarks">Remarks Required</span>
+                                        <span class="em-pill em-pill-elig">Eligible: <t t-esc="fmt(line.eligible_amount)"/></span>
+                                        <button t-if="line.editable" class="em-trash-btn"
+                                                t-att-data-line-id="line.id" t-on-click="onDeleteLineClick">
+                                            <i class="fa fa-trash"/>
+                                        </button>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="em-field-label">Amount</label>
-                                    <t t-if="line.editable">
-                                        <input type="number" class="form-control form-control-sm em-amount-input"
-                                               t-att-value="line.amount"
-                                               t-att-data-line-id="line.id"
-                                               t-att-data-field="'amount'"
-                                               t-on-change="onLineFieldChange"/>
+
+                                <!-- Body: fields depend on expense nature -->
+                                <div class="em-card-body d-flex flex-wrap align-items-end">
+
+                                    <!-- TRAVELLING: From / To / Travel Mode / Daily KM / Amount / SYSTEM KM / Remarks -->
+                                    <t t-if="line.nature === 'travelling'">
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><span class="em-req">*</span>From</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-att-value="line.from_location" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'from_location'"
+                                                   t-on-change="onLineFieldChangeText"/>
+                                        </div>
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><span class="em-req">*</span>To</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-att-value="line.to_location" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'to_location'"
+                                                   t-on-change="onLineFieldChangeText"/>
+                                        </div>
+                                        <div class="em-fld">
+                                            <label class="em-field-label">Travel Mode</label>
+                                            <select class="form-select form-select-sm" t-att-disabled="!line.editable"
+                                                    t-att-data-line-id="line.id" t-on-change="onLineTravelModeChange">
+                                                <option value="">Select...</option>
+                                                <t t-set="modeList" t-value="line.allowed_modes.length ? line.allowed_modes : state.data.travel_modes"/>
+                                                <t t-foreach="modeList" t-as="tm" t-key="tm.id">
+                                                    <option t-att-value="tm.id" t-att-selected="line.travel_mode_id === tm.id"><t t-esc="tm.name"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label"><span class="em-req">*</span>Daily KM</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   t-att-value="line.daily_km" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'daily_km'"
+                                                   t-on-change="onLineFieldChange"/>
+                                        </div>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label"><span class="em-req">*</span>Amount</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   t-att-value="line.amount" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'amount'"
+                                                   t-on-change="onLineFieldChange"/>
+                                        </div>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label">SYSTEM KM</label>
+                                            <div class="em-system-km"><t t-esc="(line.system_km || 0).toFixed(2)"/></div>
+                                        </div>
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><t t-if="line.remarks_required"><span class="em-req">*</span></t>Remarks</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-att-value="line.remarks" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'remarks'"
+                                                   t-on-change="onLineFieldChangeText"/>
+                                        </div>
                                     </t>
+
+                                    <!-- DAILY ALLOWANCE: Hours / Amount / Remarks -->
+                                    <t t-elif="line.nature === 'daily'">
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label">Hours</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   t-att-value="line.hours" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'hours'"
+                                                   t-on-change="onLineFieldChange"/>
+                                        </div>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label"><span class="em-req">*</span>Amount</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   t-att-value="line.amount" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'amount'"
+                                                   t-on-change="onLineFieldChange"/>
+                                        </div>
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><t t-if="line.remarks_required"><span class="em-req">*</span></t>Remarks</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-att-value="line.remarks" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'remarks'"
+                                                   t-on-change="onLineFieldChangeText"/>
+                                        </div>
+                                    </t>
+
+                                    <!-- LODGING: City / City Tier / Amount / Remarks -->
+                                    <t t-elif="line.nature === 'lodging'">
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><span class="em-req">*</span>City</label>
+                                            <select class="form-select form-select-sm" t-att-disabled="!line.editable"
+                                                    t-att-data-line-id="line.id" t-on-change="onLineCityChange">
+                                                <option value="">Search city...</option>
+                                                <t t-foreach="state.data.cities" t-as="ct" t-key="ct.id">
+                                                    <option t-att-value="ct.id" t-att-selected="line.city_tier_id === ct.id"><t t-esc="ct.name"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label">City Tier</label>
+                                            <div class="em-readonly-val"><t t-esc="line.city_tier_label || '—'"/></div>
+                                        </div>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label"><span class="em-req">*</span>Amount</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   t-att-value="line.amount" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'amount'"
+                                                   t-on-change="onLineFieldChange"/>
+                                        </div>
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><t t-if="line.remarks_required"><span class="em-req">*</span></t>Remarks</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-att-value="line.remarks" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'remarks'"
+                                                   t-on-change="onLineFieldChangeText"/>
+                                        </div>
+                                    </t>
+
+                                    <!-- BASIC (fuel / mobile / toll / food / printing / stationery / misc): Amount / Remarks -->
                                     <t t-else="">
-                                        <div class="em-amount-input form-control form-control-sm bg-light" style="cursor:not-allowed;">
-                                            <t t-esc="(line.amount || 0).toFixed(2)"/>
+                                        <div class="em-fld em-fld-sm">
+                                            <label class="em-field-label"><span class="em-req">*</span>Amount</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   t-att-value="line.amount" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'amount'"
+                                                   t-on-change="onLineFieldChange"/>
+                                        </div>
+                                        <div class="em-fld em-fld-grow">
+                                            <label class="em-field-label"><t t-if="line.remarks_required"><span class="em-req">*</span></t>Remarks</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-att-value="line.remarks" t-att-readonly="!line.editable"
+                                                   t-att-data-line-id="line.id" t-att-data-field="'remarks'"
+                                                   t-on-change="onLineFieldChangeText"/>
                                         </div>
                                     </t>
                                 </div>
-                                <div style="flex:1;">
-                                    <label class="em-field-label">Remarks</label>
-                                    <input type="text" class="form-control form-control-sm"
-                                           t-att-value="line.remarks || ''"
-                                           t-att-readonly="!line.editable"
-                                           t-att-data-line-id="line.id"
-                                           t-att-data-field="'remarks'"
-                                           t-on-change="onLineFieldChangeText"/>
-                                </div>
-                                <t t-if="line.rate_type === 'per_km'">
-                                    <div>
-                                        <label class="em-field-label">Daily KM</label>
-                                        <input type="number" class="form-control form-control-sm em-km-input"
-                                               t-att-value="line.daily_km"
-                                               t-att-data-line-id="line.id"
-                                               t-att-data-field="'daily_km'"
-                                               t-on-change="onLineFieldChange"/>
-                                    </div>
-                                    <div>
-                                        <label class="em-field-label">SYSTEM KM</label>
-                                        <div class="em-system-km"><t t-esc="(line.system_km || 0).toFixed(2)"/></div>
+
+                                <!-- Receipt zone (only when the rule requires a receipt) -->
+                                <t t-if="line.receipt_required">
+                                    <div class="em-receipt-zone">
+                                        <div t-if="!line.has_receipt" class="em-receipt-warn">
+                                            <i class="fa fa-exclamation-triangle me-1"/>Receipt Missing
+                                        </div>
+                                        <div t-else="" class="em-receipt-ok">
+                                            <i class="fa fa-check-circle me-1"/>Receipt Attached
+                                        </div>
+                                        <div t-if="line.editable" class="em-upload-box d-flex align-items-center gap-2 mt-2">
+                                            <label class="em-upload-btn mb-0">
+                                                <i class="fa fa-upload me-1"/>Upload Files
+                                                <input type="file" style="display:none"
+                                                       t-att-data-line-id="line.id" t-on-change="onReceiptUpload"/>
+                                            </label>
+                                            <span class="em-upload-hint">or Drop Files</span>
+                                        </div>
                                     </div>
                                 </t>
-                                <t t-if="line.rate_type === 'per_hour'">
-                                    <div>
-                                        <label class="em-field-label">Hours</label>
-                                        <input type="number" class="form-control form-control-sm em-hours-input"
-                                               t-att-value="line.hours"
-                                               t-att-data-line-id="line.id"
-                                               t-att-data-field="'hours'"
-                                               t-on-change="onLineFieldChange"/>
-                                    </div>
-                                </t>
-                                <button class="btn btn-sm btn-link text-danger mt-3"
-                                        t-att-data-line-id="line.id"
-                                        t-on-click="onDeleteLineClick">
-                                    <i class="fa fa-trash"/>
-                                </button>
                             </div>
                         </t>
 

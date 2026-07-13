@@ -71,10 +71,3 @@ access_fmcg_account_user,fmcg.account.user,model_fmcg_account,employee_dashboard
 access_fmcg_account_manager,fmcg.account.manager,model_fmcg_account,employee_dashboard_v19.group_employee_dashboard_manager,1,1,1,1
 access_sale_order_reject_wizard,sale.order.reject.wizard,model_sale_order_reject_wizard,base.group_user,1,1,1,1
 access_fmcg_holiday,fmcg.holiday,model_fmcg_holiday,base.group_user,1,1,1,1
-access_sfa_expense_band,access.sfa.expense.band,model_sfa_expense_band,hr_expense.group_hr_expense_manager,1,1,1,1
-access_sfa_expense_type,access.sfa.expense.type,model_sfa_expense_type,hr_expense.group_hr_expense_manager,1,1,1,1
-access_sfa_city_tier_label,access.sfa.city.tier.label,model_sfa_city_tier_label,hr_expense.group_hr_expense_manager,1,1,1,1
-access_sfa_city_tier,access.sfa.city.tier,model_sfa_city_tier,hr_expense.group_hr_expense_manager,1,1,1,1
-access_sfa_travel_mode,access.sfa.travel.mode,model_sfa_travel_mode,hr_expense.group_hr_expense_manager,1,1,1,1
-access_sfa_expense_policy,access.sfa.expense.policy,model_sfa_expense_policy,hr_expense.group_hr_expense_manager,1,1,1,1
-access_sfa_expense_policy_rule,access.sfa.expense.policy.rule,model_sfa_expense_policy_rule,hr_expense.group_hr_expense_manager,1,1,1,1
