@@ -250,9 +250,56 @@ class TargetCriteriaManager extends Component {
     }
     onFilterField(idx, ev) {
         const fid = ev.target.value ? parseInt(ev.target.value) : false;
-        this.state.form.filters[idx].field_id = fid;
+        const flt = this.state.form.filters[idx];
+        flt.field_id = fid;
         const fld = this.state.modelFields.all.find(x => x.id === fid);
-        this.state.form.filters[idx].field_label = fld ? fld.label : "";
+        flt.field_label = fld ? fld.label : "";
+        flt.value = ""; // the previous field's value is meaningless for the new one
+        // Status/Selection fields only support 'equals to' and 'in'.
+        if (this.isSelectionFilter(flt) && !["=", "in"].includes(flt.operator)) {
+            flt.operator = "=";
+        }
+    }
+    onFilterOperator(idx, ev) {
+        const flt = this.state.form.filters[idx];
+        flt.operator = ev.target.value;
+        if (flt.operator === "set" || flt.operator === "not set") {
+            flt.value = "";
+        } else if (this.isSelectionFilter(flt) && flt.operator === "=") {
+            // collapse a previous multi-selection to a single value
+            flt.value = this.filterValueList(flt)[0] || "";
+        }
+    }
+    onFilterMultiValue(idx, ev) {
+        const vals = Array.from(ev.target.selectedOptions || [])
+            .map((o) => o.value)
+            .filter((v) => v !== "");
+        this.state.form.filters[idx].value = vals.join(",");
+    }
+
+    // ── Filter field-type helpers ─────────────────────────────────────────────
+    filterFieldInfo(flt) {
+        return this.state.modelFields.all.find(x => x.id === flt.field_id) || null;
+    }
+    isSelectionFilter(flt) {
+        const f = this.filterFieldInfo(flt);
+        return !!(f && f.ttype === "selection");
+    }
+    selectionOptions(flt) {
+        const f = this.filterFieldInfo(flt);
+        return (f && f.selection) || [];
+    }
+    operatorsForFilter(flt) {
+        if (this.isSelectionFilter(flt)) {
+            return [
+                { value: "=", label: "equals to" },
+                { value: "in", label: "in" },
+            ];
+        }
+        return this.state.options.filter_operators;
+    }
+    filterValueList(flt) {
+        return (flt.value || "").split(",").map(v => v.trim()).filter(Boolean);
     }
 
     // ── Save ──────────────────────────────────────────────────────────────────
@@ -297,6 +344,9 @@ class TargetCriteriaManager extends Component {
         const lines = rows.map((r, i) => {
             const name = r.field_label || this._fieldName(r.field_id);
             if (setOps[r.operator]) return `${i + 1}. ${name} ${setOps[r.operator]}`;
+            if (r.operator === "in" || r.operator === "not in") {
+                return `${i + 1}. ${name} ${r.operator} [${this.filterValueList(r).join(", ")}]`;
+            }
             return `${i + 1}. ${name} ${r.operator} ${r.value || "''"}`;
         });
         const logic = (f.filter_logic || "").trim() ||

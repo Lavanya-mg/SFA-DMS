@@ -123,6 +123,9 @@ class SfaTargetCriteria(models.Model):
             fname = f.field_name or (f.field_id.name if f.field_id else '?')
             if f.operator in ('set', 'not set'):
                 leaves.append("%d. %s %s" % (idx, fname, dict(FILTER_OPERATOR_SELECTION).get(f.operator)))
+            elif f.operator in ('in', 'not in'):
+                vals = [v.strip() for v in (f.value or '').split(',') if v.strip()]
+                leaves.append("%d. %s %s [%s]" % (idx, fname, f.operator, ', '.join(vals)))
             else:
                 leaves.append("%d. %s %s %s" % (idx, fname, f.operator, f.value or "''"))
         if not leaves:
@@ -234,6 +237,10 @@ class SfaTargetCriteria(models.Model):
             return [{
                 'id': f.id, 'name': f.name, 'label': f.field_description or f.name,
                 'ttype': f.ttype, 'relation': f.relation or '',
+                # Selection options so the filter builder can offer value pickers
+                # instead of free text for Status/Selection fields.
+                'selection': [{'value': s.value, 'label': s.name}
+                              for s in f.selection_ids] if f.ttype == 'selection' else [],
             } for f in rs]
 
         return {

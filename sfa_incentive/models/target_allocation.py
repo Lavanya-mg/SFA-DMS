@@ -37,9 +37,21 @@ class SfaTargetAllocation(models.Model):
     achievement_total = fields.Float('Total Achievement', compute='_compute_totals', digits=(16, 2))
     achievement_pct = fields.Float('Achievement %', compute='_compute_totals', digits=(16, 2))
 
+    @api.model
+    def _direct_subordinates(self, employee):
+        """Employees who report to `employee` (their parent_id points to it).
+        Never includes the employee itself, even with corrupt self-referencing
+        hierarchy data."""
+        if not employee:
+            return self.env['hr.employee']
+        return self.env['hr.employee'].search([
+            ('parent_id', '=', employee.id),
+            ('id', '!=', employee.id),
+        ])
+
     def _compute_team(self):
         for rec in self:
-            subs = rec.employee_id.child_ids
+            subs = self._direct_subordinates(rec.employee_id)
             if subs and rec.period_id and rec.criteria_id:
                 lines = self.search([
                     ('period_id', '=', rec.period_id.id),
@@ -95,7 +107,7 @@ class SfaTargetAllocation(models.Model):
         period = self.env['kpi.target.period'].browse(int(period_id))
         employee = self.env['hr.employee'].browse(int(employee_id))
         criteria = self.env['sfa.target.criteria'].search([('active', '=', True)], order='sequence, name')
-        subs = employee.child_ids
+        subs = self._direct_subordinates(employee)
         emp_ids = [employee.id] + subs.ids
 
         allocs = self.search([
@@ -149,7 +161,9 @@ class SfaTargetAllocation(models.Model):
         if not period_id or not employee_id:
             return {'criteria': [], 'executives': [], 'manager_targets': {}}
         employee = self.env['hr.employee'].browse(int(employee_id))
-        subs = employee.child_ids
+        # Only direct subordinates (parent_id = selected user) may receive a
+        # distribution — never the selected user themself.
+        subs = self._direct_subordinates(employee)
         criteria = self.env['sfa.target.criteria'].search([('active', '=', True)], order='sequence, name')
 
         sub_allocs = self.search([
@@ -209,7 +223,7 @@ class SfaTargetAllocation(models.Model):
         if not period.exists() or not period.date_from or not period.date_to:
             raise UserError(_("The selected period has no start/end date."))
         employee = self.env['hr.employee'].browse(int(employee_id))
-        employees = employee + employee.child_ids
+        employees = employee + self._direct_subordinates(employee)
         criteria = self.env['sfa.target.criteria'].search([('active', '=', True)])
         now = fields.Datetime.now()
         for emp in employees:
@@ -231,12 +245,13 @@ class SfaTargetAllocation(models.Model):
             team = employee
             frontier = employee
             for _i in range(20):  # bounded descent to avoid loops
-                frontier = frontier.mapped('child_ids')
+                frontier = Emp.search([('parent_id', 'in', frontier.ids),
+                                       ('id', 'not in', team.ids)])
                 if not frontier:
                     break
                 team |= frontier
             return team
-        return employee | employee.child_ids  # 'my' = self + direct reports
+        return employee | self._direct_subordinates(employee)  # 'my' = self + direct reports
 
     def _aggregate(self, period, employees):
         """Sum target/achievement per criteria over a set of employees for a period."""

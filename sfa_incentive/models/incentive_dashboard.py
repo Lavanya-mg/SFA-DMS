@@ -12,16 +12,9 @@ _CRITERIA_FIELD_MAP = {
     'collection': ('target_payment_collected', 'actual_payment_collected'),
     'new_outlets': ('target_new_dealers', 'actual_new_dealers'),
     'productive_calls': ('target_visits', 'actual_visits'),
-    'revenue': ('target_orders', 'actual_order_amount'),
-}
-
-# Maps sfa.target.criteria code → the achievement-% field kpi.target already
-# computes (consistent target/actual units, and matches the KPI dashboard).
-_CRITERIA_ACHIEVEMENT_MAP = {
-    'collection': 'achievement_payment_collected',
-    'new_outlets': 'achievement_new_dealers',
-    'productive_calls': 'achievement_visits',
-    'revenue': 'achievement_orders',
+    # target_orders is an order count — pair it with the order count actual
+    # (kpi.target has no order-amount target field).
+    'revenue': ('target_orders', 'actual_orders'),
 }
 
 
@@ -39,44 +32,6 @@ class SfaIncentiveDashboard(models.Model):
     def _period_domain(self, period_id=None, month=None, year=None):
         """Build domain for filtering incentive records by period."""
         return [('period_month', '=', month), ('period_year', '=', year)]
-
-    def _best_slab(self, criteria, achievement, territory_ids, profile_id, ref_date):
-        """Pick the slab that applies to (criteria, achievement, territory, profile).
-
-        A slab matches when its achievement range contains the achievement AND
-        each of its criteria / territory / profile is either blank (Universal) or
-        matches the employee's. When several match, the MOST SPECIFIC one wins
-        (criteria-specific beats universal, then territory, then profile), then
-        sort_order. This implements the transcript's rule: leave a dimension blank
-        to apply to all, or set it to target a specific criteria/role/territory."""
-        Slab = self.env['sfa.incentive.slab']
-        domain = [
-            ('active', '=', True),
-            ('min_achievement', '<=', achievement),
-            ('max_achievement', '>=', achievement),
-            '|', ('criteria_id', '=', criteria.id), ('criteria_id', '=', False),
-            '|', ('date_from', '=', False), ('date_from', '<=', str(ref_date)),
-            '|', ('date_to', '=', False), ('date_to', '>=', str(ref_date)),
-        ]
-        if territory_ids:
-            domain += ['|', ('territory_id', '=', False), ('territory_id', 'in', list(territory_ids))]
-        else:
-            domain += [('territory_id', '=', False)]
-        if profile_id:
-            domain += ['|', ('profile_id', '=', False), ('profile_id', '=', profile_id)]
-        else:
-            domain += [('profile_id', '=', False)]
-
-        slabs = Slab.search(domain, order='sort_order, id')
-        if not slabs:
-            return Slab
-
-        def _specificity(s):
-            return ((4 if s.criteria_id else 0)
-                    + (2 if s.territory_id else 0)
-                    + (1 if s.profile_id else 0))
-
-        return sorted(slabs, key=lambda s: (-_specificity(s), s.sort_order, s.id))[0]
 
     # ── OWL RPC methods ─────────────────────────────────────────────────────────
 
@@ -188,18 +143,36 @@ class SfaIncentiveDashboard(models.Model):
                 [('id', 'in', criteria_ids)] if criteria_ids else []
             ) or self.env['sfa.target.criteria'].search([])
 
+            # Only calculate criteria that actually have an applicable active
+            # slab in this window; otherwise the dashboard fills up with rows
+            # for criteria nobody configured a payout for.
+            period_slabs = Slab.search([
+                ('active', '=', True),
+                '|', ('date_from', '=', False), ('date_from', '<=', str(df)),
+                '|', ('date_to', '=', False), ('date_to', '>=', str(dt)),
+            ])
+            has_universal_slab = any(not s.criteria_id for s in period_slabs)
+            slab_criteria_ids = set(period_slabs.mapped('criteria_id').ids)
+            eligible_criteria = criteria_recs if has_universal_slab else \
+                criteria_recs.filtered(lambda c: c.id in slab_criteria_ids)
+
+            # Purge still-editable records of in-scope criteria that no longer
+            # have any slab, so previously created mismatched rows disappear.
+            stale_criteria_ids = set(criteria_recs.ids) - set(eligible_criteria.ids)
+            if stale_criteria_ids:
+                Record.search([
+                    ('period_month', '=', m),
+                    ('period_year', '=', calc_year),
+                    ('criteria_id', 'in', list(stale_criteria_ids)),
+                    ('status', '=', 'calculated'),
+                ]).unlink()
+
             for kpi in kpi_targets:
                 employee = kpi.employee_id
                 if not employee:
                     continue
 
-                # Employee's territories (M2m) and incentive profile drive which
-                # profile-/territory-specific slabs are eligible.
-                territory_ids = employee.territory_id.ids if 'territory_id' in employee._fields else []
-                emp_profile = employee.profile_id if 'profile_id' in employee._fields else False
-                emp_profile_id = emp_profile.id if emp_profile else False
-
-                for criteria in criteria_recs:
+                for criteria in eligible_criteria:
                     field_map = _CRITERIA_FIELD_MAP.get(criteria.code)
                     if field_map:
                         target_val = getattr(kpi, field_map[0], 0) or 0
@@ -210,18 +183,19 @@ class SfaIncentiveDashboard(models.Model):
                     else:
                         continue
 
-                    # Achievement %: prefer the value kpi.target already computes
-                    # (correct units, matches the KPI dashboard); fall back to
-                    # actual/target only for custom criteria without one.
-                    ach_field = _CRITERIA_ACHIEVEMENT_MAP.get(criteria.code)
-                    if ach_field and ach_field in kpi._fields:
-                        achievement = getattr(kpi, ach_field, 0) or 0
-                    else:
-                        achievement = (actual_val / target_val * 100) if target_val else 0
+                    achievement = (actual_val / target_val * 100) if target_val else 0
 
-                    # Match the best slab for this criteria / territory / profile
-                    slab = self._best_slab(criteria, achievement, territory_ids,
-                                           emp_profile_id, df)
+                    # Match slab
+                    slab_domain = [
+                        ('min_achievement', '<=', achievement),
+                        ('max_achievement', '>=', achievement),
+                        ('active', '=', True),
+                        '|', ('criteria_id', '=', criteria.id), ('criteria_id', '=', False),
+                    ]
+                    slab_domain += ['|', ('date_from', '=', False), ('date_from', '<=', str(df))]
+                    slab_domain += ['|', ('date_to', '=', False), ('date_to', '>=', str(dt))]
+
+                    slab = Slab.search(slab_domain, order='sort_order, id', limit=1)
 
                     # Compute payout
                     calculated = 0.0
@@ -234,33 +208,34 @@ class SfaIncentiveDashboard(models.Model):
                             gross = employee.contract_id.wage if employee.contract_id else 0
                             calculated = gross * (slab.payout_value / 100.0) * slab.multiplier
 
-                    # Upsert record
-                    search_domain = [
+                    # Upsert record: one row per employee/criteria/period.
+                    existing = Record.search([
                         ('employee_id', '=', employee.id),
                         ('criteria_id', '=', criteria.id),
                         ('period_month', '=', m),
                         ('period_year', '=', calc_year),
-                        ('status', 'in', ('calculated',)),
-                    ]
-                    existing = Record.search(search_domain, limit=1)
+                    ], order='id')
+                    editable = existing.filtered(lambda r: r.status == 'calculated')
 
-                    # Record the resolved territory (slab's, else the employee's
-                    # first territory) and the employee's incentive profile.
-                    rec_territory_id = (slab.territory_id.id if slab and slab.territory_id
-                                        else (territory_ids[0] if territory_ids else False))
+                    # A record already in the approval workflow (or rejected)
+                    # must not be recalculated — and must not be duplicated by
+                    # creating a second 'calculated' row next to it.
+                    if existing - editable:
+                        editable.unlink()  # drop leftover duplicates, keep the workflow row
+                        continue
+
                     vals = {
                         'target_value': target_val,
                         'actual_value': actual_val,
                         'achievement_percent': achievement,
                         'slab_id': slab.id if slab else False,
-                        'territory_id': rec_territory_id,
-                        'profile_id': emp_profile_id,
                         'calculated_amount': calculated,
                         'final_amount': calculated,
                         'status': 'calculated',
                     }
-                    if existing:
-                        existing.write(vals)
+                    if editable:
+                        editable[0].write(vals)
+                        (editable - editable[0]).unlink()  # dedupe historical extras
                     else:
                         vals.update({
                             'employee_id': employee.id,

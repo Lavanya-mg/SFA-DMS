@@ -25,7 +25,7 @@
         <field name="name">Revenue</field>
         <field name="code">revenue</field>
         <field name="target_field">target_orders</field>
-        <field name="actual_field">actual_order_amount</field>
+        <field name="actual_field">actual_orders</field>
         <field name="sequence">40</field>
     </record>
 </odoo>

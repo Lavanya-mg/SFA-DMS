@@ -134,6 +134,8 @@
 }
 .tcm-input:focus { outline: none; border-color: #4b2fd6; box-shadow: 0 0 0 3px rgba(75,47,214,.12); }
 .tcm-input:disabled { background: #f3f4f6; color: #9aa0ac; }
+.tcm-multi { min-height: 92px; padding: 4px; }
+.tcm-multi option { padding: 5px 8px; border-radius: 5px; }
 .tcm-hint { font-size: 11px; color: #9aa0ac; margin-top: 10px; }
 .tcm-mb { margin-bottom: 14px; } .tcm-mt { margin-top: 12px; }
 

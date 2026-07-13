@@ -268,18 +268,44 @@
                             <div class="tcm-field">
                                 <label>Operator</label>
                                 <select class="tcm-input" t-att-value="flt.operator"
-                                        t-on-change="(ev) => this.setFilter(flt_index, 'operator', ev.target.value)">
-                                    <t t-foreach="state.options.filter_operators" t-as="op" t-key="op.value">
+                                        t-on-change="(ev) => this.onFilterOperator(flt_index, ev)">
+                                    <t t-foreach="operatorsForFilter(flt)" t-as="op" t-key="op.value">
                                         <option t-att-value="op.value"><t t-esc="op.label"/></option>
                                     </t>
                                 </select>
                             </div>
                             <div class="tcm-field tcm-grow">
                                 <label>Value</label>
-                                <input type="text" class="tcm-input"
-                                       t-att-disabled="flt.operator === 'set' or flt.operator === 'not set'"
-                                       t-att-value="flt.value"
-                                       t-on-change="(ev) => this.setFilter(flt_index, 'value', ev.target.value)"/>
+                                <!-- Status/Selection + 'in' → multi-select -->
+                                <t t-if="isSelectionFilter(flt) and flt.operator === 'in'">
+                                    <select multiple="multiple" class="tcm-input tcm-multi"
+                                            t-on-change="(ev) => this.onFilterMultiValue(flt_index, ev)">
+                                        <t t-foreach="selectionOptions(flt)" t-as="o" t-key="o.value">
+                                            <option t-att-value="o.value"
+                                                    t-att-selected="filterValueList(flt).includes(o.value) ? 'selected' : undefined">
+                                                <t t-esc="o.label"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                    <div class="tcm-hint">Hold Ctrl/Cmd to select multiple values.</div>
+                                </t>
+                                <!-- Status/Selection + 'equals to' → single-value picker -->
+                                <t t-elif="isSelectionFilter(flt)">
+                                    <select class="tcm-input" t-att-value="flt.value || ''"
+                                            t-on-change="(ev) => this.setFilter(flt_index, 'value', ev.target.value)">
+                                        <option value="">Select value…</option>
+                                        <t t-foreach="selectionOptions(flt)" t-as="o" t-key="o.value">
+                                            <option t-att-value="o.value"><t t-esc="o.label"/></option>
+                                        </t>
+                                    </select>
+                                </t>
+                                <t t-else="">
+                                    <input type="text" class="tcm-input"
+                                           t-att-disabled="flt.operator === 'set' or flt.operator === 'not set'"
+                                           t-att-value="flt.value"
+                                           t-att-placeholder="flt.operator === 'in' or flt.operator === 'not in' ? 'value1, value2, …' : ''"
+                                           t-on-change="(ev) => this.setFilter(flt_index, 'value', ev.target.value)"/>
+                                </t>
                             </div>
                             <button class="tcm-icon tcm-icon-danger tcm-filter-del" title="Remove"
                                     t-on-click="() => this.removeFilter(flt_index)">

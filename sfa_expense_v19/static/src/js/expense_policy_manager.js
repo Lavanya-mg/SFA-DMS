@@ -33,10 +33,8 @@ class ExpensePolicyManager extends Component {
             listOptions: { bands: [], types: [], duty_types: [] },
             formOptions: { bands: [], types: [], duty_types: [], rate_types: [], mode_groups: [] },
             form: emptyRule(),
-            formOpen: false,
             // City Tiers tab
             cityRows: [], cityConfigs: [], cityForm: { id: null, city: "", tier_id: false, active: true },
-            cityFormOpen: false,
         });
 
         onWillStart(async () => {
@@ -67,13 +65,13 @@ class ExpensePolicyManager extends Component {
         if (!window.confirm("Delete this rule?")) return;
         try {
             await this.orm.call(RULE, "delete_rule", [id]);
-            if (this.state.form.id === id) { this.state.form = emptyRule(); this.state.formOpen = false; }
+            if (this.state.form.id === id) this.state.form = emptyRule();
             await this.loadRules();
         } catch (e) { this._err(e); }
     }
 
     // ── Rule form ─────────────────────────────────────────────────────────────
-    newRule() { this.state.form = emptyRule(); this.state.formOpen = true; }
+    newRule() { this.state.form = emptyRule(); }
     async editRule(id) {
         try {
             const d = await this.orm.call(RULE, "get_rule_detail", [id]);
@@ -87,10 +85,9 @@ class ExpensePolicyManager extends Component {
                 };
             }
             this.state.form = f;
-            this.state.formOpen = true;
         } catch (e) { this._err(e); }
     }
-    cancelForm() { this.state.form = emptyRule(); this.state.formOpen = false; }
+    cancelForm() { this.state.form = emptyRule(); }
 
     setField(key, value) { this.state.form[key] = value; }
     setCheck(key, ev) { this.state.form[key] = ev.target.checked; }
@@ -190,7 +187,6 @@ class ExpensePolicyManager extends Component {
             await this.orm.call(RULE, "save_rule", [{ ...f, mode_rates }, f.id || false]);
             this.notification.add(f.id ? "Rule updated" : "Rule created", { type: "success" });
             this.state.form = emptyRule();
-            this.state.formOpen = false;
             await this.loadRules();
         } catch (e) { this._err(e); } finally { this.state.saving = false; }
     }
@@ -207,9 +203,8 @@ class ExpensePolicyManager extends Component {
             this.state.cityConfigs = res.configs || [];
         } catch (e) { this._err(e); }
     }
-    newCity() { this.state.cityForm = { id: null, city: "", tier_id: false, active: true }; this.state.cityFormOpen = true; }
-    editCity(row) { this.state.cityForm = { id: row.id, city: row.city, tier_id: row.tier_id, active: row.active }; this.state.cityFormOpen = true; }
-    cancelCity() { this.state.cityForm = { id: null, city: "", tier_id: false, active: true }; this.state.cityFormOpen = false; }
+    newCity() { this.state.cityForm = { id: null, city: "", tier_id: false, active: true }; }
+    editCity(row) { this.state.cityForm = { id: row.id, city: row.city, tier_id: row.tier_id, active: row.active }; }
     setCityField(key, ev) {
         this.state.cityForm[key] = key === "active" ? ev.target.checked : ev.target.value;
     }
@@ -221,8 +216,7 @@ class ExpensePolicyManager extends Component {
         try {
             await this.orm.call(CITY, "save_city_tier", [{ ...this.state.cityForm }, this.state.cityForm.id || false]);
             this.notification.add("City tier saved", { type: "success" });
-            this.state.cityForm = { id: null, city: "", tier_id: false, active: true };
-            this.state.cityFormOpen = false;
+            this.newCity();
             await this.loadCityTiers();
         } catch (e) { this._err(e); }
     }
