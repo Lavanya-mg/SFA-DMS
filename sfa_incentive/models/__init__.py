@@ -1,3 +1,4 @@
+from . import hr_employee
 from . import target_criteria
 from . import target_allocation
 from . import kpi_dashboard

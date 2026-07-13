@@ -45,7 +45,7 @@
             </div>
             <div>
                 <span class="em-filter-label d-block">BAND</span>
-                <span style="font-size:13px;font-weight:700;color:#1a1a3e;"><t t-esc="state.data.header.code || '—'"/></span>
+                <span style="font-size:13px;font-weight:700;color:#1a1a3e;"><t t-esc="state.data.header.band_id || '—'"/></span>
             </div>
         </div>
         <div class="ms-auto">
@@ -169,8 +169,7 @@
                                             <select class="form-select form-select-sm" t-att-disabled="!line.editable"
                                                     t-att-data-line-id="line.id" t-on-change="onLineTravelModeChange">
                                                 <option value="">Select...</option>
-                                                <t t-set="modeList" t-value="line.allowed_modes.length ? line.allowed_modes : state.data.travel_modes"/>
-                                                <t t-foreach="modeList" t-as="tm" t-key="tm.id">
+                                                <t t-foreach="state.data.travel_modes" t-as="tm" t-key="tm.id">
                                                     <option t-att-value="tm.id" t-att-selected="line.travel_mode_id === tm.id"><t t-esc="tm.name"/></option>
                                                 </t>
                                             </select>
@@ -355,10 +354,20 @@
                 </div>
             </div>
 
-            <div t-if="state.data.header.state === 'draft'" class="em-footer px-3 py-2 d-flex justify-content-end gap-2">
-                <button class="btn btn-primary" t-on-click="submitExpense">
-                    <i class="fa fa-paper-plane me-1"/>Submit Expense
-                </button>
+            <div class="em-footer px-3 py-2 d-flex align-items-center">
+                <div class="em-grand-total">Grand Total: <span class="em-grand-total-val"><t t-esc="fmt(grandTotal)"/></span></div>
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-light em-btn-cancel" t-att-disabled="state.loading" t-on-click="onCancelClick">
+                        <i class="fa fa-times me-1"/>Cancel
+                    </button>
+                    <button class="btn btn-primary" t-att-disabled="state.loading" t-on-click="onSaveClick">
+                        <i class="fa fa-save me-1"/>Save
+                    </button>
+                    <button class="btn btn-success" t-att-disabled="state.loading" t-on-click="onSaveSubmitClick">
+                        <i class="fa fa-paper-plane me-1"/>
+                        <t t-esc="state.data.header.state === 'draft' ? 'Save &amp; Submit' : 'Re-Submit'"/>
+                    </button>
+                </div>
             </div>
         </t>
 

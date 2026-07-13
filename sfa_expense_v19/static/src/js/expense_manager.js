@@ -194,6 +194,60 @@ class ExpenseManager extends Component {
         window.history.back();
     }
 
+    get grandTotal() {
+        return this.sortedDates.reduce((s, d) => s + (Number(d.total) || 0), 0);
+    }
+
+    /** Collect blocking issues for the lines the user is actually claiming
+     *  (amount > 0): missing receipt, missing mandatory remarks, and the
+     *  required per-nature fields. Returns a list of human-readable messages. */
+    _validateForSubmit() {
+        const errors = [];
+        let claimed = 0;
+        for (const day of this.sortedDates) {
+            for (const line of day.lines || []) {
+                const amt = Number(line.amount) || 0;
+                if (amt <= 0) continue;            // untouched line — not claimed
+                claimed++;
+                const where = `${day.date_display} · ${line.expense_type_name}`;
+                if (line.receipt_required && !line.has_receipt)
+                    errors.push(`${where}: receipt required`);
+                if (line.remarks_required && !String(line.remarks || '').trim())
+                    errors.push(`${where}: remarks required`);
+                if (line.nature === 'travelling') {
+                    if (!String(line.from_location || '').trim()) errors.push(`${where}: From required`);
+                    if (!String(line.to_location || '').trim()) errors.push(`${where}: To required`);
+                    if (!(Number(line.daily_km) > 0)) errors.push(`${where}: Daily KM required`);
+                }
+                if (line.nature === 'lodging' && !line.city_tier_id)
+                    errors.push(`${where}: City required`);
+            }
+        }
+        if (!claimed) errors.push('Enter an amount on at least one expense before submitting.');
+        return errors;
+    }
+
+    onCancelClick() {
+        window.history.back();
+    }
+
+    async onSaveClick() {
+        // Fields auto-save on change; Save re-syncs from the server and confirms.
+        await this.loadData();
+        this.notification.add('Expenses saved', { type: 'success' });
+    }
+
+    async onSaveSubmitClick() {
+        const errors = this._validateForSubmit();
+        if (errors.length) {
+            this.notification.add(`Fix ${errors.length} issue(s): ` + errors.join('; '), {
+                type: 'warning', title: 'Cannot submit', sticky: true,
+            });
+            return;
+        }
+        await this.submitExpense();
+    }
+
     async submitExpense() {
         try {
             await this.orm.call('sfa.expense.manager', 'action_submit', [

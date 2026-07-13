@@ -69,8 +69,8 @@
                     </div>
                 </div>
 
-                <!-- RIGHT: New / Edit Rule form -->
-                <div class="epm-form-panel">
+                <!-- RIGHT: New / Edit Rule form (only when creating / editing) -->
+                <div class="epm-form-panel" t-if="state.formOpen">
                     <div class="epm-panel-hd">
                         <span><t t-esc="state.form.id ? 'Edit Rule' : 'New Rule'"/></span>
                         <div class="epm-actions">
@@ -220,6 +220,12 @@
                         </div>
                     </div>
                 </div>
+                <div class="epm-form-panel epm-empty-panel" t-else="">
+                    <div class="epm-empty-state">
+                        <i class="fa fa-hand-o-left epm-empty-icon"/>
+                        <p>Select a rule to edit, or click <b>New Rule</b> to add one.</p>
+                    </div>
+                </div>
             </div>
         </t>
 
@@ -248,9 +254,12 @@
                         </table>
                     </div>
                 </div>
-                <div class="epm-form-panel">
+                <div class="epm-form-panel" t-if="state.cityFormOpen">
                     <div class="epm-panel-hd"><span><t t-esc="state.cityForm.id ? 'Edit City' : 'New City'"/></span>
-                        <button class="epm-btn epm-btn-primary epm-sm" t-on-click="() => this.saveCity()"><i class="fa fa-save me-1"/>Save</button>
+                        <div class="epm-actions">
+                            <button class="epm-btn epm-btn-outline epm-sm" t-on-click="() => this.cancelCity()">Cancel</button>
+                            <button class="epm-btn epm-btn-primary epm-sm" t-on-click="() => this.saveCity()"><i class="fa fa-save me-1"/>Save</button>
+                        </div>
                     </div>
                     <div class="epm-form-scroll">
                         <div class="epm-grid">
@@ -263,6 +272,12 @@
                                 </select></div>
                             <div class="epm-field"><label class="epm-check"><input type="checkbox" t-att-checked="state.cityForm.active" t-on-change="(ev) => this.setCityField('active', ev)"/><span>Active</span></label></div>
                         </div>
+                    </div>
+                </div>
+                <div class="epm-form-panel epm-empty-panel" t-else="">
+                    <div class="epm-empty-state">
+                        <i class="fa fa-hand-o-left epm-empty-icon"/>
+                        <p>Select a city to edit, or click <b>New City</b> to add one.</p>
                     </div>
                 </div>
             </div>

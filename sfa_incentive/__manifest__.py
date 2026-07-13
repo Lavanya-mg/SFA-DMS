@@ -8,6 +8,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/target_criteria_data.xml',
+        'views/hr_employee_views.xml',
         'views/target_criteria_views.xml',
         'views/target_allocation_views.xml',
         'views/incentive_profile_views.xml',

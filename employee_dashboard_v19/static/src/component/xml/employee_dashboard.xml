@@ -248,7 +248,8 @@
                         </div>
 
                         <div class="emp360-nav-item"
-                             t-on-click="openExpenseManager">
+                             t-att-class="state.activeTab === 'expenseManager' ? 'active' : ''"
+                             t-on-click="() => this.changeTab('expenseManager')">
                             <div class="emp360-nav-icon"><i class="fa fa-file-text-o"></i></div>
                             <span class="emp360-nav-label">Expense Mgr</span>
                         </div>
@@ -1833,6 +1834,11 @@
                     <t t-if="state.activeTab === 'kpiDashboard'">
                         <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
                             <t t-component="getActionComponent('sfa_kpi_dashboard')" t-key="'kdb'"/>
+                        </div>
+                    </t>
+                    <t t-if="state.activeTab === 'expenseManager'">
+                        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                            <t t-component="getActionComponent('sfa_expense_v19.expense_manager_action')" t-key="'em'"/>
                         </div>
                     </t>
 

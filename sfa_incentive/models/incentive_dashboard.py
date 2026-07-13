@@ -15,6 +15,15 @@ _CRITERIA_FIELD_MAP = {
     'revenue': ('target_orders', 'actual_order_amount'),
 }
 
+# Maps sfa.target.criteria code → the achievement-% field kpi.target already
+# computes (consistent target/actual units, and matches the KPI dashboard).
+_CRITERIA_ACHIEVEMENT_MAP = {
+    'collection': 'achievement_payment_collected',
+    'new_outlets': 'achievement_new_dealers',
+    'productive_calls': 'achievement_visits',
+    'revenue': 'achievement_orders',
+}
+
 
 class SfaIncentiveDashboard(models.Model):
     """Service model providing RPC methods for the Incentive Dashboard OWL component."""
@@ -30,6 +39,44 @@ class SfaIncentiveDashboard(models.Model):
     def _period_domain(self, period_id=None, month=None, year=None):
         """Build domain for filtering incentive records by period."""
         return [('period_month', '=', month), ('period_year', '=', year)]
+
+    def _best_slab(self, criteria, achievement, territory_ids, profile_id, ref_date):
+        """Pick the slab that applies to (criteria, achievement, territory, profile).
+
+        A slab matches when its achievement range contains the achievement AND
+        each of its criteria / territory / profile is either blank (Universal) or
+        matches the employee's. When several match, the MOST SPECIFIC one wins
+        (criteria-specific beats universal, then territory, then profile), then
+        sort_order. This implements the transcript's rule: leave a dimension blank
+        to apply to all, or set it to target a specific criteria/role/territory."""
+        Slab = self.env['sfa.incentive.slab']
+        domain = [
+            ('active', '=', True),
+            ('min_achievement', '<=', achievement),
+            ('max_achievement', '>=', achievement),
+            '|', ('criteria_id', '=', criteria.id), ('criteria_id', '=', False),
+            '|', ('date_from', '=', False), ('date_from', '<=', str(ref_date)),
+            '|', ('date_to', '=', False), ('date_to', '>=', str(ref_date)),
+        ]
+        if territory_ids:
+            domain += ['|', ('territory_id', '=', False), ('territory_id', 'in', list(territory_ids))]
+        else:
+            domain += [('territory_id', '=', False)]
+        if profile_id:
+            domain += ['|', ('profile_id', '=', False), ('profile_id', '=', profile_id)]
+        else:
+            domain += [('profile_id', '=', False)]
+
+        slabs = Slab.search(domain, order='sort_order, id')
+        if not slabs:
+            return Slab
+
+        def _specificity(s):
+            return ((4 if s.criteria_id else 0)
+                    + (2 if s.territory_id else 0)
+                    + (1 if s.profile_id else 0))
+
+        return sorted(slabs, key=lambda s: (-_specificity(s), s.sort_order, s.id))[0]
 
     # ── OWL RPC methods ─────────────────────────────────────────────────────────
 
@@ -146,6 +193,12 @@ class SfaIncentiveDashboard(models.Model):
                 if not employee:
                     continue
 
+                # Employee's territories (M2m) and incentive profile drive which
+                # profile-/territory-specific slabs are eligible.
+                territory_ids = employee.territory_id.ids if 'territory_id' in employee._fields else []
+                emp_profile = employee.profile_id if 'profile_id' in employee._fields else False
+                emp_profile_id = emp_profile.id if emp_profile else False
+
                 for criteria in criteria_recs:
                     field_map = _CRITERIA_FIELD_MAP.get(criteria.code)
                     if field_map:
@@ -157,19 +210,18 @@ class SfaIncentiveDashboard(models.Model):
                     else:
                         continue
 
-                    achievement = (actual_val / target_val * 100) if target_val else 0
+                    # Achievement %: prefer the value kpi.target already computes
+                    # (correct units, matches the KPI dashboard); fall back to
+                    # actual/target only for custom criteria without one.
+                    ach_field = _CRITERIA_ACHIEVEMENT_MAP.get(criteria.code)
+                    if ach_field and ach_field in kpi._fields:
+                        achievement = getattr(kpi, ach_field, 0) or 0
+                    else:
+                        achievement = (actual_val / target_val * 100) if target_val else 0
 
-                    # Match slab
-                    slab_domain = [
-                        ('min_achievement', '<=', achievement),
-                        ('max_achievement', '>=', achievement),
-                        ('active', '=', True),
-                        '|', ('criteria_id', '=', criteria.id), ('criteria_id', '=', False),
-                    ]
-                    slab_domain += ['|', ('date_from', '=', False), ('date_from', '<=', str(df))]
-                    slab_domain += ['|', ('date_to', '=', False), ('date_to', '>=', str(dt))]
-
-                    slab = Slab.search(slab_domain, order='sort_order, id', limit=1)
+                    # Match the best slab for this criteria / territory / profile
+                    slab = self._best_slab(criteria, achievement, territory_ids,
+                                           emp_profile_id, df)
 
                     # Compute payout
                     calculated = 0.0
@@ -192,11 +244,17 @@ class SfaIncentiveDashboard(models.Model):
                     ]
                     existing = Record.search(search_domain, limit=1)
 
+                    # Record the resolved territory (slab's, else the employee's
+                    # first territory) and the employee's incentive profile.
+                    rec_territory_id = (slab.territory_id.id if slab and slab.territory_id
+                                        else (territory_ids[0] if territory_ids else False))
                     vals = {
                         'target_value': target_val,
                         'actual_value': actual_val,
                         'achievement_percent': achievement,
                         'slab_id': slab.id if slab else False,
+                        'territory_id': rec_territory_id,
+                        'profile_id': emp_profile_id,
                         'calculated_amount': calculated,
                         'final_amount': calculated,
                         'status': 'calculated',
