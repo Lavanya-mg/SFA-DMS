@@ -133,11 +133,27 @@ class SfaIncentiveDashboard(models.Model):
             m = df.month
             calc_year = df.year
 
-            # Find all KPI targets in this period
+            # Find all KPI targets in this period (legacy fallback source)
             kpi_targets = KpiTarget.search([
                 ('period_id.date_from', '<=', str(dt)),
                 ('period_id.date_to', '>=', str(df)),
             ])
+            kpi_by_emp = {}
+            for k in kpi_targets:
+                if k.employee_id and k.employee_id.id not in kpi_by_emp:
+                    kpi_by_emp[k.employee_id.id] = k
+
+            # Primary source: the Target Allocation screen. Its targets and
+            # synced achievements are what users actually maintain.
+            alloc_periods = self.env['kpi.target.period'].search([
+                ('date_from', '<=', str(dt)), ('date_to', '>=', str(df)),
+            ])
+            allocations = self.env['sfa.target.allocation'].search([
+                ('period_id', 'in', alloc_periods.ids),
+            ]) if alloc_periods else self.env['sfa.target.allocation']
+            alloc_map = {}
+            for a in allocations:
+                alloc_map.setdefault((a.employee_id.id, a.criteria_id.id), a)
 
             criteria_recs = self.env['sfa.target.criteria'].search(
                 [('id', 'in', criteria_ids)] if criteria_ids else []
@@ -167,20 +183,39 @@ class SfaIncentiveDashboard(models.Model):
                     ('status', '=', 'calculated'),
                 ]).unlink()
 
-            for kpi in kpi_targets:
-                employee = kpi.employee_id
-                if not employee:
-                    continue
+            employee_ids = set(kpi_by_emp) | {a.employee_id.id for a in allocations}
+            for emp_id in employee_ids:
+                employee = self.env['hr.employee'].browse(emp_id)
+                kpi = kpi_by_emp.get(emp_id)
 
                 for criteria in eligible_criteria:
-                    field_map = _CRITERIA_FIELD_MAP.get(criteria.code)
-                    if field_map:
+                    # 1) Target Allocation values win when the row carries data.
+                    alloc = alloc_map.get((emp_id, criteria.id))
+                    if alloc and (alloc.target_individual or alloc.achievement_individual):
+                        target_val = alloc.target_individual or 0
+                        actual_val = alloc.achievement_individual or 0
+                    # 2) Legacy kpi.target field mapping as fallback.
+                    elif kpi and _CRITERIA_FIELD_MAP.get(criteria.code):
+                        field_map = _CRITERIA_FIELD_MAP[criteria.code]
                         target_val = getattr(kpi, field_map[0], 0) or 0
                         actual_val = getattr(kpi, field_map[1], 0) or 0
-                    elif criteria.target_field and criteria.actual_field:
+                    elif kpi and criteria.target_field and criteria.actual_field:
                         target_val = getattr(kpi, criteria.target_field, 0) or 0
                         actual_val = getattr(kpi, criteria.actual_field, 0) or 0
                     else:
+                        continue
+
+                    # Nothing measured for this employee/criteria — don't pay a
+                    # fixed slab on an empty row, and drop any still-editable
+                    # record previously calculated from empty data.
+                    if not target_val and not actual_val:
+                        Record.search([
+                            ('employee_id', '=', emp_id),
+                            ('criteria_id', '=', criteria.id),
+                            ('period_month', '=', m),
+                            ('period_year', '=', calc_year),
+                            ('status', '=', 'calculated'),
+                        ]).unlink()
                         continue
 
                     achievement = (actual_val / target_val * 100) if target_val else 0
