@@ -463,17 +463,11 @@ class SfaExpenseManager(models.Model):
             'distance': sum(exp.daily_km or 0 for exp in expenses),
         }
 
-        # Expense types — ONLY the types that have an active policy rule. Restrict
-        # to the employee's band when set; otherwise show every rule-defined type
-        # (so the dropdown isn't empty before a band is assigned).
-        rule_domain = [('active', '=', True)]
-        if band:
-            rule_domain.append(('band_id', '=', band.id))
-        allowed_type_ids = set(Rule.search(rule_domain).mapped('expense_type_id').ids)
+        # Expense types — every active type is selectable. Policy rules only
+        # drive the eligible amount / receipt / remarks when one matches.
         expense_types = []
         for t in self.env['sfa.expense.type'].search(
-                [('active', '=', True), ('id', 'in', list(allowed_type_ids) or [0])],
-                order='sequence, name'):
+                [('active', '=', True)], order='sequence, name'):
             product = self._ensure_type_product(t)
             if not product:
                 continue
@@ -618,18 +612,8 @@ class SfaExpenseManager(models.Model):
             remarks = vals.get('remarks', '')
             product = self.env['product.product'].browse(expense_type_id) if expense_type_id else False
 
-            # Policy guard: only expense types with a rule for the band are allowed.
-            emp = self.env.user.employee_id
-            band = self._employee_band(emp)
-            etype = self.env['sfa.expense.type'].search(
-                [('product_id', '=', product.id)], limit=1) if product else False
-            if band and etype and not self.env['sfa.expense.policy.rule'].search([
-                    ('active', '=', True), ('band_id', '=', band.id),
-                    ('expense_type_id', '=', etype.id)], limit=1):
-                raise UserError(_(
-                    "'%(t)s' is not allowed by the expense policy for band %(b)s.",
-                    t=etype.name, b=band.code or band.name))
-
+            # All active expense types are claimable; when the band has a policy
+            # rule for the type, _apply_policy below caps the eligible amount.
             exp_name = remarks or (product.name if product else 'Expense')
             exp = HrExpense.create({
                 'name': exp_name,
